@@ -1,4 +1,4 @@
-# Changelog 30/08/2025
+# Changelog
 
 All notable changes to this project will be documented in this file.
 
@@ -8,10 +8,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Created Dice class with the following functionality:
+- Created Dice class with the following functionality: (30/08/2025)
   - Rolling two dice with random values between 1-6
   - Detecting when doubles are rolled (same value on both dice)
   - Special handling for doubles in backgammon (each die value can be used four times)
   - Initial roll functionality to determine which player goes first
   - Function to determine the highest roller in the initial roll
 - Implemented comprehensive test suite for the Dice class following TDD methodology
+
+- Created Board class with the following functionality: (31/08/2025)
+  - Standard backgammon board representation with 24 points
+  - Support for moving checkers between points
+  - Rules enforcement for valid moves
+  - Bar functionality for hit checkers
+  - Bearing off checkers when all are in the home board
+  - Win condition detection
+  - Helper methods for board state queries
+- Implemented comprehensive test suite for the Board class following TDD methodology
