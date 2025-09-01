@@ -91,3 +91,36 @@ Created a comprehensive implementation of the Game class for a Backgammon game f
    - Win condition checking and game ending
 
 The Game class orchestrates the entire game, using the Dice and Board classes to manage the game state, player turns, and rule enforcement. It does not contain any game-specific logic outside of what is necessary to manage turns and check for wins, adhering to the principles of separation of concerns and single responsibility.
+
+## Checker Implementation for Backgammon
+
+### Prompt
+```
+Let's do the checker tests for now. Remember to cover all cases in Backgammon, like:
+Moving the checker, moving the checker as many times as you can with the dice, all the cases with the bar, without reutilizing methods you've already used in board or dice. Always following the SOLID principles.
+```
+
+### Response
+Created a comprehensive implementation of the Checker class for a Backgammon game following Test-Driven Development principles:
+
+1. First, designed and implemented test cases covering:
+   - Checker initialization with color (white or black)
+   - Setting and tracking checker position
+   - Moving checkers on the board
+   - Calculating new positions based on dice values
+   - Handling checker state (on board, on bar, borne off)
+   - Sending checkers to the bar when hit
+   - Re-entering checkers from the bar
+   - Bearing off checkers from the home board
+   - Checking if a checker can be borne off with a specific dice value
+   - String representation of checkers for debugging
+
+2. Then implemented the Checker class with:
+   - Enums for checker color and state
+   - Position tracking
+   - Directional movement (white moves 0->23, black moves 23->0)
+   - Validation for entry points from the bar
+   - Validation for bearing off
+   - Helper methods for checking home board position
+
+This implementation is designed to work with but not depend on the Board class. The Checker class handles its own state and rules, while the Board will manage the overall game state and interactions between checkers.

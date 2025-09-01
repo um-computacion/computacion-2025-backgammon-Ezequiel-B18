@@ -25,3 +25,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Win condition detection
   - Helper methods for board state queries
 - Implemented comprehensive test suite for the Board class following TDD methodology
+
+- Created Checker class with the following functionality: (01/09/2025)
+  - Representing individual checkers with color and state
+  - Tracking checker position on the board
+  - Handling moves according to player color (direction)
+  - Supporting placement on the bar when hit
+  - Supporting re-entry from the bar
+  - Supporting bearing off from the home board
+  - Validation for all checker operations
+- Implemented comprehensive test suite for the Checker class following TDD methodology
