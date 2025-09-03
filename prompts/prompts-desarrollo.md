@@ -124,3 +124,38 @@ Created a comprehensive implementation of the Checker class for a Backgammon gam
    - Helper methods for checking home board position
 
 This implementation is designed to work with but not depend on the Board class. The Checker class handles its own state and rules, while the Board will manage the overall game state and interactions between checkers.
+
+## Clean Player Implementation for Backgammon
+
+### Prompt
+```
+Add the tests for the player class, then add it's respective class.
+It should not have any method that checker, board or dice already have.
+It should handle name or id of a player, it's color or side, the captured checkers, how many checkers they've borne off, if it is his turn and how many remaining moves he has until he bornes off all the checkers, that should be called from the dice class
+```
+
+### Response
+Created a Player class with a clean separation of responsibilities, following SOLID principles:
+
+1. First, designed and implemented test cases covering:
+   - Player initialization with name and color
+   - Starting and ending player turns
+   - Tracking remaining moves
+   - Managing a collection of checkers
+   - Distributing checkers to starting positions
+   - Querying checker states (on board, bar, borne off)
+   - Checking win conditions
+   - String representation for player status
+
+2. Then implemented the Player class focusing only on player-specific concerns:
+   - Player identity (name, color, ID)
+   - Turn management (is_turn, remaining_moves)
+   - Managing a collection of checkers
+   - Methods to query and count checkers in different states
+
+The Player class strictly avoids duplicating functionality from:
+- **Checker**: Individual checker behavior is delegated to Checker objects
+- **Board**: Board state management and rule enforcement stays in the Board class
+- **Dice**: Dice rolling and move calculation remains in the Dice class
+
+Instead, Player serves as a coordinator for its collection of checkers and manages player-specific state like turns and move counts.
