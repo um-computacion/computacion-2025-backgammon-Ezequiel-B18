@@ -35,3 +35,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Supporting bearing off from the home board
   - Validation for all checker operations
 - Implemented comprehensive test suite for the Checker class following TDD methodology
+
+- Created Player class with the following functionality: (02/09/2025)
+  - Managing player identity (name, color, player ID)
+  - Tracking turn status and remaining moves
+  - Managing a collection of 15 checkers
+  - Distributing checkers to starting positions
+  - Providing methods to query checker states (on board, bar, borne off)
+  - Checking win conditions
+  - Strict separation of responsibilities from other classes
+- Implemented comprehensive test suite for the Player class following TDD and SOLID principles
