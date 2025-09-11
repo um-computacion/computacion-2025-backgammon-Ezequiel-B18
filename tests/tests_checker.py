@@ -200,5 +200,7 @@ class TestChecker(unittest.TestCase):
         self.white_checker.set_position(5)
         self.assertEqual(str(self.white_checker), "White(ON_BOARD, pos=5)")
         
+        # Set position in home board before bearing off
+        self.white_checker.set_position(20)  # Position in white home board
         self.white_checker.bear_off()
         self.assertEqual(str(self.white_checker), "White(BORNE_OFF, pos=None)")
