@@ -53,3 +53,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Updated test expectations to match actual behavior of test setups
   - Improved test isolation to prevent state pollution between tests
   - Ensured all tests follow proper backgammon rules and TDD principles
+
+### Changed
+- Updated CI workflow to run on entire project structure: (13/09/2025)
+  - Modified test discovery to automatically find all test files in tests directory
+  - Updated Pylint analysis to scan all Python files in the project
+  - Improved workflow scalability and maintainability
+  - Enhanced code coverage and quality analysis across the entire codebase
