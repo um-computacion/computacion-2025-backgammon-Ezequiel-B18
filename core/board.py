@@ -235,15 +235,15 @@ class Board:
         if self.points[point][0] != player or self.points[point][1] == 0:
             return False
         
-        # For white: check if there are checkers on higher points (18-22 if trying to bear off from 18)
-        # For black: check if there are checkers on lower points (1-4 if trying to bear off from 0)
+        # For white: check if there are checkers on higher points (point+1 to 23)
+        # For black: check if there are checkers on lower points (0 to point-1)
         if player == 1:
-            higher_points = range(18, point)
+            higher_points = range(point + 1, 24)
             for p in higher_points:
                 if self.points[p][0] == player and self.points[p][1] > 0:
                     return False
         else:  # player == 2
-            lower_points = range(point + 1, 6)
+            lower_points = range(0, point)
             for p in lower_points:
                 if self.points[p][0] == player and self.points[p][1] > 0:
                     return False
