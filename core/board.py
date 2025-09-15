@@ -14,14 +14,9 @@ class Board:
         # player: 0 = empty, 1 = white, 2 = black
         # count: number of checkers at that point
         self.points = [(0, 0) for _ in range(24)]
-        
-        # Bar holds checkers that have been hit
-        # Index 1 = white, 2 = black
         self.bar = {1: 0, 2: 0}
-        
-        # Home holds checkers that have been borne off
         self.home = {1: 0, 2: 0}
-        
+
         if test_bearing_off:
             # Special setup for bearing off tests
             # All white checkers in home board
@@ -40,18 +35,8 @@ class Board:
             self.points[4] = (2, 3)
             self.points[5] = (2, 3)
         else:
-            # Standard starting position
-            # White (player 1) starting positions
-            self.points[0] = (1, 2)   # 2 checkers on point 0
-            self.points[11] = (1, 5)  # 5 checkers on point 11
-            self.points[16] = (1, 3)  # 3 checkers on point 16
-            self.points[18] = (1, 5)  # 5 checkers on point 18
-            
-            # Black (player 2) starting positions
-            self.points[23] = (2, 2)  # 2 checkers on point 23
-            self.points[12] = (2, 5)  # 5 checkers on point 12
-            self.points[7] = (2, 3)   # 3 checkers on point 7
-            self.points[5] = (2, 5)   # 5 checkers on point 5
+            # Use the new helper to set standard starting positions
+            self.setup_starting_positions()
 
     def get_player_at_point(self, point):
         """
@@ -105,30 +90,40 @@ class Board:
         
         return True
 
+    def setup_starting_positions(self):
+        """
+        Set the standard starting positions for the board.
+        Board is the single source of truth for starting layout.
+        """
+        # White (player 1) starting positions
+        self.points[0] = (1, 2)
+        self.points[11] = (1, 5)
+        self.points[16] = (1, 3)
+        self.points[18] = (1, 5)
+
+        # Black (player 2) starting positions
+        self.points[23] = (2, 2)
+        self.points[12] = (2, 5)
+        self.points[7] = (2, 3)
+        self.points[5] = (2, 5)
+
     def move_checker(self, player, from_point, to_point):
         """
-        Move a checker from one point to another.
-        
-        Args:
-            player (int): Player making the move (1 for white, 2 for black)
-            from_point (int): Starting point index (0-23)
-            to_point (int): Target point index (0-23)
-            
-        Returns:
-            bool: True if the move was successful, False otherwise
+        Move a checker and return a structured event describing what happened.
+        Returns dict: {'moved': bool, 'hit': bool, 'hit_player': int or None, 'borne_off': bool}
         """
+        event = {'moved': False, 'hit': False, 'hit_player': None, 'borne_off': False}
+
         if not self.is_valid_move(player, from_point, to_point):
-            return False
-        
+            return event
+
         # Remove checker from source point
         source_player, source_count = self.points[from_point]
         if source_count == 1:
-            # Last checker, point becomes empty
             self.points[from_point] = (0, 0)
         else:
-            # Reduce count
             self.points[from_point] = (source_player, source_count - 1)
-        
+
         # Handle target point
         target_player, target_count = self.points[to_point]
         if target_player == 0 or target_player == player:
@@ -138,8 +133,11 @@ class Board:
             # Hit opponent's blot
             self.points[to_point] = (player, 1)
             self.bar[target_player] += 1
-        
-        return True
+            event['hit'] = True
+            event['hit_player'] = target_player
+
+        event['moved'] = True
+        return event
 
     def enter_from_bar(self, player, point):
         """

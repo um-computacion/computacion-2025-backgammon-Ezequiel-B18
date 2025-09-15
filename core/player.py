@@ -47,19 +47,14 @@ class Player:
 
     def distribute_checkers(self, board):
         """
-        Distribute checkers to their starting positions on the board.
-        
-        Args:
-            board: The game board
+        Assign initial positions to this player's Checker objects based on the standard starting layout.
+        Important: this method no longer mutates board.points. Board.setup_starting_positions() should be
+        called by the orchestrator (Game) to initialize the board. This keeps Board as the single source of truth.
         """
         starting_positions = self.get_starting_positions()
         checker_index = 0
-        
+
         for point, count in starting_positions:
-            # Update board state
-            board.points[point] = (self.player_id, count)
-            
-            # Set position for each checker
             for i in range(count):
                 if checker_index < len(self.checkers):
                     self.checkers[checker_index].set_position(point)

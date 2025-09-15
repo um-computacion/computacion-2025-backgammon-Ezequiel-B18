@@ -46,6 +46,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Strict separation of responsibilities from other classes
 - Implemented comprehensive test suite for the Player class following TDD and SOLID principles
 
+- Game orchestrator class to coordinate Board, Dice and Player, with sync logic and core turn methods. (14/09/2025)
+- Unit tests for Game behaviors: initialization, setup/distribution, initial roll decision and start turn. (14/09/2025)
+
 ### Fixed
 - Resolved test failures in checker and board classes: (11/09/2025)
   - Fixed checker test to properly place checker in home board before bearing off
@@ -60,3 +63,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Updated Pylint analysis to scan all Python files in the project
   - Improved workflow scalability and maintainability
   - Enhanced code coverage and quality analysis across the entire codebase
+- Documented analysis of class responsibilities and identified potential clashes between Board, Player and Checker; recommended refactors to make Board the single source of truth and to simplify Player.distribute_checkers. (15/09/2025)
+- Enforced Board as single source of truth: added Board.setup_starting_positions() and made Board.move_checker return structured events; Player.distribute_checkers no longer mutates board.points; Game.setup_game now uses Board.setup_starting_positions() and Game.sync_checkers reconciles Checker objects. (15/09/2025)

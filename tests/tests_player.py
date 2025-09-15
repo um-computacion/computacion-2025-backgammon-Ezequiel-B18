@@ -1,5 +1,5 @@
 import unittest
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 from core.player import Player, PlayerColor
 from core.checker import CheckerColor, CheckerState
 

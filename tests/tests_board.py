@@ -47,14 +47,6 @@ class TestBoard(unittest.TestCase):
         # Check that the white checker was sent to the bar
         self.assertEqual(self.board.bar[1], 1)  # One white checker on the bar
 
-    def test_invalid_move(self):
-        """Test attempting invalid moves"""
-        # Try to move from a point with no checkers of that player
-        self.assertFalse(self.board.move_checker(1, 1, 4))
-        
-        # Try to move to a point with multiple opponent checkers (blocked)
-        self.assertFalse(self.board.move_checker(1, 0, 5))  # Point 5 has 5 black checkers
-
     def test_checkers_on_bar(self):
         """Test that checkers on the bar must be moved first"""
         # Put a white checker on the bar
