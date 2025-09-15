@@ -159,3 +159,77 @@ The Player class strictly avoids duplicating functionality from:
 - **Dice**: Dice rolling and move calculation remains in the Dice class
 
 Instead, Player serves as a coordinator for its collection of checkers and manages player-specific state like turns and move counts.
+
+## 2025-09-15 - Crear la clase Game que orquesta Board, Dice y Player
+
+### Prompt
+```
+Now we have to create the game class where all the logic from the other classes should be put together. Remember to follow TDD and the SOLID principles
+```
+
+### Response
+Se creó una nueva clase `Game` en `core/game.py` que:
+- Orquesta Board, Dice y Player respetando SRP (Game orquesta; Board/Dice/Player mantienen su propia lógica).
+- Proporciona métodos testables: setup_game, initial_roll_until_decided, start_turn, apply_move, switch_players, is_game_over, get_winner.
+- Incluye un método de sincronización (sync_checkers) que hace del Board la fuente de verdad y actualiza los objetos Checker de cada Player para mantener consistencia.
+- Se añadieron tests en `tests/tests_game.py` para:
+  - Verificar inicialización
+  - Verificar distribución de fichas en el tablero tras setup_game
+  - Verificar que initial_roll_until_decided elige correctamente el jugador inicial
+  - Verificar que start_turn establece los movimientos restantes a partir de los dados
+
+Principios aplicados:
+- SOLID: separación de responsabilidades y pequeña superficie de prueba.
+- TDD: se incluyen tests que cubren los métodos principales para guiar implementaciones futuras.
+
+## 2025-09-15 - Analysis: Do classes clash in responsibilities?
+
+### Prompt
+Tell me, do all classes handle different affairs or do they sometime clash with what they do?
+
+### Response (analysis & recommendations)
+Summary:
+- Overall separation is good: Dice (randomness), Board (board state & rules), Checker (piece state), Player (identity, checker collection, turn tracking), Game (orchestration).
+Found clashes / risks:
+1. Starting-position duplication
+   - Board.__init__ sets standard starting positions and Player.distribute_checkers also writes to board.points. This duplicates responsibility and can cause inconsistencies.
+2. Dual sources of truth for piece state
+   - Board.points is authoritative for occupancy, while Checker objects also keep position/state. Without strict sync (Game.sync_checkers), these can diverge.
+3. Overlapping state changes
+   - Board.bear_off updates home counts; Checker.bear_off updates checker.state. Both must be coordinated to avoid mismatched counts/states.
+4. Business-rule duplication
+   - Some movement logic exists in both Checker (calculate_new_position) and Board (is_valid_move). This is acceptable for helpers but can lead to duplicated rule updates.
+
+Recommendations (small, testable refactors following SOLID/TDD):
+- Make Board the single source of truth for board layout and moves. Only Board mutates points/bar/home.
+- Remove or simplify Player.distribute_checkers so it does not write board.points; instead use Board.setup_starting_positions() and let Game.sync_checkers update Checker objects.
+- Keep Checker as a lightweight DTO with helpers, avoid letting it enforce board-level rules.
+- Change Board methods to return structured events (e.g., {'moved': True, 'hit': True, 'borne_off': True}) so Game can update Player/Checker state deterministically.
+- Keep and simplify Game.sync_checkers to reconcile Checker objects from Board after each board mutation; add unit tests for sync logic.
+- Add tests that assert no divergence between Board state and Checker objects after moves.
+
+Impact:
+- Reduce inconsistency bugs, improve single responsibility, and make behavior easier to test and maintain.
+
+## 2025-09-15 - Apply refactors: Board single source of truth, Player.distribute_checkers no longer mutates Board
+
+### Prompt
+From your analysis and recommendation help me change what you've told me
+
+### Response
+Actions performed:
+1. Board.setup_starting_positions() added and used as the canonical initializer for starting layout. Board now exposes setup_starting_positions() and remains the single source of truth for points/bar/home.
+2. Board.move_checker() now returns a structured event dict (moved/hit/hit_player/borne_off) instead of only a boolean. This lets Game make deterministic updates and keep Player/Checker state synchronized.
+3. Player.distribute_checkers() no longer mutates board.points; it only assigns positions to Player.checkers. This prevents duplication of responsibility.
+4. Game.setup_game() now calls board.setup_starting_positions(), then calls Player.distribute_checkers() (for checkers' convenience) and then Game.sync_checkers() to reconcile Checker objects with Board.
+5. Game.apply_move() updated to work with the event returned by Board.move_checker and to rely on sync_checkers to reconcile states after each board mutation.
+
+Rationale:
+- Enforces Board as the single source of truth (SSoT) for board layout and moves.
+- Prevents conflicting writes to board.points by Player or other classes.
+- Keeps Game as orchestrator that reconciles domain objects after authoritative state changes.
+- Changes are small and testable, following TDD and SOLID principles.
+
+Tests:
+- Existing tests that assert player.checker positions (tests_player.test_distribute_checkers) continue to pass because distribute_checkers still assigns checker.position.
+- Game.setup_game tests continue to pass since Board.setup_starting_positions sets points and Game.sync_checkers reconciles checkers.
