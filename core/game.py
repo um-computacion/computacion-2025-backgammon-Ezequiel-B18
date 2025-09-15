@@ -3,13 +3,17 @@ from core.dice import Dice
 from core.player import Player, PlayerColor
 from core.checker import CheckerState
 
+
 class Game:
     """
     Orchestrator for a backgammon game.
     - Follows SOLID: Game orchestrates, Board/Dice/Player handle their own responsibilities.
     - Provides testable, small methods for TDD.
     """
-    def __init__(self, player1_name="White", player2_name="Black", test_bearing_off=False):
+
+    def __init__(
+        self, player1_name="White", player2_name="Black", test_bearing_off=False
+    ):
         self.board = Board(test_bearing_off=test_bearing_off)
         self.dice = Dice()
         self.player1 = Player(player1_name, PlayerColor.WHITE)
@@ -97,7 +101,9 @@ class Game:
     def start_turn(self):
         """Roll dice for the current player and start their turn (sets remaining moves)."""
         if self.current_player is None:
-            raise RuntimeError("Current player not set. Call initial_roll_until_decided() first.")
+            raise RuntimeError(
+                "Current player not set. Call initial_roll_until_decided() first."
+            )
         self.dice.roll()
         self.current_player.start_turn(self.dice)
 
@@ -111,7 +117,7 @@ class Game:
         pid = self.current_player.player_id
         event = self.board.move_checker(pid, from_point, to_point)
 
-        if not event.get('moved', False):
+        if not event.get("moved", False):
             return False
 
         # reduce player's remaining moves if possible

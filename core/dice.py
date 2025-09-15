@@ -6,6 +6,7 @@ class Dice:
     Represents a pair of dice used in a backgammon game.
     Handles regular rolls, doubles detection, and initial roll to determine the first player.
     """
+
     def __init__(self):
         """Initialize two dice with default values of [0, 0]"""
         self.values = [0, 0]
@@ -15,11 +16,11 @@ class Dice:
         """Roll both dice and store their values"""
         self.values = [random.randint(1, 6), random.randint(1, 6)]
         return self.values
-    
+
     def is_doubles(self):
         """Check if both dice show the same value"""
         return self.values[0] == self.values[1]
-    
+
     def get_moves(self):
         """
         Get the available moves based on dice values.
@@ -29,7 +30,7 @@ class Dice:
             # For doubles, return the value four times
             return [self.values[0]] * 4
         return self.values.copy()
-    
+
     def initial_roll(self):
         """
         Roll dice to determine who goes first.
@@ -38,11 +39,11 @@ class Dice:
         self.roll()
         self.initial_values = self.values.copy()
         return tuple(self.initial_values)
-    
+
     def is_initial_tie(self):
         """Check if the initial roll resulted in a tie"""
         return self.initial_values[0] == self.initial_values[1]
-    
+
     def get_highest_roller(self):
         """
         Get the player who rolled the highest value in the initial roll.
