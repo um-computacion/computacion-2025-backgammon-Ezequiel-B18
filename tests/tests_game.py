@@ -2,6 +2,8 @@ import unittest
 from unittest.mock import patch
 from core.game import Game
 from core.player import PlayerColor
+from core.checker import CheckerState
+
 
 class TestGame(unittest.TestCase):
     def test_game_initialization(self):
@@ -30,10 +32,12 @@ class TestGame(unittest.TestCase):
 
     def test_initial_roll_chooses_player(self):
         game = Game()
+
         # Patch dice.initial_roll to set initial_values and return non-tie
         def fake_initial_roll():
             game.dice.initial_values = [5, 2]
             return (5, 2)
+
         with patch.object(game.dice, "initial_roll", side_effect=fake_initial_roll):
             winner = game.initial_roll_until_decided()
             self.assertIn(winner, (1, 2))
@@ -50,6 +54,82 @@ class TestGame(unittest.TestCase):
                 game.start_turn()
                 self.assertTrue(game.player1.is_turn)
                 self.assertEqual(game.player1.remaining_moves, 2)
+
+    def test_initial_roll_repeats_on_tie_then_decides(self):
+        game = Game()
+
+        calls = [[3, 3], [4, 2]]  # first tie, then player1 wins
+
+        def fake_initial_roll():
+            vals = calls.pop(0)
+            game.dice.initial_values = vals
+            return tuple(vals)
+
+        with patch.object(game.dice, "initial_roll", side_effect=fake_initial_roll):
+            winner = game.initial_roll_until_decided()
+            self.assertEqual(winner, 1)
+            self.assertIs(game.current_player, game.player1)
+
+    def test_start_turn_without_current_player_raises(self):
+        game = Game()
+        with self.assertRaises(RuntimeError):
+            game.start_turn()
+
+    def test_apply_move_without_current_player_returns_false(self):
+        game = Game()
+        self.assertFalse(game.apply_move(0, 3))
+
+    def test_apply_move_event_not_moved_returns_false(self):
+        game = Game()
+        game.current_player = game.player1
+        # attempt invalid move (no checker at 1)
+        self.assertFalse(game.apply_move(1, 3))
+
+    def test_apply_move_hit_and_sync_updates_checkers(self):
+        game = Game()
+        # set up board so white will hit a single black on point 3
+        game.board.points[0] = (1, 1)
+        game.board.points[3] = (2, 1)
+        game.setup_game()  # sets board and syncs checkers
+        # ensure current player
+        game.current_player = game.player1
+        # apply move: white from 0 to 3 -> hit black
+        moved = game.apply_move(0, 3)
+        self.assertTrue(moved)
+        # board should reflect black on bar
+        self.assertEqual(game.board.bar[2], 1)
+        # player's checker objects should reflect that (one black on bar)
+        black_on_bar = len(game.player2.get_checkers_by_state(CheckerState.ON_BAR))
+        self.assertEqual(black_on_bar, 1)
+
+    def test_sync_checkers_reflects_bar_and_home(self):
+        """sync_checkers should map board.bar and board.home to Player.checkers states"""
+        game = Game()
+        # manipulate board: give white 2 borne off and put 1 black on bar
+        game.board.setup_starting_positions()
+        game.board.home[1] = 2
+        game.board.bar[2] = 1
+        # ensure some on-board distribution exists for both players
+        game.player1.distribute_checkers(game.board)
+        game.player2.distribute_checkers(game.board)
+        # reconcile
+        game.sync_checkers()
+        # white borne off count
+        self.assertEqual(len(game.player1.get_checkers_by_state(CheckerState.BORNE_OFF)), 2)
+        # black on bar count
+        self.assertEqual(len(game.player2.get_checkers_by_state(CheckerState.ON_BAR)), 1)
+
+    def test_get_winner_and_is_game_over(self):
+        """is_game_over and get_winner should reflect board.check_winner result"""
+        game = Game()
+        # no winner
+        self.assertFalse(game.is_game_over())
+        self.assertIsNone(game.get_winner())
+        # set a winner on board
+        game.board.home[1] = 15
+        self.assertTrue(game.is_game_over())
+        self.assertIs(game.get_winner(), game.player1)
+
 
 if __name__ == "__main__":
     unittest.main()
