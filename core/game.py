@@ -14,12 +14,28 @@ class Game:
     def __init__(
         self, player1_name="White", player2_name="Black", test_bearing_off=False
     ):
-        self.board = Board(test_bearing_off=test_bearing_off)
-        self.dice = Dice()
-        self.player1 = Player(player1_name, PlayerColor.WHITE)
-        self.player2 = Player(player2_name, PlayerColor.BLACK)
+        self._board = Board(test_bearing_off=test_bearing_off)
+        self._dice = Dice()
+        self._player1 = Player(player1_name, PlayerColor.WHITE)
+        self._player2 = Player(player2_name, PlayerColor.BLACK)
         self.current_player = None  # Will be set after initial roll
         self.other_player = None
+
+    @property
+    def board(self):
+        return self._board
+
+    @property
+    def dice(self):
+        return self._dice
+
+    @property
+    def player1(self):
+        return self._player1
+
+    @property
+    def player2(self):
+        return self._player2
 
     def setup_game(self):
         """Use Board as source of truth for starting positions and sync player checkers."""

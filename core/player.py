@@ -33,11 +33,16 @@ class Player:
         checker_color = (
             CheckerColor.WHITE if color == PlayerColor.WHITE else CheckerColor.BLACK
         )
-        self.checkers = [Checker(checker_color) for _ in range(15)]
+        self._checkers = [Checker(checker_color) for _ in range(15)]
 
         # Turn and move tracking
         self.is_turn = False
         self.remaining_moves = 0
+
+    @property
+    def checkers(self):
+        """Access to the player's list of checkers (element mutation allowed)."""
+        return self._checkers
 
     def get_starting_positions(self):
         """
@@ -61,7 +66,7 @@ class Player:
         checker_index = 0
 
         for point, count in starting_positions:
-            for i in range(count):
+            for _ in range(count):
                 if checker_index < len(self.checkers):
                     self.checkers[checker_index].set_position(point)
                     checker_index += 1
