@@ -1,3 +1,6 @@
+"""Board class for backgammon game."""
+
+
 class Board:
     """
     Represents a backgammon board.
@@ -9,7 +12,8 @@ class Board:
         Initialize the backgammon board with the standard starting position.
 
         Args:
-            test_bearing_off (bool): If True, set up a test position with all white checkers in home board
+            test_bearing_off (bool): If True, set up a test position with
+                                   all white checkers in home board
         """
         # Points are represented as tuples (player, count)
         # player: 0 = empty, 1 = white, 2 = black
@@ -126,7 +130,8 @@ class Board:
     def move_checker(self, player, from_point, to_point):
         """
         Move a checker and return a structured event describing what happened.
-        Returns dict: {'moved': bool, 'hit': bool, 'hit_player': int or None, 'borne_off': bool}
+        Returns dict: {'moved': bool, 'hit': bool, 'hit_player': int or None, 
+                      'borne_off': bool}
         """
         event = {"moved": False, "hit": False, "hit_player": None, "borne_off": False}
 
@@ -142,7 +147,7 @@ class Board:
 
         # Handle target point
         target_player, target_count = self.points[to_point]
-        if target_player == 0 or target_player == player:
+        if target_player in (0, player):
             # Empty point or same player, add checker
             self.points[to_point] = (player, target_count + 1)
         elif target_count == 1:
@@ -208,7 +213,7 @@ class Board:
 
         Returns:
             bool: True if all checkers are in the home board, False otherwise
-        """ 
+        """
         # Check if there are any checkers on the bar
         if self.bar[player] > 0:
             return False
@@ -279,7 +284,6 @@ class Board:
         """
         if self.home[1] == 15:
             return 1
-        elif self.home[2] == 15:
+        if self.home[2] == 15:
             return 2
-        else:
-            return 0
+        return 0

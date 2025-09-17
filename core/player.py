@@ -1,3 +1,4 @@
+"""Player class for backgammon game."""
 from enum import Enum, auto
 from core.checker import Checker, CheckerColor, CheckerState
 
@@ -53,14 +54,16 @@ class Player:
         """
         if self.color == PlayerColor.WHITE:
             return [(0, 2), (11, 5), (16, 3), (18, 5)]
-        else:  # BLACK
-            return [(23, 2), (12, 5), (7, 3), (5, 5)]
+        return [(23, 2), (12, 5), (7, 3), (5, 5)]
 
-    def distribute_checkers(self, board):
+    def distribute_checkers(self, _board):
         """
-        Assign initial positions to this player's Checker objects based on the standard starting layout.
-        Important: this method no longer mutates board.points. Board.setup_starting_positions() should be
-        called by the orchestrator (Game) to initialize the board. This keeps Board as the single source of truth.
+        Assign initial positions to this player's Checker objects based on the
+        standard starting layout.
+        Important: this method no longer mutates board.points.
+        Board.setup_starting_positions() should be called by the orchestrator
+        (Game) to initialize the board. This keeps Board as the single source
+        of truth.
         """
         starting_positions = self.get_starting_positions()
         checker_index = 0
@@ -149,7 +152,12 @@ class Player:
         borne_off = self.count_checkers_by_state(CheckerState.BORNE_OFF)
 
         turn_status = (
-            f"in turn ({self.remaining_moves} moves)" if self.is_turn else "not in turn"
+            f"in turn ({self.remaining_moves} moves)"
+            if self.is_turn
+            else "not in turn"
         )
 
-        return f"{self.name} ({self.color.name}): {on_board} on board, {on_bar} on bar, {borne_off} borne off, {turn_status}"
+        return (
+            f"{self.name} ({self.color.name}): {on_board} on board, "
+            f"{on_bar} on bar, {borne_off} borne off, {turn_status}"
+        )

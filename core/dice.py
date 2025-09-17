@@ -1,3 +1,4 @@
+"""Dice class for backgammon game."""
 import random
 
 
@@ -14,6 +15,7 @@ class Dice:
 
     @property
     def values(self):
+        """Get the current dice values."""
         return self._values
 
     def roll(self):
@@ -55,7 +57,6 @@ class Dice:
         """
         if self.initial_values[0] > self.initial_values[1]:
             return 1
-        elif self.initial_values[1] > self.initial_values[0]:
+        if self.initial_values[1] > self.initial_values[0]:
             return 2
-        else:
-            return 0
+        return 0
