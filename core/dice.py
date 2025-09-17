@@ -9,13 +9,17 @@ class Dice:
 
     def __init__(self):
         """Initialize two dice with default values of [0, 0]"""
-        self.values = [0, 0]
+        self._values = [0, 0]
         self.initial_values = [0, 0]
+
+    @property
+    def values(self):
+        return self._values
 
     def roll(self):
         """Roll both dice and store their values"""
-        self.values = [random.randint(1, 6), random.randint(1, 6)]
-        return self.values
+        self._values = [random.randint(1, 6), random.randint(1, 6)]
+        return self._values
 
     def is_doubles(self):
         """Check if both dice show the same value"""

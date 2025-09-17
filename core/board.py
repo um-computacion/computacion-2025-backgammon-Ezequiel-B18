@@ -14,30 +14,45 @@ class Board:
         # Points are represented as tuples (player, count)
         # player: 0 = empty, 1 = white, 2 = black
         # count: number of checkers at that point
-        self.points = [(0, 0) for _ in range(24)]
-        self.bar = {1: 0, 2: 0}
-        self.home = {1: 0, 2: 0}
+        self._points = [(0, 0) for _ in range(24)]
+        self._bar = {1: 0, 2: 0}
+        self._home = {1: 0, 2: 0}
 
         if test_bearing_off:
             # Special setup for bearing off tests
             # All white checkers in home board
-            self.points[18] = (1, 2)
-            self.points[19] = (1, 2)
-            self.points[20] = (1, 3)
-            self.points[21] = (1, 2)
-            self.points[22] = (1, 3)
-            self.points[23] = (1, 3)
+            self._points[18] = (1, 2)
+            self._points[19] = (1, 2)
+            self._points[20] = (1, 3)
+            self._points[21] = (1, 2)
+            self._points[22] = (1, 3)
+            self._points[23] = (1, 3)
 
             # All black checkers in their home board
-            self.points[0] = (2, 2)
-            self.points[1] = (2, 2)
-            self.points[2] = (2, 3)
-            self.points[3] = (2, 2)
-            self.points[4] = (2, 3)
-            self.points[5] = (2, 3)
+            self._points[0] = (2, 2)
+            self._points[1] = (2, 2)
+            self._points[2] = (2, 3)
+            self._points[3] = (2, 2)
+            self._points[4] = (2, 3)
+            self._points[5] = (2, 3)
         else:
             # Use the new helper to set standard starting positions
             self.setup_starting_positions()
+
+    @property
+    def points(self):
+        """View (mutable at element level) of board points (internal SSoT: _points)."""
+        return self._points
+
+    @property
+    def bar(self):
+        """Dictionary mapping player -> number of checkers on the bar."""
+        return self._bar
+
+    @property
+    def home(self):
+        """Dictionary mapping player -> number of checkers borne off (home)."""
+        return self._home
 
     def get_player_at_point(self, point):
         """
@@ -193,11 +208,7 @@ class Board:
 
         Returns:
             bool: True if all checkers are in the home board, False otherwise
-        """
-        # Home board is points 18-23 for white (player 1)
-        # Home board is points 0-5 for black (player 2)
-        home_board = range(18, 24) if player == 1 else range(0, 6)
-
+        """ 
         # Check if there are any checkers on the bar
         if self.bar[player] > 0:
             return False

@@ -31,7 +31,15 @@ class Checker:
         """
         self.color = color
         self.state = CheckerState.ON_BOARD
-        self.position = None
+        self._position = None
+
+    @property
+    def position(self):
+        return self._position
+
+    @position.setter
+    def position(self, value):
+        self._position = value
 
     def set_position(self, position):
         """
@@ -43,7 +51,7 @@ class Checker:
         if not (0 <= position <= 23):
             raise ValueError(f"Position must be between 0-23, got {position}")
 
-        self.position = position
+        self._position = position
         self.state = CheckerState.ON_BOARD
 
     def move_to_position(self, new_position):
@@ -56,7 +64,7 @@ class Checker:
         if not (0 <= new_position <= 23):
             raise ValueError(f"Position must be between 0-23, got {new_position}")
 
-        self.position = new_position
+        self._position = new_position
         self.state = CheckerState.ON_BOARD
 
     def calculate_new_position(self, dice_value):
@@ -74,18 +82,18 @@ class Checker:
         if self.state != CheckerState.ON_BOARD:
             raise ValueError("Cannot calculate new position: checker not on board")
 
-        if self.position is None:
+        if self._position is None:
             raise ValueError("Cannot calculate new position: no current position")
 
         if self.color == CheckerColor.WHITE:
-            return self.position + dice_value
+            return self._position + dice_value
         else:  # BLACK
-            return self.position - dice_value
+            return self._position - dice_value
 
     def send_to_bar(self):
         """Send this checker to the bar (after being hit)"""
         self.state = CheckerState.ON_BAR
-        self.position = None
+        self._position = None
 
     def enter_from_bar(self, position):
         """
@@ -111,7 +119,7 @@ class Checker:
                 f"{self.color.name} checkers must enter on points {valid_range}"
             )
 
-        self.position = position
+        self._position = position
         self.state = CheckerState.ON_BOARD
 
     def bear_off(self):
@@ -128,7 +136,7 @@ class Checker:
             raise ValueError("Cannot bear off: checker not in home board")
 
         self.state = CheckerState.BORNE_OFF
-        self.position = None
+        self._position = None
 
     def is_in_home_board(self):
         """
@@ -137,15 +145,15 @@ class Checker:
         Returns:
             bool: True if the checker is in its home board, False otherwise
         """
-        if self.state != CheckerState.ON_BOARD or self.position is None:
+        if self.state != CheckerState.ON_BOARD or self._position is None:
             return False
 
         # White home board is points 18-23
         if self.color == CheckerColor.WHITE:
-            return 18 <= self.position <= 23
+            return 18 <= self._position <= 23
 
         # Black home board is points 0-5
-        return 0 <= self.position <= 5
+        return 0 <= self._position <= 5
 
     def can_bear_off_with_value(self, dice_value):
         """
@@ -162,15 +170,15 @@ class Checker:
 
         # For white, calculate distance to bear off (24 - position)
         if self.color == CheckerColor.WHITE:
-            distance_to_bear_off = 24 - self.position
+            distance_to_bear_off = 24 - self._position
             return dice_value >= distance_to_bear_off
 
         # For black, position + 1 is the distance
-        return dice_value >= self.position + 1
+        return dice_value >= self._position + 1
 
     def __str__(self):
         """String representation of the checker"""
         color_name = "White" if self.color == CheckerColor.WHITE else "Black"
         state_name = self.state.name
-        pos_str = f"pos={self.position}"
+        pos_str = f"pos={self._position}"
         return f"{color_name}({state_name}, {pos_str})"

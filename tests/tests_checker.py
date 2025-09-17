@@ -232,8 +232,8 @@ class TestChecker(unittest.TestCase):
 
     def test_calculate_new_position_errors_when_no_position(self):
         c = Checker(CheckerColor.WHITE)
-        # state ON_BOARD but no position set
-        c.state = CheckerState.ON_BOARD
-        c.position = None
+        # state ON_BOARD but no position set - use send_to_bar then force back to ON_BOARD
+        c.send_to_bar()
+        c.state = CheckerState.ON_BOARD  # Force invalid state: ON_BOARD with None position
         with self.assertRaises(ValueError):
             c.calculate_new_position(2)
