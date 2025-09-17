@@ -1,8 +1,10 @@
+"""Tests for the Checker class."""
 import unittest
 from core.checker import Checker, CheckerColor, CheckerState
 
 
 class TestChecker(unittest.TestCase):
+    """Test cases for the Checker class."""
     def setUp(self):
         self.white_checker = Checker(CheckerColor.WHITE)
         self.black_checker = Checker(CheckerColor.BLACK)
@@ -211,6 +213,7 @@ class TestChecker(unittest.TestCase):
         self.assertEqual(str(self.white_checker), "White(BORNE_OFF, pos=None)")
 
     def test_set_position_invalid_raises(self):
+        """Test that set_position raises ValueError for invalid positions."""
         c = Checker(CheckerColor.WHITE)
         with self.assertRaises(ValueError):
             c.set_position(-1)
@@ -218,6 +221,7 @@ class TestChecker(unittest.TestCase):
             c.set_position(24)
 
     def test_move_to_position_invalid_raises(self):
+        """Test that move_to_position raises ValueError for invalid positions."""
         c = Checker(CheckerColor.BLACK)
         with self.assertRaises(ValueError):
             c.move_to_position(-5)
@@ -225,12 +229,14 @@ class TestChecker(unittest.TestCase):
             c.move_to_position(100)
 
     def test_calculate_new_position_errors_when_not_on_board(self):
+        """Test that calculate_new_position raises ValueError when checker not on board."""
         c = Checker(CheckerColor.WHITE)
         c.send_to_bar()
         with self.assertRaises(ValueError):
             c.calculate_new_position(3)
 
     def test_calculate_new_position_errors_when_no_position(self):
+        """Test that calculate_new_position raises ValueError when position is None."""
         c = Checker(CheckerColor.WHITE)
         # state ON_BOARD but no position set - use send_to_bar then force back to ON_BOARD
         c.send_to_bar()

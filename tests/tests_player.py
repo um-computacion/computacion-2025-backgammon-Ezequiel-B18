@@ -1,3 +1,4 @@
+"""Tests for the Player class."""
 import unittest
 from unittest.mock import Mock
 from core.player import Player, PlayerColor
@@ -5,6 +6,8 @@ from core.checker import CheckerColor, CheckerState
 
 
 class TestPlayer(unittest.TestCase):
+    """Test cases for the Player class."""
+
     def setUp(self):
         self.white_player = Player("Player 1", PlayerColor.WHITE)
         self.black_player = Player("Player 2", PlayerColor.BLACK)

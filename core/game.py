@@ -1,3 +1,4 @@
+"""Game orchestrator class for backgammon."""
 from core.board import Board
 from core.dice import Dice
 from core.player import Player, PlayerColor
@@ -23,18 +24,22 @@ class Game:
 
     @property
     def board(self):
+        """Get the game board."""
         return self._board
 
     @property
     def dice(self):
+        """Get the game dice."""
         return self._dice
 
     @property
     def player1(self):
+        """Get player 1."""
         return self._player1
 
     @property
     def player2(self):
+        """Get player 2."""
         return self._player2
 
     def setup_game(self):
@@ -49,58 +54,70 @@ class Game:
 
     def sync_checkers(self):
         """
-        Make Board the source of truth and update Player.checkers states accordingly.
-        Deterministic process:
-        1) Mark appropriate number of checkers as BORNE_OFF from the end of the list
+        Make Board the source of truth and update Player.checkers states
+        accordingly. Deterministic process:
+        1) Mark appropriate number of checkers as BORNE_OFF from the end
         2) Mark checkers on the BAR
-        3) Assign ON_BOARD positions from board.points in increasing point order
+        3) Assign ON_BOARD positions from board.points in increasing order
         """
         for player_obj, player_id in ((self.player1, 1), (self.player2, 2)):
-            # Reset positions and default state to ON_BOARD; we'll override BORNE_OFF/ON_BAR below
-            for c in player_obj.checkers:
-                c.position = None
-                c.state = CheckerState.ON_BOARD
+            self._reset_checker_states(player_obj)
+            self._assign_borne_off_checkers(player_obj, player_id)
+            self._assign_bar_checkers(player_obj, player_id)
+            self._assign_board_positions(player_obj, player_id)
 
-            # 1) BORNE_OFF: set last N checkers as borne off
-            borne_off_count = self.board.home.get(player_id, 0)
-            if borne_off_count > 0:
-                counter = borne_off_count
-                for c in reversed(player_obj.checkers):
-                    if counter == 0:
-                        break
-                    c.state = CheckerState.BORNE_OFF
-                    c.position = None
-                    counter -= 1
+    def _reset_checker_states(self, player_obj):
+        """Reset all checker positions and set default state to ON_BOARD."""
+        for checker in player_obj.checkers:
+            checker.position = None
+            checker.state = CheckerState.ON_BOARD
 
-            # 2) ON_BAR: set first available (non-borne-off) checkers to ON_BAR
-            bar_count = self.board.bar.get(player_id, 0)
-            if bar_count > 0:
-                counter = bar_count
-                for c in player_obj.checkers:
-                    if counter == 0:
-                        break
-                    if c.state == CheckerState.BORNE_OFF:
-                        continue
-                    c.state = CheckerState.ON_BAR
-                    c.position = None
-                    counter -= 1
+    def _assign_borne_off_checkers(self, player_obj, player_id):
+        """Set last N checkers as borne off."""
+        borne_off_count = self.board.home.get(player_id, 0)
+        if borne_off_count > 0:
+            counter = borne_off_count
+            for checker in reversed(player_obj.checkers):
+                if counter == 0:
+                    break
+                checker.state = CheckerState.BORNE_OFF
+                checker.position = None
+                counter -= 1
 
-            # 3) ON_BOARD: assign positions according to board.points counts
-            # Iterate points deterministically 0..23
-            for point_idx in range(24):
-                pt_player, pt_count = self.board.points[point_idx]
-                if pt_player != player_id or pt_count == 0:
+    def _assign_bar_checkers(self, player_obj, player_id):
+        """Set first available (non-borne-off) checkers to ON_BAR."""
+        bar_count = self.board.bar.get(player_id, 0)
+        if bar_count > 0:
+            counter = bar_count
+            for checker in player_obj.checkers:
+                if counter == 0:
+                    break
+                if checker.state == CheckerState.BORNE_OFF:
                     continue
-                need = pt_count
-                for c in player_obj.checkers:
-                    if need == 0:
-                        break
-                    if c.state == CheckerState.ON_BOARD and c.position is None:
-                        c.position = point_idx
-                        need -= 1
+                checker.state = CheckerState.ON_BAR
+                checker.position = None
+                counter -= 1
+
+    def _assign_board_positions(self, player_obj, player_id):
+        """Assign ON_BOARD positions according to board.points counts."""
+        for point_idx in range(24):
+            pt_player, pt_count = self.board.points[point_idx]
+            if pt_player != player_id or pt_count == 0:
+                continue
+            need = pt_count
+            for checker in player_obj.checkers:
+                if need == 0:
+                    break
+                if (checker.state == CheckerState.ON_BOARD and
+                        checker.position is None):
+                    checker.position = point_idx
+                    need -= 1
 
     def initial_roll_until_decided(self):
-        """Perform initial rolls until a non-tie decides who starts. Sets current_player and other_player."""
+        """
+        Perform initial rolls until a non-tie decides who starts.
+        Sets current_player and other_player.
+        """
         while True:
             self.dice.initial_roll()
             winner = self.dice.get_highest_roller()
@@ -108,14 +125,17 @@ class Game:
                 self.current_player = self.player1
                 self.other_player = self.player2
                 return 1
-            elif winner == 2:
+            if winner == 2:
                 self.current_player = self.player2
                 self.other_player = self.player1
                 return 2
             # else tie -> repeat
 
     def start_turn(self):
-        """Roll dice for the current player and start their turn (sets remaining moves)."""
+        """
+        Roll dice for the current player and start their turn
+        (sets remaining moves).
+        """
         if self.current_player is None:
             raise RuntimeError(
                 "Current player not set. Call initial_roll_until_decided() first."
@@ -125,7 +145,8 @@ class Game:
 
     def apply_move(self, from_point, to_point):
         """
-        Apply a move for the current player using the board. Accepts the event dict returned by board.move_checker.
+        Apply a move for the current player using the board.
+        Accepts the event dict returned by board.move_checker.
         Returns True if move succeeded, False otherwise.
         """
         if self.current_player is None:
@@ -138,10 +159,12 @@ class Game:
 
         # reduce player's remaining moves if possible
         self.current_player.use_move()
-        # If a hit occurred, Game could update player/checker states (we rely on sync_checkers to reconcile)
+        # If a hit occurred, Game could update player/checker states
+        # (we rely on sync_checkers to reconcile)
         self.sync_checkers()
 
-        # If a bear-off event is to be supported by Board later, handle 'borne_off' here.
+        # If a bear-off event is to be supported by Board later,
+        # handle 'borne_off' here.
         if self.current_player.remaining_moves <= 0:
             self.current_player.end_turn()
             self.switch_players()

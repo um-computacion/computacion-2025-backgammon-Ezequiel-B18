@@ -1,3 +1,4 @@
+"""Tests for the Game class."""
 import unittest
 from unittest.mock import patch
 from core.game import Game
@@ -6,7 +7,10 @@ from core.checker import CheckerState
 
 
 class TestGame(unittest.TestCase):
+    """Test cases for the Game class."""
+
     def test_game_initialization(self):
+        """Test that a new Game object is initialized correctly."""
         game = Game("Alice", "Bob")
         self.assertEqual(game.player1.name, "Alice")
         self.assertEqual(game.player2.name, "Bob")
@@ -16,6 +20,7 @@ class TestGame(unittest.TestCase):
         self.assertIsNotNone(game.dice)
 
     def test_setup_distribute_checkers(self):
+        """Test that setup_game properly distributes checkers."""
         game = Game("P1", "P2")
         game.setup_game()
         # Check that board has expected starting occupancy for some known points
@@ -31,6 +36,7 @@ class TestGame(unittest.TestCase):
         self.assertEqual(game.board.points[5][0], 2)
 
     def test_initial_roll_chooses_player(self):
+        """Test that initial roll correctly chooses the starting player."""
         game = Game()
 
         # Patch dice.initial_roll to set initial_values and return non-tie
@@ -46,6 +52,7 @@ class TestGame(unittest.TestCase):
             self.assertIs(game.current_player, game.player1)
 
     def test_start_turn_sets_moves(self):
+        """Test that start_turn properly sets remaining moves."""
         game = Game()
         game.current_player = game.player1
         # Mock dice.roll and get_moves
@@ -56,6 +63,7 @@ class TestGame(unittest.TestCase):
                 self.assertEqual(game.player1.remaining_moves, 2)
 
     def test_initial_roll_repeats_on_tie_then_decides(self):
+        """Test that initial roll repeats on tie then decides winner."""
         game = Game()
 
         calls = [[3, 3], [4, 2]]  # first tie, then player1 wins
@@ -71,21 +79,25 @@ class TestGame(unittest.TestCase):
             self.assertIs(game.current_player, game.player1)
 
     def test_start_turn_without_current_player_raises(self):
+        """Test that start_turn raises RuntimeError when no current player."""
         game = Game()
         with self.assertRaises(RuntimeError):
             game.start_turn()
 
     def test_apply_move_without_current_player_returns_false(self):
+        """Test that apply_move returns False when no current player."""
         game = Game()
         self.assertFalse(game.apply_move(0, 3))
 
     def test_apply_move_event_not_moved_returns_false(self):
+        """Test that apply_move returns False when move is invalid."""
         game = Game()
         game.current_player = game.player1
         # attempt invalid move (no checker at 1)
         self.assertFalse(game.apply_move(1, 3))
 
     def test_apply_move_hit_and_sync_updates_checkers(self):
+        """Test that apply_move handles hits and syncs checker states."""
         game = Game()
         # set up board so white will hit a single black on point 3
         game.board.points[0] = (1, 1)

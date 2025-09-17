@@ -1,8 +1,11 @@
+"""Tests for the Board class."""
 import unittest
 from core.board import Board
 
 
 class TestBoard(unittest.TestCase):
+    """Test cases for the Board class."""
+
     def setUp(self):
         self.board = Board()
 
@@ -150,12 +153,14 @@ class TestBoard(unittest.TestCase):
         self.assertTrue(self.board.all_checkers_in_home_board(2))
 
     def test_is_valid_move_blocked_by_bar(self):
+        """Test that moves are blocked when player has checkers on bar."""
         b = Board()
         b.bar[1] = 1
         # Even if source has checkers, bar presence blocks normal moves
         self.assertFalse(b.is_valid_move(1, 0, 3))
 
     def test_is_valid_move_source_missing_or_target_blocked(self):
+        """Test validation for missing source or blocked target."""
         b = Board()
         # source empty (point 1 is empty at start)
         self.assertFalse(b.is_valid_move(1, 1, 3))
@@ -166,6 +171,7 @@ class TestBoard(unittest.TestCase):
         self.assertFalse(b.is_valid_move(1, 0, 3))
 
     def test_move_checker_hits_opponent(self):
+        """Test that move_checker properly handles hitting opponent."""
         b = Board()
         # prepare: white at 0 (1 checker), black single at 3
         b.points[0] = (1, 1)
@@ -178,6 +184,7 @@ class TestBoard(unittest.TestCase):
         self.assertEqual(b.points[3][0], 1)
 
     def test_enter_from_bar_invalid_and_hit(self):
+        """Test enter_from_bar validation and hitting behavior."""
         b = Board()
         # no checker on bar -> can't enter
         self.assertFalse(b.enter_from_bar(1, 3))
@@ -190,12 +197,14 @@ class TestBoard(unittest.TestCase):
         self.assertEqual(b.bar[2], 1)
 
     def test_enter_from_bar_invalid_entry_point(self):
+        """Test that enter_from_bar validates entry points."""
         b = Board()
         b.bar[1] = 1
         # white cannot enter at point 10
         self.assertFalse(b.enter_from_bar(1, 10))
 
     def test_bear_off_requires_all_in_home_and_correct_point(self):
+        """Test bear_off preconditions and validation."""
         b = Board()
         # not all in home -> cannot bear off
         self.assertFalse(b.bear_off(1, 18))

@@ -1,9 +1,12 @@
+"""Tests for the Dice class."""
 import unittest
 from unittest.mock import patch
 from core.dice import Dice
 
 
 class TestDice(unittest.TestCase):
+    """Test cases for the Dice class."""
+
     def setUp(self):
         self.dice = Dice()
 

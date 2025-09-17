@@ -1,3 +1,4 @@
+"""Checker class for backgammon game."""
 from enum import Enum, auto
 
 
@@ -39,6 +40,7 @@ class Checker:
 
     @position.setter
     def position(self, value):
+        """Set the position of the checker."""
         self._position = value
 
     def set_position(self, position):
@@ -48,7 +50,7 @@ class Checker:
         Args:
             position (int): Point index (0-23) where the checker is placed
         """
-        if not (0 <= position <= 23):
+        if not 0 <= position <= 23:
             raise ValueError(f"Position must be between 0-23, got {position}")
 
         self._position = position
@@ -61,7 +63,7 @@ class Checker:
         Args:
             new_position (int): Target point index (0-23)
         """
-        if not (0 <= new_position <= 23):
+        if not 0 <= new_position <= 23:
             raise ValueError(f"Position must be between 0-23, got {new_position}")
 
         self._position = new_position
@@ -87,8 +89,7 @@ class Checker:
 
         if self.color == CheckerColor.WHITE:
             return self._position + dice_value
-        else:  # BLACK
-            return self._position - dice_value
+        return self._position - dice_value
 
     def send_to_bar(self):
         """Send this checker to the bar (after being hit)"""
