@@ -178,6 +178,11 @@ class Game:
         if self.is_game_over():
             raise GameAlreadyOverError("Cannot make moves when game is over")
 
+        if self.current_player.remaining_moves <= 0:
+            raise InvalidPlayerTurnError(
+                f"Player {self.current_player.name} has no remaining moves"
+            )
+
         pid = self.current_player.player_id
 
         try:
@@ -189,13 +194,9 @@ class Game:
         if not event.get("moved", False):
             return False
 
-        # reduce player's remaining moves - this may raise NoMovesRemainingError
-        try:
-            self.current_player.use_move()
-        except NoMovesRemainingError:
-            # This shouldn't happen due to our validation above, but handle it
-            raise InvalidPlayerTurnError(f"Player {self.current_player.name} has no remaining moves")
-
+        # reduce player's remaining moves
+        self.current_player.use_move()
+        
         # If a hit occurred, Game could update player/checker states
         # (we rely on sync_checkers to reconcile)
         self.sync_checkers()

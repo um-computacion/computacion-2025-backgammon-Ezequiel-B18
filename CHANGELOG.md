@@ -133,6 +133,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Established professional Python development standards and documentation practices
 
 ### Added - 2024-12-19
+
 - Created comprehensive exception system in `core/exceptions.py`
 - Added hierarchical custom exceptions following SOLID principles:
   - Base exceptions: `BackgammonError`, `GameError`, `BoardError`, `PlayerError`, `DiceError`, `CheckerError`
@@ -141,11 +142,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added game state validation to prevent operations on uninitialized or finished games
 
 ### Changed - 2024-12-19
+
 - Updated `Game` class to use custom exceptions instead of generic RuntimeError
 - Improved error messages with more context and specific error types
 - Added game initialization tracking for better state management
 
 ### Added - 2024-12-19
+
 - Implemented TDD-driven exception system across core classes
 - Added `InvalidPointError` with point validation in Board class methods
 - Added `InvalidCheckerPositionError` for Checker position validation
@@ -153,49 +156,95 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added comprehensive test cases for all new exception scenarios
 
 ### Changed - 2024-12-19
+
 - Refactored exceptions.py to follow TDD principles (only implementing needed exceptions)
 - Updated Checker class to use custom exceptions instead of generic ValueError
 - Enhanced Board class with point validation using custom exceptions
 - Improved error messages with contextual information and specific error attributes
 
 ### Fixed - 2024-12-19
+
 - Corrected exception hierarchy to avoid over-engineering unused exceptions
 - Applied SOLID principles properly by implementing exceptions incrementally based on actual needs
 
 ### Fixed - 2024-12-19
+
 - Moved all Game class tests from `test_game.py` to `tests_game.py` to follow consistent naming convention
 - Fixed syntax errors in `core/exceptions.py` that were causing import issues
 - Updated test initialization to properly call `game.setup_game()` before testing exception scenarios
 - Ensured all tests follow TDD principles with proper setup and teardown
 
 ### Added - 2024-12-19
+
 - Comprehensive exception handling tests in proper test file location
-- Consistent test file naming across the project (tests_*.py pattern)
+- Consistent test file naming across the project (tests\_\*.py pattern)
 - Enhanced test coverage for Game class exception scenarios
 
 ### Changed - 2024-12-19
+
 - Standardized test file naming convention to match existing pattern
 - Improved test reliability by ensuring proper game initialization
 - Enhanced exception test coverage following TDD methodology
 
 ### Fixed - 2024-12-19
+
 - Fixed syntax error in `core/exceptions.py` by removing duplicated class definition
 - Fixed duplicate return statement in `core/checker.py`
 - Updated failing test `test_apply_move_without_current_player_returns_false` to properly test exception behavior instead of return value
 - Corrected test logic to follow TDD principles with proper game initialization before testing exception scenarios
 
 ### Changed - 2024-12-19
+
 - Enhanced test reliability by ensuring proper exception testing patterns
 - Improved consistency between test expectations and actual implementation behavior
 - Updated tests to match the new exception-based error handling approach
 
 ### Fixed - 2024-12-19
+
 - Fixed failing dice initialization test by updating it to work with new DiceNotRolledError exception
-- Removed duplicate return statement in Checker.__str__ method
+- Removed duplicate return statement in Checker.**str** method
 - Added proper test coverage for NoMovesRemainingError in Player class
 - Enhanced exception testing to verify proper error messages and attributes
 
 ### Added - 2024-12-19
+
 - Added test for DiceNotRolledError to verify dice values cannot be accessed before rolling
 - Added test for NoMovesRemainingError to verify player move validation
 - Enhanced test coverage for all implemented custom exceptions
+
+### Fixed - 2024-12-19
+
+- Updated legacy `tests/test_game.py` to honor game initialization requirements and new exception flow before calling `start_turn` and `apply_move`.
+
+### Added - 2024-12-19
+- Implemented comprehensive CLI interface in `cli/cli.py` for playing Backgammon
+- Created `BackgammonCLI` class that orchestrates game flow using existing core classes
+- Added visual board display showing all 24 points, bar, and borne-off checkers
+- Implemented player turn management with dice rolling and move input
+- Added proper error handling for invalid moves and game states
+- Included game initialization with player name input and initial roll
+- Added game loop with win condition checking and turn switching
+- Followed SOLID principles with clear separation between CLI interaction and game logic
+- Used only built-in Python functions (no external libraries)
+- Prepared foundation for TDD testing of CLI components
+
+### Fixed - 2024-12-19
+- Corrected initial roll logic to follow standard backgammon rules where each player rolls one die separately instead of rolling two dice together
+- Updated `Dice.initial_roll()` to simulate separate rolls for each player
+- Modified `Dice.get_highest_roller()` to properly compare the two player rolls
+- Updated tests to reflect the corrected initial roll behavior
+- Ensured game initialization follows proper backgammon rules for determining first player
+
+### Fixed - 2024-12-19
+- Updated CLI to display individual player rolls during initial roll determination, clarifying that each player rolls separately according to standard backgammon rules
+
+### Added - 2024-12-19
+- Enhanced CLI interface with improved board display using Unicode box drawing characters for better visual appeal
+- Added comprehensive welcome message and game rules explanation at startup
+- Implemented detailed help system accessible during gameplay with 'h' command
+- Added clear instructions for move input with examples and validation feedback
+- Included visual indicators (emojis) for better user experience and clarity
+- Added display of available moves and remaining moves counter
+- Enhanced error messages with emoji indicators for better user feedback
+- Added special handling instructions for checkers on the bar
+- Improved game flow with better prompts and user guidance throughout the game
