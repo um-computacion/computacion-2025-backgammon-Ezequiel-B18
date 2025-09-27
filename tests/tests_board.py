@@ -1,6 +1,8 @@
 """Tests for the Board class."""
+
 import unittest
 from core.board import Board
+from core.exceptions import InvalidPointError
 
 
 class TestBoard(unittest.TestCase):
@@ -134,11 +136,36 @@ class TestBoard(unittest.TestCase):
         self.assertEqual(self.board.get_player_at_point(5), 2)  # Black at point 5
         self.assertEqual(self.board.get_player_at_point(1), 0)  # No checkers at point 1
 
+    def test_get_player_at_point_invalid_point_raises_error(self):
+        """Test that get_player_at_point raises InvalidPointError for invalid points."""
+        board = Board()
+
+        with self.assertRaises(InvalidPointError) as context:
+            board.get_player_at_point(-1)
+
+        self.assertEqual(context.exception.point, -1)
+        self.assertIn("Invalid point: -1", str(context.exception))
+
+        with self.assertRaises(InvalidPointError):
+            board.get_player_at_point(24)
+
     def test_get_checkers_count(self):
         """Test getting the number of checkers at a point"""
         self.assertEqual(self.board.get_checkers_count(0), 2)  # 2 checkers at point 0
         self.assertEqual(self.board.get_checkers_count(11), 5)  # 5 checkers at point 11
         self.assertEqual(self.board.get_checkers_count(1), 0)  # No checkers at point 1
+
+    def test_get_checkers_count_invalid_point_raises_error(self):
+        """Test that get_checkers_count raises InvalidPointError for invalid points."""
+        board = Board()
+
+        with self.assertRaises(InvalidPointError) as context:
+            board.get_checkers_count(25)
+
+        self.assertEqual(context.exception.point, 25)
+
+        with self.assertRaises(InvalidPointError):
+            board.get_checkers_count(-5)
 
     def test_all_checkers_in_home_board(self):
         """Test checking if all player's checkers are in their home board"""
@@ -256,3 +283,13 @@ class TestBoard(unittest.TestCase):
         else:
             self.assertEqual(b.points[0], (2, expected_count))
         self.assertEqual(b.home[2], prev_home_black + 1)
+
+    def test_is_valid_move_invalid_points_raise_error(self):
+        """Test that is_valid_move raises InvalidPointError for invalid point indices."""
+        board = Board()
+
+        with self.assertRaises(InvalidPointError):
+            board.is_valid_move(1, -1, 5)
+
+        with self.assertRaises(InvalidPointError):
+            board.is_valid_move(1, 0, 24)

@@ -1,7 +1,9 @@
 """Tests for the Dice class."""
+
 import unittest
 from unittest.mock import patch
 from core.dice import Dice
+from core.exceptions import DiceNotRolledError
 
 
 class TestDice(unittest.TestCase):
@@ -13,8 +15,22 @@ class TestDice(unittest.TestCase):
     def test_dice_initialization(self):
         """Test that a new Dice object is initialized correctly"""
         self.assertIsNotNone(self.dice)
-        self.assertEqual(len(self.dice.values), 2)
-        self.assertTrue(all(value == 0 for value in self.dice.values))
+
+        # Test that accessing values before rolling raises exception
+        with self.assertRaises(DiceNotRolledError):
+            _ = self.dice.values
+
+        # Test that initial_values are properly initialized
+        self.assertEqual(self.dice.initial_values, [0, 0])
+
+    def test_dice_not_rolled_error(self):
+        """Test that accessing dice values before rolling raises DiceNotRolledError"""
+        dice = Dice()
+
+        with self.assertRaises(DiceNotRolledError) as context:
+            _ = dice.values
+
+        self.assertIn("Dice must be rolled before accessing values", str(context.exception))
 
     def test_roll_values_range(self):
         """Test that dice roll values are between 1 and 6"""

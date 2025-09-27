@@ -1,5 +1,7 @@
 """Board class for backgammon game."""
 
+from core.exceptions import InvalidPointError
+
 
 class Board:
     """
@@ -68,6 +70,8 @@ class Board:
         Returns:
             int: Player number (0 if empty, 1 for white, 2 for black)
         """
+        if not 0 <= point <= 23:
+            raise InvalidPointError(point)
         return self.points[point][0]
 
     def get_checkers_count(self, point):
@@ -80,6 +84,8 @@ class Board:
         Returns:
             int: Number of checkers at the point
         """
+        if not 0 <= point <= 23:
+            raise InvalidPointError(point)
         return self.points[point][1]
 
     def is_valid_move(self, player, from_point, to_point):
@@ -94,6 +100,12 @@ class Board:
         Returns:
             bool: True if the move is valid, False otherwise
         """
+        # Validate point indices
+        if not 0 <= from_point <= 23:
+            raise InvalidPointError(from_point)
+        if not 0 <= to_point <= 23:
+            raise InvalidPointError(to_point)
+
         # Check if there are checkers on the bar that must be entered first
         if self.bar[player] > 0:
             return False
@@ -130,13 +142,17 @@ class Board:
     def move_checker(self, player, from_point, to_point):
         """
         Move a checker and return a structured event describing what happened.
-        Returns dict: {'moved': bool, 'hit': bool, 'hit_player': int or None, 
+        Returns dict: {'moved': bool, 'hit': bool, 'hit_player': int or None,
                       'borne_off': bool}
         """
         event = {"moved": False, "hit": False, "hit_player": None, "borne_off": False}
 
-        if not self.is_valid_move(player, from_point, to_point):
-            return event
+        try:
+            if not self.is_valid_move(player, from_point, to_point):
+                return event
+        except InvalidPointError:
+            # Re-raise point errors to be caught by Game
+            raise
 
         # Remove checker from source point
         source_player, source_count = self.points[from_point]

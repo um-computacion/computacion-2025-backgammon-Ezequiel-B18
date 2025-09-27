@@ -131,3 +131,71 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Maintained encapsulation improvements while ensuring all property access works correctly
   - Enhanced code maintainability and readability across entire codebase
   - Established professional Python development standards and documentation practices
+
+### Added - 2024-12-19
+- Created comprehensive exception system in `core/exceptions.py`
+- Added hierarchical custom exceptions following SOLID principles:
+  - Base exceptions: `BackgammonError`, `GameError`, `BoardError`, `PlayerError`, `DiceError`, `CheckerError`
+  - Specific exceptions for each domain with detailed error messages and context
+- Enhanced error handling in `Game` class with proper exception usage
+- Added game state validation to prevent operations on uninitialized or finished games
+
+### Changed - 2024-12-19
+- Updated `Game` class to use custom exceptions instead of generic RuntimeError
+- Improved error messages with more context and specific error types
+- Added game initialization tracking for better state management
+
+### Added - 2024-12-19
+- Implemented TDD-driven exception system across core classes
+- Added `InvalidPointError` with point validation in Board class methods
+- Added `InvalidCheckerPositionError` for Checker position validation
+- Enhanced existing Game class exception handling with proper validation
+- Added comprehensive test cases for all new exception scenarios
+
+### Changed - 2024-12-19
+- Refactored exceptions.py to follow TDD principles (only implementing needed exceptions)
+- Updated Checker class to use custom exceptions instead of generic ValueError
+- Enhanced Board class with point validation using custom exceptions
+- Improved error messages with contextual information and specific error attributes
+
+### Fixed - 2024-12-19
+- Corrected exception hierarchy to avoid over-engineering unused exceptions
+- Applied SOLID principles properly by implementing exceptions incrementally based on actual needs
+
+### Fixed - 2024-12-19
+- Moved all Game class tests from `test_game.py` to `tests_game.py` to follow consistent naming convention
+- Fixed syntax errors in `core/exceptions.py` that were causing import issues
+- Updated test initialization to properly call `game.setup_game()` before testing exception scenarios
+- Ensured all tests follow TDD principles with proper setup and teardown
+
+### Added - 2024-12-19
+- Comprehensive exception handling tests in proper test file location
+- Consistent test file naming across the project (tests_*.py pattern)
+- Enhanced test coverage for Game class exception scenarios
+
+### Changed - 2024-12-19
+- Standardized test file naming convention to match existing pattern
+- Improved test reliability by ensuring proper game initialization
+- Enhanced exception test coverage following TDD methodology
+
+### Fixed - 2024-12-19
+- Fixed syntax error in `core/exceptions.py` by removing duplicated class definition
+- Fixed duplicate return statement in `core/checker.py`
+- Updated failing test `test_apply_move_without_current_player_returns_false` to properly test exception behavior instead of return value
+- Corrected test logic to follow TDD principles with proper game initialization before testing exception scenarios
+
+### Changed - 2024-12-19
+- Enhanced test reliability by ensuring proper exception testing patterns
+- Improved consistency between test expectations and actual implementation behavior
+- Updated tests to match the new exception-based error handling approach
+
+### Fixed - 2024-12-19
+- Fixed failing dice initialization test by updating it to work with new DiceNotRolledError exception
+- Removed duplicate return statement in Checker.__str__ method
+- Added proper test coverage for NoMovesRemainingError in Player class
+- Enhanced exception testing to verify proper error messages and attributes
+
+### Added - 2024-12-19
+- Added test for DiceNotRolledError to verify dice values cannot be accessed before rolling
+- Added test for NoMovesRemainingError to verify player move validation
+- Enhanced test coverage for all implemented custom exceptions

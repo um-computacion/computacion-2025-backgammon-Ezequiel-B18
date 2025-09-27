@@ -407,4 +407,60 @@ Implemented comprehensive Pylint compliance improvements across the entire codeb
 - Reduced cognitive complexity while maintaining functionality
 - Prepared foundation for future enhancements with clean, well-documented code
 
-The changes demonstrate professional Python development practices and establish a strong foundation for continued development following industry standards.
+## Prompt: Exception System Implementation
+**Date:** 2024-12-19
+**User Request:** How can we add exceptions to every class? Do we make a new folder inside src with exceptions.py? And then implement them inside every class, right?
+
+### GitHub Copilot Response:
+Implemented a comprehensive exception system following SOLID principles and TDD methodology:
+
+1. **Created `core/exceptions.py`** - Centralized exception definitions with hierarchical structure
+2. **Designed exception hierarchy** - Base exceptions for each domain (Game, Board, Player, Dice, Checker) with specific subclasses
+3. **Enhanced Game class** - Added proper exception handling with game state validation
+4. **Following SOLID principles** - Single Responsibility (exceptions module), Open/Closed (extensible hierarchy)
+5. **TDD-ready** - Exceptions provide clear, testable error conditions with detailed context
+
+### Implementation Details:
+- Base `BackgammonError` exception for all game-related errors
+- Domain-specific base exceptions (GameError, BoardError, etc.)
+- Specific exceptions with context (InvalidMoveError with from/to points, PointOccupiedError with occupying player)
+- Game state validation to prevent operations on uninitialized/finished games
+- Enhanced error messages for better debugging and user experience
+
+### Benefits:
+- Clear error hierarchy for different types of failures
+- Better debugging with specific exception types and context
+- Testable error conditions for TDD
+- Centralized exception management following SOLID principles
+- Improved game state management and validation
+
+## Prompt: Add exceptions to existing files and tests
+**Date:** 2024-12-19
+**User Request:** Add the exceptions to these existing files and tests
+
+### GitHub Copilot Response:
+Following TDD methodology and SOLID principles, implemented exception handling in existing classes:
+
+#### TDD Approach Applied:
+1. **Red Phase**: Created failing tests for exception scenarios first
+2. **Green Phase**: Added minimal exception handling to make tests pass
+3. **Refactor Phase**: Cleaned up exceptions.py to remove unused exceptions
+
+#### SOLID Principles Applied:
+- **Single Responsibility**: Each exception has a specific purpose and context
+- **Open/Closed**: Exception hierarchy allows extension without modification
+- **Interface Segregation**: Only implemented exceptions that are actually used
+- **Dependency Inversion**: Classes depend on exception abstractions, not concrete implementations
+
+#### Implementation Details:
+1. **Refactored exceptions.py** - Removed over-engineered exceptions, kept only what's needed
+2. **Enhanced Board class** - Added point validation with `InvalidPointError`
+3. **Updated Checker class** - Replaced ValueError with `InvalidCheckerPositionError`
+4. **Comprehensive test coverage** - Added tests for all exception scenarios
+
+#### Benefits:
+- Follows TDD Red-Green-Refactor cycle
+- Avoids YAGNI violations by implementing only needed exceptions
+- Provides clear, testable error conditions
+- Maintains clean exception hierarchy
+- Offers better debugging with contextual error information

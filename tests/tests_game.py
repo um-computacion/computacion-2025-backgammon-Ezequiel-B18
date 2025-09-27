@@ -1,9 +1,16 @@
 """Tests for the Game class."""
+
 import unittest
 from unittest.mock import patch
 from core.game import Game
 from core.player import PlayerColor
 from core.checker import CheckerState
+from core.exceptions import (
+    GameNotInitializedError,
+    InvalidPlayerTurnError,
+    GameAlreadyOverError,
+    InvalidMoveError,
+)
 
 
 class TestGame(unittest.TestCase):
@@ -54,6 +61,7 @@ class TestGame(unittest.TestCase):
     def test_start_turn_sets_moves(self):
         """Test that start_turn properly sets remaining moves."""
         game = Game()
+        game.setup_game()  # Initialize game first
         game.current_player = game.player1
         # Mock dice.roll and get_moves
         with patch.object(game.dice, "roll", return_value=(3, 4)):
@@ -79,20 +87,29 @@ class TestGame(unittest.TestCase):
             self.assertIs(game.current_player, game.player1)
 
     def test_start_turn_without_current_player_raises(self):
-        """Test that start_turn raises RuntimeError when no current player."""
+        """Test that start_turn raises GameNotInitializedError when no current player."""
         game = Game()
-        with self.assertRaises(RuntimeError):
+        game.setup_game()  # Initialize but don't set current player
+        with self.assertRaises(GameNotInitializedError):
             game.start_turn()
 
     def test_apply_move_without_current_player_returns_false(self):
-        """Test that apply_move returns False when no current player."""
+        """Test that apply_move raises InvalidPlayerTurnError when no current player after initialization."""
         game = Game()
-        self.assertFalse(game.apply_move(0, 3))
+        game.setup_game()  # Initialize the game first
+        # Don't set current_player - this should raise InvalidPlayerTurnError
+
+        with self.assertRaises(InvalidPlayerTurnError) as context:
+            game.apply_move(0, 3)
+
+        self.assertIn("No current player set", str(context.exception))
 
     def test_apply_move_event_not_moved_returns_false(self):
         """Test that apply_move returns False when move is invalid."""
         game = Game()
+        game.setup_game()
         game.current_player = game.player1
+        game.current_player.remaining_moves = 1
         # attempt invalid move (no checker at 1)
         self.assertFalse(game.apply_move(1, 3))
 
@@ -105,6 +122,7 @@ class TestGame(unittest.TestCase):
         game.setup_game()  # sets board and syncs checkers
         # ensure current player
         game.current_player = game.player1
+        game.current_player.remaining_moves = 1
         # apply move: white from 0 to 3 -> hit black
         moved = game.apply_move(0, 3)
         self.assertTrue(moved)
@@ -127,9 +145,13 @@ class TestGame(unittest.TestCase):
         # reconcile
         game.sync_checkers()
         # white borne off count
-        self.assertEqual(len(game.player1.get_checkers_by_state(CheckerState.BORNE_OFF)), 2)
+        self.assertEqual(
+            len(game.player1.get_checkers_by_state(CheckerState.BORNE_OFF)), 2
+        )
         # black on bar count
-        self.assertEqual(len(game.player2.get_checkers_by_state(CheckerState.ON_BAR)), 1)
+        self.assertEqual(
+            len(game.player2.get_checkers_by_state(CheckerState.ON_BAR)), 1
+        )
 
     def test_get_winner_and_is_game_over(self):
         """is_game_over and get_winner should reflect board.check_winner result"""
@@ -141,6 +163,88 @@ class TestGame(unittest.TestCase):
         game.board.home[1] = 15
         self.assertTrue(game.is_game_over())
         self.assertIs(game.get_winner(), game.player1)
+
+    def test_start_turn_without_initialization_raises_error(self):
+        """Test that start_turn raises GameNotInitializedError when game not initialized."""
+        game = Game()
+        game.current_player = game.player1  # Set player but don't initialize game
+
+        with self.assertRaises(GameNotInitializedError) as context:
+            game.start_turn()
+
+        self.assertIn("initialized before starting turns", str(context.exception))
+
+    def test_start_turn_when_game_over_raises_error(self):
+        """Test that start_turn raises GameAlreadyOverError when game is over."""
+        game = Game()
+        game.setup_game()
+        game.current_player = game.player1
+
+        # Force game over condition
+        game.board.home[1] = 15
+
+        with self.assertRaises(GameAlreadyOverError) as context:
+            game.start_turn()
+
+        self.assertIn("game is over", str(context.exception))
+
+    def test_apply_move_without_initialization_raises_error(self):
+        """Test that apply_move raises GameNotInitializedError when game not initialized."""
+        game = Game()
+        game.current_player = game.player1
+
+        with self.assertRaises(GameNotInitializedError) as context:
+            game.apply_move(0, 3)
+
+        self.assertIn("initialized before making moves", str(context.exception))
+
+    def test_apply_move_without_current_player_raises_error(self):
+        """Test that apply_move raises InvalidPlayerTurnError when no current player."""
+        game = Game()
+        game.setup_game()
+        # Don't set current_player
+
+        with self.assertRaises(InvalidPlayerTurnError) as context:
+            game.apply_move(0, 3)
+
+        self.assertIn("No current player set", str(context.exception))
+
+    def test_apply_move_when_game_over_raises_error(self):
+        """Test that apply_move raises GameAlreadyOverError when game is over."""
+        game = Game()
+        game.setup_game()
+        game.current_player = game.player1
+
+        # Force game over condition
+        game.board.home[1] = 15
+
+        with self.assertRaises(GameAlreadyOverError) as context:
+            game.apply_move(0, 3)
+
+        self.assertIn("game is over", str(context.exception))
+
+    def test_apply_move_without_remaining_moves_raises_error(self):
+        """Test that apply_move raises InvalidPlayerTurnError when no moves remaining."""
+        game = Game()
+        game.setup_game()
+        game.current_player = game.player1
+        game.current_player.remaining_moves = 0
+
+        with self.assertRaises(InvalidPlayerTurnError) as context:
+            game.apply_move(0, 3)
+
+        self.assertIn("has no remaining moves", str(context.exception))
+
+    def test_switch_players_without_initialization_raises_error(self):
+        """Test that switch_players raises GameNotInitializedError when game not initialized."""
+        game = Game()
+        game.current_player = game.player1
+        game.other_player = game.player2
+
+        with self.assertRaises(GameNotInitializedError) as context:
+            game.switch_players()
+
+        self.assertIn("initialized before switching players", str(context.exception))
 
 
 if __name__ == "__main__":

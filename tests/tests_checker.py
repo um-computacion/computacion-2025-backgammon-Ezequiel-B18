@@ -1,10 +1,13 @@
 """Tests for the Checker class."""
+
 import unittest
 from core.checker import Checker, CheckerColor, CheckerState
+from core.exceptions import InvalidCheckerPositionError
 
 
 class TestChecker(unittest.TestCase):
     """Test cases for the Checker class."""
+
     def setUp(self):
         self.white_checker = Checker(CheckerColor.WHITE)
         self.black_checker = Checker(CheckerColor.BLACK)
@@ -102,7 +105,7 @@ class TestChecker(unittest.TestCase):
         self.white_checker.send_to_bar()
 
         # Try to enter at invalid position (valid white entry points are 0-5)
-        with self.assertRaises(ValueError):
+        with self.assertRaises(InvalidCheckerPositionError):
             self.white_checker.enter_from_bar(6)
 
         # Ensure state hasn't changed
@@ -112,7 +115,7 @@ class TestChecker(unittest.TestCase):
         # Same for black (valid black entry points are 18-23)
         self.black_checker.send_to_bar()
 
-        with self.assertRaises(ValueError):
+        with self.assertRaises(InvalidCheckerPositionError):
             self.black_checker.enter_from_bar(17)
 
         self.assertEqual(self.black_checker.state, CheckerState.ON_BAR)
@@ -213,19 +216,19 @@ class TestChecker(unittest.TestCase):
         self.assertEqual(str(self.white_checker), "White(BORNE_OFF, pos=None)")
 
     def test_set_position_invalid_raises(self):
-        """Test that set_position raises ValueError for invalid positions."""
+        """Test that set_position raises InvalidCheckerPositionError for invalid positions."""
         c = Checker(CheckerColor.WHITE)
-        with self.assertRaises(ValueError):
+        with self.assertRaises(InvalidCheckerPositionError):
             c.set_position(-1)
-        with self.assertRaises(ValueError):
+        with self.assertRaises(InvalidCheckerPositionError):
             c.set_position(24)
 
     def test_move_to_position_invalid_raises(self):
-        """Test that move_to_position raises ValueError for invalid positions."""
+        """Test that move_to_position raises InvalidCheckerPositionError for invalid positions."""
         c = Checker(CheckerColor.BLACK)
-        with self.assertRaises(ValueError):
+        with self.assertRaises(InvalidCheckerPositionError):
             c.move_to_position(-5)
-        with self.assertRaises(ValueError):
+        with self.assertRaises(InvalidCheckerPositionError):
             c.move_to_position(100)
 
     def test_calculate_new_position_errors_when_not_on_board(self):
@@ -240,6 +243,55 @@ class TestChecker(unittest.TestCase):
         c = Checker(CheckerColor.WHITE)
         # state ON_BOARD but no position set - use send_to_bar then force back to ON_BOARD
         c.send_to_bar()
-        c.state = CheckerState.ON_BOARD  # Force invalid state: ON_BOARD with None position
+        c.state = (
+            CheckerState.ON_BOARD
+        )  # Force invalid state: ON_BOARD with None position
         with self.assertRaises(ValueError):
             c.calculate_new_position(2)
+
+    def test_set_position_invalid_raises_custom_error(self):
+        """Test that set_position raises InvalidCheckerPositionError for invalid positions."""
+        c = Checker(CheckerColor.WHITE)
+
+        with self.assertRaises(InvalidCheckerPositionError) as context:
+            c.set_position(-1)
+
+        self.assertEqual(context.exception.position, -1)
+        self.assertIn("Position must be between 0-23", str(context.exception))
+
+        with self.assertRaises(InvalidCheckerPositionError):
+            c.set_position(24)
+
+    def test_move_to_position_invalid_raises_custom_error(self):
+        """Test that move_to_position raises InvalidCheckerPositionError for invalid positions."""
+        c = Checker(CheckerColor.BLACK)
+
+        with self.assertRaises(InvalidCheckerPositionError) as context:
+            c.move_to_position(-5)
+
+        self.assertEqual(context.exception.position, -5)
+
+        with self.assertRaises(InvalidCheckerPositionError):
+            c.move_to_position(100)
+
+    def test_enter_from_bar_invalid_position_raises_custom_error(self):
+        """Test that entering from bar with invalid position raises InvalidCheckerPositionError."""
+        # Setup checker on bar
+        self.white_checker.send_to_bar()
+
+        # Try to enter at invalid position for white (valid range is 0-5)
+        with self.assertRaises(InvalidCheckerPositionError) as context:
+            self.white_checker.enter_from_bar(6)
+
+        self.assertEqual(context.exception.position, 6)
+        self.assertEqual(context.exception.valid_range, "0-5")
+        self.assertIn("Position must be between 0-5", str(context.exception))
+
+        # Same for black (valid range is 18-23)
+        self.black_checker.send_to_bar()
+
+        with self.assertRaises(InvalidCheckerPositionError) as context:
+            self.black_checker.enter_from_bar(17)
+
+        self.assertEqual(context.exception.position, 17)
+        self.assertEqual(context.exception.valid_range, "18-23")

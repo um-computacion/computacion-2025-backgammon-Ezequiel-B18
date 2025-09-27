@@ -1,6 +1,8 @@
 """Player class for backgammon game."""
+
 from enum import Enum, auto
 from core.checker import Checker, CheckerColor, CheckerState
+from core.exceptions import NoMovesRemainingError
 
 
 class PlayerColor(Enum):
@@ -98,7 +100,7 @@ class Player:
             bool: True if successful, False if no moves remaining
         """
         if self.remaining_moves <= 0:
-            return False
+            raise NoMovesRemainingError(self.name)
 
         self.remaining_moves -= 1
         return True
@@ -152,9 +154,7 @@ class Player:
         borne_off = self.count_checkers_by_state(CheckerState.BORNE_OFF)
 
         turn_status = (
-            f"in turn ({self.remaining_moves} moves)"
-            if self.is_turn
-            else "not in turn"
+            f"in turn ({self.remaining_moves} moves)" if self.is_turn else "not in turn"
         )
 
         return (

@@ -1,8 +1,16 @@
 """Game orchestrator class for backgammon."""
+
 from core.board import Board
 from core.dice import Dice
 from core.player import Player, PlayerColor
 from core.checker import CheckerState
+from core.exceptions import (
+    GameNotInitializedError,
+    InvalidPlayerTurnError,
+    GameAlreadyOverError,
+    InvalidMoveError,
+    NoMovesRemainingError
+)
 
 
 class Game:
@@ -21,6 +29,7 @@ class Game:
         self._player2 = Player(player2_name, PlayerColor.BLACK)
         self.current_player = None  # Will be set after initial roll
         self.other_player = None
+        self._game_initialized = False
 
     @property
     def board(self):
@@ -51,6 +60,7 @@ class Game:
         self.player2.distribute_checkers(self.board)
         # Game reconciles Checker objects to match Board
         self.sync_checkers()
+        self._game_initialized = True
 
     def sync_checkers(self):
         """
@@ -108,8 +118,7 @@ class Game:
             for checker in player_obj.checkers:
                 if need == 0:
                     break
-                if (checker.state == CheckerState.ON_BOARD and
-                        checker.position is None):
+                if checker.state == CheckerState.ON_BOARD and checker.position is None:
                     checker.position = point_idx
                     need -= 1
 
@@ -136,10 +145,19 @@ class Game:
         Roll dice for the current player and start their turn
         (sets remaining moves).
         """
+        if not self._game_initialized:
+            raise GameNotInitializedError(
+                "Game must be initialized before starting turns"
+            )
+
         if self.current_player is None:
-            raise RuntimeError(
+            raise GameNotInitializedError(
                 "Current player not set. Call initial_roll_until_decided() first."
             )
+
+        if self.is_game_over():
+            raise GameAlreadyOverError("Cannot start turn when game is over")
+
         self.dice.roll()
         self.current_player.start_turn(self.dice)
 
@@ -149,16 +167,35 @@ class Game:
         Accepts the event dict returned by board.move_checker.
         Returns True if move succeeded, False otherwise.
         """
+        if not self._game_initialized:
+            raise GameNotInitializedError(
+                "Game must be initialized before making moves"
+            )
+
         if self.current_player is None:
-            return False
+            raise InvalidPlayerTurnError("No current player set")
+
+        if self.is_game_over():
+            raise GameAlreadyOverError("Cannot make moves when game is over")
+
         pid = self.current_player.player_id
-        event = self.board.move_checker(pid, from_point, to_point)
+
+        try:
+            event = self.board.move_checker(pid, from_point, to_point)
+        except Exception as e:
+            # Re-raise board exceptions as InvalidMoveError for game context
+            raise InvalidMoveError(from_point, to_point, str(e)) from e
 
         if not event.get("moved", False):
             return False
 
-        # reduce player's remaining moves if possible
-        self.current_player.use_move()
+        # reduce player's remaining moves - this may raise NoMovesRemainingError
+        try:
+            self.current_player.use_move()
+        except NoMovesRemainingError:
+            # This shouldn't happen due to our validation above, but handle it
+            raise InvalidPlayerTurnError(f"Player {self.current_player.name} has no remaining moves")
+
         # If a hit occurred, Game could update player/checker states
         # (we rely on sync_checkers to reconcile)
         self.sync_checkers()
@@ -173,6 +210,11 @@ class Game:
 
     def switch_players(self):
         """Switch current and other players."""
+        if not self._game_initialized:
+            raise GameNotInitializedError(
+                "Game must be initialized before switching players"
+            )
+
         self.current_player, self.other_player = self.other_player, self.current_player
 
     def is_game_over(self):
