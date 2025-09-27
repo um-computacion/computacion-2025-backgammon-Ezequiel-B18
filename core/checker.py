@@ -1,5 +1,7 @@
 """Checker class for backgammon game."""
+
 from enum import Enum, auto
+from core.exceptions import InvalidCheckerPositionError
 
 
 class CheckerColor(Enum):
@@ -51,7 +53,7 @@ class Checker:
             position (int): Point index (0-23) where the checker is placed
         """
         if not 0 <= position <= 23:
-            raise ValueError(f"Position must be between 0-23, got {position}")
+            raise InvalidCheckerPositionError(position)
 
         self._position = position
         self.state = CheckerState.ON_BOARD
@@ -64,7 +66,7 @@ class Checker:
             new_position (int): Target point index (0-23)
         """
         if not 0 <= new_position <= 23:
-            raise ValueError(f"Position must be between 0-23, got {new_position}")
+            raise InvalidCheckerPositionError(new_position)
 
         self._position = new_position
         self.state = CheckerState.ON_BOARD
@@ -104,7 +106,7 @@ class Checker:
             position (int): Target point index (0-23)
 
         Raises:
-            ValueError: If the position is not a valid entry point for this color
+            InvalidCheckerPositionError: If the position is not a valid entry point for this color
         """
         if self.state != CheckerState.ON_BAR:
             raise ValueError("Cannot enter from bar: checker not on bar")
@@ -116,9 +118,7 @@ class Checker:
 
         if position not in valid_entry_points:
             valid_range = "0-5" if self.color == CheckerColor.WHITE else "18-23"
-            raise ValueError(
-                f"{self.color.name} checkers must enter on points {valid_range}"
-            )
+            raise InvalidCheckerPositionError(position, valid_range)
 
         self._position = position
         self.state = CheckerState.ON_BOARD

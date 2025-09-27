@@ -1,5 +1,7 @@
 """Dice class for backgammon game."""
+
 import random
+from core.exceptions import DiceNotRolledError, InvalidDiceValueError
 
 
 class Dice:
@@ -16,11 +18,17 @@ class Dice:
     @property
     def values(self):
         """Get the current dice values."""
+        if self._values == [0, 0]:
+            raise DiceNotRolledError("Dice must be rolled before accessing values")
         return self._values
 
     def roll(self):
         """Roll both dice and store their values"""
         self._values = [random.randint(1, 6), random.randint(1, 6)]
+        # Validate the rolled values
+        for value in self._values:
+            if not 1 <= value <= 6:
+                raise InvalidDiceValueError(value)
         return self._values
 
     def is_doubles(self):

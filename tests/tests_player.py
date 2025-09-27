@@ -1,8 +1,10 @@
 """Tests for the Player class."""
+
 import unittest
 from unittest.mock import Mock
 from core.player import Player, PlayerColor
 from core.checker import CheckerColor, CheckerState
+from core.exceptions import NoMovesRemainingError
 
 
 class TestPlayer(unittest.TestCase):
@@ -102,6 +104,17 @@ class TestPlayer(unittest.TestCase):
         self.assertTrue(
             self.white_player.is_turn
         )  # Still in turn until explicitly ended
+
+    def test_use_move_with_no_remaining_raises_error(self):
+        """Test that use_move raises NoMovesRemainingError when no moves remaining"""
+        # Setup: player with no remaining moves
+        self.white_player.remaining_moves = 0
+
+        with self.assertRaises(NoMovesRemainingError) as context:
+            self.white_player.use_move()
+
+        self.assertEqual(context.exception.player_name, "Player 1")
+        self.assertIn("Player Player 1 has no remaining moves", str(context.exception))
 
     def test_get_checkers_by_state(self):
         """Test getting checkers by their state"""
