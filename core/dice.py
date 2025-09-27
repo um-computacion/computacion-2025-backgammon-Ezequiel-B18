@@ -48,10 +48,12 @@ class Dice:
     def initial_roll(self):
         """
         Roll dice to determine who goes first.
-        Returns the values of both dice as a tuple.
+        Each player rolls one die separately.
+        Returns the values as [player1_roll, player2_roll].
         """
-        self.roll()
-        self.initial_values = self.values.copy()
+        player1_roll = random.randint(1, 6)
+        player2_roll = random.randint(1, 6)
+        self.initial_values = [player1_roll, player2_roll]
         return tuple(self.initial_values)
 
     def is_initial_tie(self):
