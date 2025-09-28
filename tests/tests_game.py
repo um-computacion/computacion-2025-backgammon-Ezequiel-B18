@@ -116,14 +116,16 @@ class TestGame(unittest.TestCase):
     def test_apply_move_hit_and_sync_updates_checkers(self):
         """Test that apply_move handles hits and syncs checker states."""
         game = Game()
-        # set up board so white will hit a single black on point 3
-        game.board.points[0] = (1, 1)
-        game.board.points[3] = (2, 1)
-        game.setup_game()  # sets board and syncs checkers
-        # ensure current player
+        game.setup_game()
+        # Clear the starting positions and set up a specific scenario
+        game.board._points[0] = (1, 1)  # One white checker at point 0
+        game.board._points[3] = (2, 1)  # One black checker at point 3
+        # Sync the checker states to match board
+        game.sync_checkers()
         game.current_player = game.player1
+        game.other_player = game.player2
         game.current_player.remaining_moves = 1
-        # apply move: white from 0 to 3 -> hit black
+        # Apply move: white from 0 to 3 -> hit black
         moved = game.apply_move(0, 3)
         self.assertTrue(moved)
         # board should reflect black on bar

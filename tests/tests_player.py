@@ -132,7 +132,7 @@ class TestPlayer(unittest.TestCase):
         # Change state of some checkers
         self.white_player.checkers[0].send_to_bar()
         self.white_player.checkers[1].send_to_bar()
-        self.white_player.checkers[2].set_position(20)
+        self.white_player.checkers[2].set_position(20)  # In white home board
         self.white_player.checkers[2].bear_off()
 
         # Check counts again
@@ -161,7 +161,7 @@ class TestPlayer(unittest.TestCase):
 
         # Change state of some checkers
         self.white_player.checkers[0].send_to_bar()
-        self.white_player.checkers[1].set_position(20)
+        self.white_player.checkers[1].set_position(20)  # In white home board
         self.white_player.checkers[1].bear_off()
 
         # Check counts again
@@ -230,7 +230,7 @@ class TestPlayer(unittest.TestCase):
 
         # Change some checker states
         self.white_player.checkers[0].send_to_bar()
-        self.white_player.checkers[1].set_position(20)
+        self.white_player.checkers[1].set_position(20)  # In white home board
         self.white_player.checkers[1].bear_off()
         self.white_player.is_turn = True
         self.white_player.remaining_moves = 3

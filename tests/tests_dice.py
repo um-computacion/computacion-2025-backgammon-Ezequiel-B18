@@ -30,7 +30,9 @@ class TestDice(unittest.TestCase):
         with self.assertRaises(DiceNotRolledError) as context:
             _ = dice.values
 
-        self.assertIn("Dice must be rolled before accessing values", str(context.exception))
+        self.assertIn(
+            "Dice must be rolled before accessing values", str(context.exception)
+        )
 
     def test_roll_values_range(self):
         """Test that dice roll values are between 1 and 6"""
