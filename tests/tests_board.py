@@ -174,10 +174,10 @@ class TestBoard(unittest.TestCase):
         self.assertFalse(self.board.all_checkers_in_home_board(2))
 
         # Setup a test case with all white checkers in home board
-        self.board = Board(test_bearing_off=True)
-        self.assertTrue(self.board.all_checkers_in_home_board(1))
+        test_board = Board(test_bearing_off=True)
+        self.assertTrue(test_board.all_checkers_in_home_board(1))
         # Black checkers are also in their home board in this test setup
-        self.assertTrue(self.board.all_checkers_in_home_board(2))
+        self.assertTrue(test_board.all_checkers_in_home_board(2))
 
     def test_is_valid_move_blocked_by_bar(self):
         """Test that moves are blocked when player has checkers on bar."""

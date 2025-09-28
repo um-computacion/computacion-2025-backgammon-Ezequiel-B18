@@ -127,17 +127,17 @@ class Board:
         Set the standard starting positions for the board.
         Board is the single source of truth for starting layout.
         """
-        # White (player 1) starting positions
-        self.points[0] = (1, 2)
-        self.points[11] = (1, 5)
-        self.points[16] = (1, 3)
-        self.points[18] = (1, 5)
+        # White (player 1) starting positions - moving from high to low
+        self.points[23] = (1, 2)
+        self.points[12] = (1, 5)
+        self.points[7] = (1, 3)
+        self.points[5] = (1, 5)
 
-        # Black (player 2) starting positions
-        self.points[23] = (2, 2)
-        self.points[12] = (2, 5)
-        self.points[7] = (2, 3)
-        self.points[5] = (2, 5)
+        # Black (player 2) starting positions - moving from low to high
+        self.points[0] = (2, 2)
+        self.points[11] = (2, 5)
+        self.points[16] = (2, 3)
+        self.points[18] = (2, 5)
 
     def move_checker(self, player, from_point, to_point):
         """
@@ -192,9 +192,9 @@ class Board:
             return False
 
         # Check if entry point is valid
-        # For white (player 1), enter at points 0-5
-        # For black (player 2), enter at points 18-23
-        valid_entry_points = range(0, 6) if player == 1 else range(18, 24)
+        # For white (player 1), enter at points 18-23
+        # For black (player 2), enter at points 0-5
+        valid_entry_points = range(18, 24) if player == 1 else range(0, 6)
         if point not in valid_entry_points:
             return False
 
@@ -235,7 +235,7 @@ class Board:
             return False
 
         # Check all points outside the home board
-        non_home_board = range(0, 18) if player == 1 else range(6, 24)
+        non_home_board = range(6, 24) if player == 1 else range(0, 18)
         for point in non_home_board:
             if self.points[point][0] == player and self.points[point][1] > 0:
                 return False
@@ -258,7 +258,7 @@ class Board:
             return False
 
         # Check if point is in player's home board
-        home_board = range(18, 24) if player == 1 else range(0, 6)
+        home_board = range(0, 6) if player == 1 else range(18, 24)
         if point not in home_board:
             return False
 
@@ -266,16 +266,16 @@ class Board:
         if self.points[point][0] != player or self.points[point][1] == 0:
             return False
 
-        # For white: check if there are checkers on higher points (point+1 to 23)
-        # For black: check if there are checkers on lower points (0 to point-1)
+        # For white: check if there are checkers on lower points (0 to point-1)
+        # For black: check if there are checkers on higher points (point+1 to 23)
         if player == 1:
-            higher_points = range(point + 1, 24)
-            for p in higher_points:
+            lower_points = range(0, point)
+            for p in lower_points:
                 if self.points[p][0] == player and self.points[p][1] > 0:
                     return False
         else:  # player == 2
-            lower_points = range(0, point)
-            for p in lower_points:
+            higher_points = range(point + 1, 24)
+            for p in higher_points:
                 if self.points[p][0] == player and self.points[p][1] > 0:
                     return False
 

@@ -55,8 +55,8 @@ class Player:
             list: List of tuples (point_index, checker_count)
         """
         if self.color == PlayerColor.WHITE:
-            return [(0, 2), (11, 5), (16, 3), (18, 5)]
-        return [(23, 2), (12, 5), (7, 3), (5, 5)]
+            return [(23, 2), (12, 5), (7, 3), (5, 5)]
+        return [(0, 2), (11, 5), (16, 3), (18, 5)]
 
     def distribute_checkers(self, _board):
         """

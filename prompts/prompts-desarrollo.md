@@ -476,13 +476,16 @@ Following TDD methodology and SOLID principles, implemented exception handling i
 - Offers better debugging with contextual error information
 
 ## Prompt: Implement CLI for Backgammon Game
+
 **Date:** 2024-12-19
 **User Request:** Let's start with the CLI, it needs to follow the standard rules for a backgammon board, remember to use all the classes that have already been made, do not import any libraries
 
 ### GitHub Copilot Response:
+
 Created a comprehensive CLI interface for the Backgammon game following SOLID principles and TDD methodology:
 
 #### CLI Architecture:
+
 1. **BackgammonCLI Class**: Main orchestrator for user interaction
 2. **Game Integration**: Uses existing Game, Board, Dice, Player classes
 3. **Visual Display**: ASCII representation of the backgammon board
@@ -490,6 +493,7 @@ Created a comprehensive CLI interface for the Backgammon game following SOLID pr
 5. **Error Handling**: Proper exception handling for invalid moves and states
 
 #### Key Features Implemented:
+
 - **Board Display**: Visual representation of all 24 points, bar, and borne-off areas
 - **Player Setup**: Input for player names with defaults
 - **Initial Roll**: Dice rolling to determine first player
@@ -499,23 +503,27 @@ Created a comprehensive CLI interface for the Backgammon game following SOLID pr
 - **Error Recovery**: Graceful handling of invalid inputs and game errors
 
 #### SOLID Principles Applied:
+
 - **Single Responsibility**: CLI handles only user interaction, delegates game logic
 - **Open/Closed**: Extensible design for future UI additions
 - **Dependency Inversion**: Depends on abstractions (Game class) not concrete implementations
 - **Interface Segregation**: Clean separation between CLI and core game logic
 
 #### TDD Considerations:
+
 - Designed with testable methods (display_board, handle_player_move, etc.)
 - Input parsing and validation ready for unit testing
 - Error conditions properly handled for test coverage
 - Game state management follows existing test patterns
 
 #### No External Libraries:
+
 - Used only built-in Python functions (print, input, string formatting)
 - Pure Python implementation for maximum compatibility
 - Clean, readable code without dependencies
 
 #### Integration Points:
+
 - Leverages all existing core classes (Game, Board, Dice, Player, Checker)
 - Uses custom exception hierarchy for proper error handling
 - Maintains game state consistency through existing sync mechanisms
@@ -524,24 +532,29 @@ Created a comprehensive CLI interface for the Backgammon game following SOLID pr
 The CLI provides a complete, playable backgammon experience through the command line while maintaining clean architecture and following established development principles.
 
 ## Prompt: Fix Initial Roll Logic for Standard Backgammon Rules
+
 **Date:** 2024-12-19
 **User Request:** Shouldn't the initial roll be decided between the highest outcome from the roll of each player?
 
 ### GitHub Copilot Response:
+
 Corrected the initial roll implementation to follow standard backgammon rules:
 
 #### Issue Identified:
+
 - Previous implementation rolled two dice together and compared them
 - Standard backgammon requires each player to roll one die separately
 - The higher individual roll determines who goes first
 
 #### Changes Made:
+
 1. **Updated `Dice.initial_roll()`**: Now simulates each player rolling one die separately using `random.randint(1, 6)` for each player
 2. **Modified `Dice.get_highest_roller()`**: Compares the two separate player rolls correctly
 3. **Updated Tests**: Adjusted test mocks and expectations to reflect separate player rolls
 4. **Maintained TDD**: All changes are testable and follow existing test patterns
 
 #### SOLID Principles Applied:
+
 - **Single Responsibility**: Dice class handles all dice-related logic including proper initial roll simulation
 - **Open/Closed**: Changes don't break existing functionality, just correct the implementation
 - **Liskov Substitution**: Interface remains the same, behavior is now correct
@@ -549,38 +562,45 @@ Corrected the initial roll implementation to follow standard backgammon rules:
 - **Dependency Inversion**: No changes to dependencies, just internal logic correction
 
 #### Benefits:
+
 - Now follows official backgammon rules for determining first player
 - More realistic simulation of the actual game
 - Maintains all existing functionality while fixing the rules violation
 - Tests properly validate the corrected behavior
 
 ## Prompt: Update CLI to Display Separate Initial Rolls
+
 **Date:** 2024-12-19
 **User Request:** It didn't change in the cli, maybe in the class but not the cli, do not document
 
 ### GitHub Copilot Response:
+
 Updated the CLI to properly display each player's individual roll during the initial roll phase, making it clear that each player rolls one die separately according to standard backgammon rules. The display now shows:
 
 - Player 1's roll value
-- Player 2's roll value  
+- Player 2's roll value
 - Which player goes first based on the higher roll
 
 This improves user experience by clearly showing the separate rolls that determine the starting player, aligning with the corrected game logic.
 
 ## Prompt: Improve CLI User Experience with Better Instructions and Board Display
+
 **Date:** 2024-12-19
 **User Request:** I cannot comprehend how to move in the game make it so that the user has clearer instructions and if possible a better board
 
 ### GitHub Copilot Response:
+
 Enhanced the CLI interface to provide a much better user experience with:
 
 #### Improved Board Display:
+
 - Used Unicode box drawing characters for a professional board appearance
 - Clear point numbering (1-24) that matches user expectations
 - Better visual separation between different board sections
 - Cleaner checker count display with W/B prefixes
 
 #### Enhanced User Instructions:
+
 - Added comprehensive welcome message explaining the game
 - Included detailed help system accessible with 'h' command
 - Added inline instructions during gameplay
@@ -588,6 +608,7 @@ Enhanced the CLI interface to provide a much better user experience with:
 - Visual indicators and emojis for better engagement
 
 #### Better Game Flow:
+
 - Step-by-step guidance through initial roll and first moves
 - Clear display of whose turn it is and remaining moves
 - Helpful prompts for special situations (checkers on bar)
@@ -595,6 +616,7 @@ Enhanced the CLI interface to provide a much better user experience with:
 - Comprehensive error messages with suggestions
 
 #### User Experience Improvements:
+
 - Consistent emoji usage for visual cues
 - Clear separation between different information types
 - Helpful validation messages for invalid inputs
@@ -602,3 +624,42 @@ Enhanced the CLI interface to provide a much better user experience with:
 - Easy access to help and quit options
 
 The CLI now provides a complete, user-friendly backgammon experience that guides players through the game with clear instructions and an attractive visual interface.
+
+# Development Prompts
+
+## 2025-01-27 - Movement Direction Fix
+
+**Prompt:** Blacks should move from low to high and whites should move from high to low, fix that
+
+**Explanation:** The user identified that the movement directions for the players were incorrect. In backgammon, traditionally:
+
+- White pieces move from high-numbered points to low-numbered points (24→1)
+- Black pieces move from low-numbered points to high-numbered points (1→24)
+
+The current implementation had this reversed, so I needed to update:
+
+1. **CLI Display Text** - Updated all references to movement directions in help text and instructions
+2. **Checker Movement Logic** - Fixed `calculate_new_position()` method to use correct direction
+3. **Starting Positions** - Swapped the starting positions between players to match new directions
+4. **Home Boards** - Updated home board definitions (White: 1-6, Black: 19-24)
+5. **Bar Entry Points** - Fixed entry points from bar to match new directions
+6. **Bearing Off Logic** - Updated bearing off calculations for new movement patterns
+
+**SOLID Principles Applied:**
+
+- **Single Responsibility**: Each class maintained its specific responsibility (Checker for movement calculation, Board for positioning, CLI for display)
+- **Open/Closed**: Changes were made by modifying existing methods rather than changing interfaces
+- **Dependency Inversion**: High-level Game class wasn't affected by low-level movement direction changes
+
+**TDD Approach:**
+
+- Changes maintain existing method signatures and return types
+- All existing tests should continue to work with updated logic
+- No new public interfaces were created, only internal logic was corrected
+
+**Files Modified:**
+
+- `cli/cli.py` - Updated display text and help information
+- `core/checker.py` - Fixed movement calculation and home board logic
+- `core/player.py` - Updated starting positions
+- `core/board.py` - Fixed board setup, entry points, and bearing off logic
