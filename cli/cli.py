@@ -6,7 +6,7 @@ from core.exceptions import (
     InvalidPlayerTurnError,
     GameAlreadyOverError,
     InvalidMoveError,
-    NoMovesRemainingError
+    NoMovesRemainingError,
 )
 
 
@@ -25,7 +25,7 @@ class BackgammonCLI:
     def start_game(self):
         """Start a new backgammon game with player setup."""
         self.display_welcome()
-        
+
         # Get player names
         self.player1_name = input("Enter Player 1 (White) name: ").strip() or "White"
         self.player2_name = input("Enter Player 2 (Black) name: ").strip() or "Black"
@@ -50,16 +50,18 @@ class BackgammonCLI:
         else:
             print(f"{self.player2_name} (Black) goes first!")
 
-        print("\n" + "="*60)
+        print("\n" + "=" * 60)
         print("HOW TO PLAY:")
         print("- Points are numbered 1-24 (see board below)")
         print("- White moves from point 24 towards 1, Black from 1 towards 24")
         print("- Enter moves as 'from_point to_point' (e.g., '1 5')")
         print("- You must use all dice values in your turn")
         print("- Hit opponent by landing on their single checker")
-        print("- Bear off when all checkers are in your home board (points 1-6 for White, 19-24 for Black)")
+        print(
+            "- Bear off when all checkers are in your home board (points 1-6 for White, 19-24 for Black)"
+        )
         print("- Type 'q' to quit, 'h' for help")
-        print("="*60)
+        print("=" * 60)
 
         # Start the game loop
         self.game_loop()
@@ -95,8 +97,12 @@ class BackgammonCLI:
                 self.game.current_player.end_turn()
                 self.game.switch_players()
 
-            except (GameNotInitializedError, InvalidPlayerTurnError,
-                    GameAlreadyOverError, InvalidMoveError) as e:
+            except (
+                GameNotInitializedError,
+                InvalidPlayerTurnError,
+                GameAlreadyOverError,
+                InvalidMoveError,
+            ) as e:
                 print(f"Error: {e}")
                 continue
 
@@ -110,10 +116,10 @@ class BackgammonCLI:
 
         def get_checker_char(player_id):
             if player_id == 1:  # White
-                return '●'
+                return "●"
             if player_id == 2:  # Black
-                return 'o'
-            return ' '
+                return "o"
+            return " "
 
         print(" 13  14  15  16  17  18      19  20  21  22  23  24")
         print("+---+---+---+---+---+---+--+--+---+---+---+---+---+---+")
@@ -122,10 +128,10 @@ class BackgammonCLI:
             row_left = []
             for p in range(12, 18):
                 player, count = points[p]
-                char = ' '
+                char = " "
                 if count > i:
                     if count > 5 and i == 4:
-                        char = str(count) if count < 10 else '+'
+                        char = str(count) if count < 10 else "+"
                     else:
                         char = get_checker_char(player)
                 row_left.append(f" {char} ")
@@ -133,10 +139,10 @@ class BackgammonCLI:
             row_right = []
             for p in range(18, 24):
                 player, count = points[p]
-                char = ' '
+                char = " "
                 if count > i:
                     if count > 5 and i == 4:
-                        char = str(count) if count < 10 else '+'
+                        char = str(count) if count < 10 else "+"
                     else:
                         char = get_checker_char(player)
                 row_right.append(f" {char} ")
@@ -150,10 +156,10 @@ class BackgammonCLI:
             row_left = []
             for p in range(11, 5, -1):
                 player, count = points[p]
-                char = ' '
+                char = " "
                 if i < count:
                     if count > 5 and i == 4:
-                        char = str(count) if count < 10 else '+'
+                        char = str(count) if count < 10 else "+"
                     else:
                         char = get_checker_char(player)
                 row_left.append(f" {char} ")
@@ -161,10 +167,10 @@ class BackgammonCLI:
             row_right = []
             for p in range(5, -1, -1):
                 player, count = points[p]
-                char = ' '
+                char = " "
                 if i < count:
                     if count > 5 and i == 4:
-                        char = str(count) if count < 10 else '+'
+                        char = str(count) if count < 10 else "+"
                     else:
                         char = get_checker_char(player)
                 row_right.append(f" {char} ")
@@ -178,7 +184,9 @@ class BackgammonCLI:
         home_white = board.home[1]
         home_black = board.home[2]
 
-        print(f"Bar: White={bar_white} Black={bar_black} | Borne off: White={home_white} Black={home_black}")
+        print(
+            f"Bar: White={bar_white} Black={bar_black} | Borne off: White={home_white} Black={home_black}"
+        )
 
     def display_current_player_info(self):
         """Display information about the current player."""
@@ -199,46 +207,60 @@ class BackgammonCLI:
     def display_available_moves(self):
         """Display helpful information about available moves."""
         player = self.game.current_player
-        print(f"\n{player.name}, you need to make {player.remaining_moves} more move(s)")
-        print(" Enter moves as 'from_point to_point' (e.g., '1 5' to move from point 1 to point 5)")
-        print(" White moves from high to low numbers (24→1), Black from low to high (1→24)")
+        print(
+            f"\n{player.name}, you need to make {player.remaining_moves} more move(s)"
+        )
+        print(
+            " Enter moves as 'from_point to_point' (e.g., '1 5' to move from point 1 to point 5)"
+        )
+        print(
+            " White moves from high to low numbers (24→1), Black from low to high (1→24)"
+        )
         if self.game.board.bar[player.player_id] > 0:
             entry_points = "19-24" if player.player_id == 1 else "1-6"
-            print(f"You have checkers on the bar! You must enter them first (points {entry_points})")
+            print(
+                f"You have checkers on the bar! You must enter them first (points {entry_points})"
+            )
 
     def handle_player_move(self):
         """Handle a single move from the current player."""
         while True:
             try:
-                move_input = input(
-                    f"Enter move (from_point to_point) or 'h' for help, 'q' to quit: "
-                ).strip().lower()
+                move_input = (
+                    input(
+                        f"Enter move (from_point to_point) or 'h' for help, 'q' to quit: "
+                    )
+                    .strip()
+                    .lower()
+                )
 
-                if move_input == 'q':
+                if move_input == "q":
                     print("Game ended by player.")
                     exit(0)
-                elif move_input == 'h':
+                elif move_input == "h":
                     self.display_help()
                     continue
 
                 # Parse move
                 parts = move_input.split()
                 if len(parts) != 2:
-                    print("Invalid input. Please enter two numbers separated by space (e.g., '1 5').")
+                    print(
+                        "Invalid input. Please enter two numbers separated by space (e.g., '1 5')."
+                    )
                     continue
 
                 try:
                     from_point = int(parts[0])
                     to_point = int(parts[1])
-                    
+
                     # Validate range (user enters 1-24, we convert to 0-23)
                     if not (1 <= from_point <= 24 and 1 <= to_point <= 24):
                         print("Invalid points. Points must be between 1-24.")
                         continue
-                    
+
                     from_point -= 1  # Convert to 0-based
                     to_point -= 1
-                    
+
                 except ValueError:
                     print("Invalid input. Please enter valid numbers.")
                     continue
@@ -258,9 +280,9 @@ class BackgammonCLI:
 
     def display_help(self):
         """Display help information."""
-        print("\n" + "="*60)
+        print("\n" + "=" * 60)
         print("BACKGAMMON HELP")
-        print("="*60)
+        print("=" * 60)
         print("BASIC RULES:")
         print("• White moves from point 24 towards 1")
         print("• Black moves from point 1 towards 24")
@@ -278,7 +300,7 @@ class BackgammonCLI:
         print("• White: All checkers in points 1-6")
         print("• Black: All checkers in points 19-24")
         print("• Bear off by moving exact dice value or higher")
-        print("="*60)
+        print("=" * 60)
 
     def display_game_over(self):
         """Display game over information."""

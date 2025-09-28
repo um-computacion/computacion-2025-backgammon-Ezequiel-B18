@@ -1,6 +1,6 @@
 # Prompts de Documentación
 
-## 2025-01-09 - Modificación del CI para ejecutar en todo el proyecto
+## Modificación del CI para ejecutar en todo el proyecto
 
 ### Prompt
 I need to change the ci.yml file to run the workflow on the entire project, help me change it. This should go in prompts-documentacion.

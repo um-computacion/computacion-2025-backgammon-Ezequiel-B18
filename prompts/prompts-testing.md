@@ -1,8 +1,35 @@
 # Testing Prompts Documentation
 
+## Fix Board Property Setter Error
+
+### Prompt:
+
+"Fix the tests of the corresponding files - There are 57 errors related to AttributeError: property 'points' of 'Board' object has no setter"
+
+### Problem Analysis:
+
+The Board class implementation has a `points` property that is read-only (no setter), but the `setup_starting_positions()` method was trying to assign directly to `self.points = [...]`. This violates the property design and causes all tests to fail during Board initialization.
+
+### Solution Applied:
+
+1. **Fixed Board.setup_starting_positions()** - Changed assignment from `self.points` to `self._points` to work with the internal storage
+2. **Fixed Board.enter_from_bar()** - Updated to use `self._points` for internal manipulation
+3. **Corrected Checker movement logic** - Fixed direction of movement and home board ranges for White/Black checkers
+4. **Updated entry point validation** - White enters 0-5, Black enters 18-23
+
+### Key Changes:
+
+- Board now properly initializes without property setter errors
+- Checker movement directions are correct (White: 0→23, Black: 23→0)
+- Home boards correctly defined (White: 18-23, Black: 0-5)
+- Entry points from bar properly validated
+
+### TDD Impact:
+
+All tests now properly initialize Board objects, allowing actual game logic testing to proceed. The fixes maintain SOLID principles by preserving encapsulation while fixing the initialization flow.
+
 ## Prompt: Move tests from test_game to tests_game file
 
-**Date:** 2024-12-19
 **User Request:** This tests from the test_game file should be inside tests_game file
 
 ### GitHub Copilot Response:
@@ -41,62 +68,8 @@ Following TDD methodology and project consistency, moved all Game class tests to
 - Proper TDD test structure with reliable setup/teardown
 - Enhanced exception test coverage
 - Follows project conventions and SOLID principles
-  ```^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  AssertionError: False is not true
-  ```
 
-======================================================================
-FAIL: test_check_winner (tests_board.TestBoard.test_check_winner)
-Test checking for a winner
-
----
-
-Traceback (most recent call last):
-File "D:\Uni\Segundo Año\Computacion\computacion-2025-backgammon-Ezequiel-B18\tests\tests_board.py", line 107, in test_check_winner
-self.assertEqual(self.board.check_winner(), 0)
-
-`````^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-AssertionError: 1 != 0
-
----
-
-Ran 41 tests in 0.017s
-
-FAILED (failures=3, errors=1)
-These tests are failing
-
-````
-
-### Response
-
-Fixed four failing tests by addressing logic errors in both test cases and implementation code, following TDD principles:
-
-**Analysis of Failures:**
-
-1. **test_checker_str_representation**: Test was trying to bear off a checker from position 5, which is not in the white home board (18-23). The checker must be in its home board before bearing off.
-
-2. **test_all_checkers_in_home_board**: The test setup with `test_bearing_off=True` places both white and black checkers in their respective home boards, but the test expected black checkers not to be in home board.
-
-3. **test_bearing_off**: The bear-off logic had incorrect range checking. For white players, it was checking points 18 to current point instead of current point+1 to 23.
-
-4. **test_check_winner**: The test was using the same board instance that had been modified by previous tests, leading to unexpected state.
-
-**Fixes Applied:**
-
-1. **Checker Test Fix**: Modified test to place checker in home board (position 20) before attempting to bear off, ensuring the test follows proper backgammon rules.
-
-2. **Board Logic Fix**: Corrected the bear-off validation logic:
-
-   - For white (player 1): Check higher points (point+1 to 23) for remaining checkers
-   - For black (player 2): Check lower points (0 to point-1) for remaining checkers
-
-3. **Test Setup Fix**: Updated test expectations to match the actual behavior of the `test_bearing_off=True` setup, which correctly places both players' checkers in their home boards.
-
-4. **Test Isolation Fix**: Created separate board instance for winner tests to avoid state pollution between test methods.
-
-## 2025-09-16 - Fix test failures caused by missing method parameter
-
-### Prompt
+## Prompt: Fix test failures caused by missing method parameter
 
 $ python -m unittest
 [Test errors showing Player.distribute_checkers() takes 1 positional argument but 2 were given]
@@ -114,7 +87,7 @@ Fixed TypeError in Player.distribute_checkers() method signature:
 
 ```python
 def distribute_checkers(self, board):
-````
+```
 
 **Tests affected:**
 
@@ -127,9 +100,7 @@ def distribute_checkers(self, board):
 
 **TDD principle:** This demonstrates the importance of running tests after refactoring to catch signature mismatches and ensure backward compatibility.
 
-## 2025-09-16 - Fix pylint errors for Board.bar property access
-
-### Prompt
+## Prompt: Fix pylint errors for Board.bar property access
 
 $ pylint core/ tests/
 [Multiple E1101 errors showing "Instance of 'Board' has no 'bar' member; maybe '_bar'?"]
@@ -156,7 +127,6 @@ Fixed pylint errors related to Board.bar property access:
 
 ## Prompt: Fix failing test for apply_move without current player
 
-**Date:** 2024-12-19
 **User Request:** Do not document, ERROR: test_apply_move_without_current_player_returns_false - Fix this test
 
 ### GitHub Copilot Response:
@@ -196,7 +166,6 @@ Following TDD methodology, fixed the failing test to match the updated exception
 
 ## Prompt: Fix failing dice initialization test
 
-**Date:** 2024-12-19
 **User Request:** ERROR: test_dice_initialization - Fix this test do not document
 
 ### GitHub Copilot Response:
@@ -236,15 +205,16 @@ Following TDD methodology, fixed the failing test that was incompatible with new
 - Maintains backward compatibility while enforcing proper usage patterns
 
 ## Prompt: Align legacy Game tests with new initialization requirements
-**Date:** 2024-12-19
+
 **User Request:** Fix failing tests in `tests/test_game.py` caused by GameNotInitializedError and InvalidPlayerTurnError.
 
 ### GitHub Copilot Response:
+
 - Ensured each affected test invokes `game.setup_game()` and defines `current_player`/`other_player` before calling `start_turn` or `apply_move`.
 - Updated expectations to assert the new exceptions instead of legacy return values.
 - Refreshed hit-and-sync test to adjust board state post-setup and resync checkers before applying the move.
 
 ### Outcome:
+
 - Legacy test suite now mirrors the validated exception flow.
 - All tests pass under the new game initialization contract.
-`````

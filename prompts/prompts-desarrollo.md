@@ -177,7 +177,7 @@ The Player class strictly avoids duplicating functionality from:
 
 Instead, Player serves as a coordinator for its collection of checkers and manages player-specific state like turns and move counts.
 
-## 2025-09-15 - Crear la clase Game que orquesta Board, Dice y Player
+## Crear la clase Game que orquesta Board, Dice y Player
 
 ### Prompt
 
@@ -203,7 +203,7 @@ Principios aplicados:
 - SOLID: separación de responsabilidades y pequeña superficie de prueba.
 - TDD: se incluyen tests que cubren los métodos principales para guiar implementaciones futuras.
 
-## 2025-09-15 - Analysis: Do classes clash in responsibilities?
+## Analysis: Do classes clash in responsibilities?
 
 ### Prompt
 
@@ -238,7 +238,7 @@ Impact:
 
 - Reduce inconsistency bugs, improve single responsibility, and make behavior easier to test and maintain.
 
-## 2025-09-15 - Apply refactors: Board single source of truth, Player.distribute_checkers no longer mutates Board
+## Apply refactors: Board single source of truth, Player.distribute_checkers no longer mutates Board
 
 ### Prompt
 
@@ -266,7 +266,7 @@ Tests:
 - Existing tests that assert player.checker positions (tests_player.test_distribute_checkers) continue to pass because distribute_checkers still assigns checker.position.
 - Game.setup_game tests continue to pass since Board.setup_starting_positions sets points and Game.sync_checkers reconciles checkers.
 
-## 2025-09-16 - Encapsulation improvements in core classes
+## Encapsulation improvements in core classes
 
 ### Prompt
 
@@ -330,7 +330,7 @@ Se implementaron mejoras de encapsulación en todas las clases del paquete core 
 - Preparación para añadir validación, logging o inmutabilidad sin breaking changes
 - Mejor encapsulación siguiendo convenciones Python (\_ prefix para internal)
 
-## 2025-09-16 - Comprehensive Pylint compliance and code quality improvements
+## Comprehensive Pylint compliance and code quality improvements
 
 ### Prompt
 
@@ -409,7 +409,6 @@ Implemented comprehensive Pylint compliance improvements across the entire codeb
 
 ## Prompt: Exception System Implementation
 
-**Date:** 2024-12-19
 **User Request:** How can we add exceptions to every class? Do we make a new folder inside src with exceptions.py? And then implement them inside every class, right?
 
 ### GitHub Copilot Response:
@@ -440,7 +439,6 @@ Implemented a comprehensive exception system following SOLID principles and TDD 
 
 ## Prompt: Add exceptions to existing files and tests
 
-**Date:** 2024-12-19
 **User Request:** Add the exceptions to these existing files and tests
 
 ### GitHub Copilot Response:
@@ -477,7 +475,6 @@ Following TDD methodology and SOLID principles, implemented exception handling i
 
 ## Prompt: Implement CLI for Backgammon Game
 
-**Date:** 2024-12-19
 **User Request:** Let's start with the CLI, it needs to follow the standard rules for a backgammon board, remember to use all the classes that have already been made, do not import any libraries
 
 ### GitHub Copilot Response:
@@ -533,7 +530,6 @@ The CLI provides a complete, playable backgammon experience through the command 
 
 ## Prompt: Fix Initial Roll Logic for Standard Backgammon Rules
 
-**Date:** 2024-12-19
 **User Request:** Shouldn't the initial roll be decided between the highest outcome from the roll of each player?
 
 ### GitHub Copilot Response:
@@ -570,7 +566,6 @@ Corrected the initial roll implementation to follow standard backgammon rules:
 
 ## Prompt: Update CLI to Display Separate Initial Rolls
 
-**Date:** 2024-12-19
 **User Request:** It didn't change in the cli, maybe in the class but not the cli, do not document
 
 ### GitHub Copilot Response:
@@ -585,7 +580,6 @@ This improves user experience by clearly showing the separate rolls that determi
 
 ## Prompt: Improve CLI User Experience with Better Instructions and Board Display
 
-**Date:** 2024-12-19
 **User Request:** I cannot comprehend how to move in the game make it so that the user has clearer instructions and if possible a better board
 
 ### GitHub Copilot Response:
@@ -625,9 +619,7 @@ Enhanced the CLI interface to provide a much better user experience with:
 
 The CLI now provides a complete, user-friendly backgammon experience that guides players through the game with clear instructions and an attractive visual interface.
 
-# Development Prompts
-
-## 2025-01-27 - Movement Direction Fix
+## Movement Direction Fix
 
 **Prompt:** Blacks should move from low to high and whites should move from high to low, fix that
 
@@ -655,6 +647,14 @@ The current implementation had this reversed, so I needed to update:
 
 - Changes maintain existing method signatures and return types
 - All existing tests should continue to work with updated logic
+- No new public interfaces were created, only internal logic was corrected
+
+**Files Modified:**
+
+- `cli/cli.py` - Updated display text and help information
+- `core/checker.py` - Fixed movement calculation and home board logic
+- `core/player.py` - Updated starting positions
+- `core/board.py` - Fixed board setup, entry points, and bearing off logic
 - No new public interfaces were created, only internal logic was corrected
 
 **Files Modified:**

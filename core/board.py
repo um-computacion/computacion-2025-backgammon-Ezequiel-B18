@@ -123,21 +123,21 @@ class Board:
         return True
 
     def setup_starting_positions(self):
-        """
-        Set the standard starting positions for the board.
-        Board is the single source of truth for starting layout.
-        """
-        # White (player 1) starting positions - moving from high to low
-        self.points[23] = (1, 2)
-        self.points[12] = (1, 5)
-        self.points[7] = (1, 3)
-        self.points[5] = (1, 5)
+        """Set up the standard backgammon starting positions."""
+        # Clear all points first
+        self._points = [(0, 0) for _ in range(24)]
 
-        # Black (player 2) starting positions - moving from low to high
-        self.points[0] = (2, 2)
-        self.points[11] = (2, 5)
-        self.points[16] = (2, 3)
-        self.points[18] = (2, 5)
+        # White checkers (player 1) starting positions
+        self._points[0] = (1, 2)  # 2 white checkers on point 0
+        self._points[11] = (1, 5)  # 5 white checkers on point 11
+        self._points[16] = (1, 3)  # 3 white checkers on point 16
+        self._points[18] = (1, 5)  # 5 white checkers on point 18
+
+        # Black checkers (player 2) starting positions
+        self._points[23] = (2, 2)  # 2 black checkers on point 23
+        self._points[12] = (2, 5)  # 5 black checkers on point 12
+        self._points[7] = (2, 3)  # 3 black checkers on point 7
+        self._points[5] = (2, 5)  # 5 black checkers on point 5
 
     def move_checker(self, player, from_point, to_point):
         """
@@ -177,116 +177,99 @@ class Board:
         return event
 
     def enter_from_bar(self, player, point):
-        """
-        Enter a checker from the bar.
-
-        Args:
-            player (int): Player entering the checker (1 for white, 2 for black)
-            point (int): Target point index (0-23)
-
-        Returns:
-            bool: True if the move was successful, False otherwise
-        """
-        # Check if player has checkers on the bar
+        """Enter a checker from the bar to the specified point."""
         if self.bar[player] == 0:
             return False
 
-        # Check if entry point is valid
-        # For white (player 1), enter at points 18-23
-        # For black (player 2), enter at points 0-5
-        valid_entry_points = range(18, 24) if player == 1 else range(0, 6)
-        if point not in valid_entry_points:
+        # Validate entry points
+        if player == 1:  # White enters from points 0-5
+            if not (0 <= point <= 5):
+                return False
+        else:  # Black enters from points 18-23
+            if not (18 <= point <= 23):
+                return False
+
+        # Check if point is blocked by opponent
+        current_player, current_count = self._points[point]
+        if current_player != 0 and current_player != player and current_count >= 2:
             return False
 
-        # Check if the entry point is not blocked
-        target_player, target_count = self.points[point]
-        if target_player != 0 and target_player != player and target_count >= 2:
-            return False
-
-        # Remove checker from bar
-        self.bar[player] -= 1
-
-        # Handle target point
-        if target_player == 0:
+        # Handle hitting
+        if current_player != 0 and current_player != player and current_count == 1:
+            # Hit opponent checker
+            self.bar[current_player] += 1
+            self._points[point] = (player, 1)
+        elif current_player == player:
+            # Stack on own checker
+            self._points[point] = (player, current_count + 1)
+        else:
             # Empty point
-            self.points[point] = (player, 1)
-        elif target_player == player:
-            # Same player, add checker
-            self.points[point] = (player, target_count + 1)
-        else:  # target_player != player and target_count == 1
-            # Hit opponent's blot
-            self.points[point] = (player, 1)
-            self.bar[target_player] += 1
+            self._points[point] = (player, 1)
 
+        # Remove from bar
+        self.bar[player] -= 1
         return True
 
     def all_checkers_in_home_board(self, player):
-        """
-        Check if all of a player's checkers are in their home board.
+        """Check if all of a player's checkers are in their home board."""
+        if player == 1:  # White player
+            home_range = range(18, 24)
+        else:  # Black player
+            home_range = range(0, 6)
 
-        Args:
-            player (int): Player to check (1 for white, 2 for black)
+        # Count checkers on board for this player
+        checkers_on_board = 0
+        checkers_in_home = 0
 
-        Returns:
-            bool: True if all checkers are in the home board, False otherwise
-        """
-        # Check if there are any checkers on the bar
-        if self.bar[player] > 0:
-            return False
+        for point_idx in range(24):
+            point_player, count = self._points[point_idx]
+            if point_player == player:
+                checkers_on_board += count
+                if point_idx in home_range:
+                    checkers_in_home += count
 
-        # Check all points outside the home board
-        non_home_board = range(6, 24) if player == 1 else range(0, 18)
-        for point in non_home_board:
-            if self.points[point][0] == player and self.points[point][1] > 0:
-                return False
-
-        return True
+        # All on-board checkers must be in home board
+        return checkers_on_board == checkers_in_home
 
     def bear_off(self, player, point):
-        """
-        Bear off a checker from the board.
+        """Bear off a checker from the specified point."""
+        # Validate point is in player's home board
+        if player == 1:  # White
+            if not (18 <= point <= 23):
+                return False
+        else:  # Black
+            if not (0 <= point <= 5):
+                return False
 
-        Args:
-            player (int): Player bearing off (1 for white, 2 for black)
-            point (int): Point index (0-23) from which to bear off
-
-        Returns:
-            bool: True if bearing off was successful, False otherwise
-        """
-        # Check if all checkers are in the home board
+        # Check if all checkers are in home board
         if not self.all_checkers_in_home_board(player):
             return False
 
-        # Check if point is in player's home board
-        home_board = range(0, 6) if player == 1 else range(18, 24)
-        if point not in home_board:
+        # Check if there's a checker at this point
+        current_player, current_count = self._points[point]
+        if current_player != player or current_count == 0:
             return False
 
-        # Check if the point has checkers belonging to the player
-        if self.points[point][0] != player or self.points[point][1] == 0:
-            return False
-
-        # For white: check if there are checkers on lower points (0 to point-1)
-        # For black: check if there are checkers on higher points (point+1 to 23)
-        if player == 1:
-            lower_points = range(0, point)
-            for p in lower_points:
-                if self.points[p][0] == player and self.points[p][1] > 0:
+        # Check if there are checkers on higher points (for bearing off validation)
+        if player == 1:  # White
+            for higher_point in range(point + 1, 24):
+                higher_player, higher_count = self._points[higher_point]
+                if higher_player == player and higher_count > 0:
                     return False
-        else:  # player == 2
-            higher_points = range(point + 1, 24)
-            for p in higher_points:
-                if self.points[p][0] == player and self.points[p][1] > 0:
+        else:  # Black
+            for higher_point in range(0, point):
+                higher_player, higher_count = self._points[higher_point]
+                if higher_player == player and higher_count > 0:
                     return False
 
-        # Bear off the checker
-        count = self.points[point][1]
-        if count == 1:
-            self.points[point] = (0, 0)  # Point becomes empty
+        # Remove checker from point
+        new_count = current_count - 1
+        if new_count == 0:
+            self._points[point] = (0, 0)
         else:
-            self.points[point] = (player, count - 1)  # Reduce count
+            self._points[point] = (player, new_count)
 
-        # Add checker to home
+        # Add to home
         self.home[player] += 1
 
         return True
