@@ -74,8 +74,8 @@ class Checker:
     def calculate_new_position(self, dice_value):
         """
         Calculate the new position based on a dice value.
-        White checkers move in increasing order (0->23)
-        Black checkers move in decreasing order (23->0)
+        White checkers move in decreasing order (23->0)
+        Black checkers move in increasing order (0->23)
 
         Args:
             dice_value (int): Value of the dice roll (1-6)
@@ -90,8 +90,8 @@ class Checker:
             raise ValueError("Cannot calculate new position: no current position")
 
         if self.color == CheckerColor.WHITE:
-            return self._position + dice_value
-        return self._position - dice_value
+            return self._position - dice_value
+        return self._position + dice_value
 
     def send_to_bar(self):
         """Send this checker to the bar (after being hit)"""
@@ -111,13 +111,13 @@ class Checker:
         if self.state != CheckerState.ON_BAR:
             raise ValueError("Cannot enter from bar: checker not on bar")
 
-        # White enters on points 0-5, Black enters on points 18-23
+        # White enters on points 18-23, Black enters on points 0-5
         valid_entry_points = (
-            range(0, 6) if self.color == CheckerColor.WHITE else range(18, 24)
+            range(18, 24) if self.color == CheckerColor.WHITE else range(0, 6)
         )
 
         if position not in valid_entry_points:
-            valid_range = "0-5" if self.color == CheckerColor.WHITE else "18-23"
+            valid_range = "18-23" if self.color == CheckerColor.WHITE else "0-5"
             raise InvalidCheckerPositionError(position, valid_range)
 
         self._position = position
@@ -149,12 +149,12 @@ class Checker:
         if self.state != CheckerState.ON_BOARD or self._position is None:
             return False
 
-        # White home board is points 18-23
+        # White home board is points 0-5
         if self.color == CheckerColor.WHITE:
-            return 18 <= self._position <= 23
+            return 0 <= self._position <= 5
 
-        # Black home board is points 0-5
-        return 0 <= self._position <= 5
+        # Black home board is points 18-23
+        return 18 <= self._position <= 23
 
     def can_bear_off_with_value(self, dice_value):
         """
@@ -169,13 +169,13 @@ class Checker:
         if not self.is_in_home_board():
             return False
 
-        # For white, calculate distance to bear off (24 - position)
+        # For white, position + 1 is the distance
         if self.color == CheckerColor.WHITE:
-            distance_to_bear_off = 24 - self._position
-            return dice_value >= distance_to_bear_off
+            return dice_value >= self._position + 1
 
-        # For black, position + 1 is the distance
-        return dice_value >= self._position + 1
+        # For black, calculate distance to bear off (24 - position)
+        distance_to_bear_off = 24 - self._position
+        return dice_value >= distance_to_bear_off
 
     def __str__(self):
         """String representation of the checker"""

@@ -217,6 +217,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated legacy `tests/test_game.py` to honor game initialization requirements and new exception flow before calling `start_turn` and `apply_move`.
 
 ### Added - 2024-12-19
+
 - Implemented comprehensive CLI interface in `cli/cli.py` for playing Backgammon
 - Created `BackgammonCLI` class that orchestrates game flow using existing core classes
 - Added visual board display showing all 24 points, bar, and borne-off checkers
@@ -229,6 +230,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Prepared foundation for TDD testing of CLI components
 
 ### Fixed - 2024-12-19
+
 - Corrected initial roll logic to follow standard backgammon rules where each player rolls one die separately instead of rolling two dice together
 - Updated `Dice.initial_roll()` to simulate separate rolls for each player
 - Modified `Dice.get_highest_roller()` to properly compare the two player rolls
@@ -236,9 +238,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Ensured game initialization follows proper backgammon rules for determining first player
 
 ### Fixed - 2024-12-19
+
 - Updated CLI to display individual player rolls during initial roll determination, clarifying that each player rolls separately according to standard backgammon rules
 
 ### Added - 2024-12-19
+
 - Enhanced CLI interface with improved board display using Unicode box drawing characters for better visual appeal
 - Added comprehensive welcome message and game rules explanation at startup
 - Implemented detailed help system accessible during gameplay with 'h' command
@@ -248,3 +252,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Enhanced error messages with emoji indicators for better user feedback
 - Added special handling instructions for checkers on the bar
 - Improved game flow with better prompts and user guidance throughout the game
+
+### Changed
+
+- Fixed movement directions: White moves from high to low (24→1), Black moves from low to high (1→24) - 2025-01-27
+- Updated starting positions and home boards to match correct movement directions - 2025-01-27
+- Updated CLI text to reflect correct movement rules - 2025-01-27
