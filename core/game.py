@@ -9,7 +9,7 @@ from core.exceptions import (
     InvalidPlayerTurnError,
     GameAlreadyOverError,
     InvalidMoveError,
-    NoMovesRemainingError
+    NoMovesRemainingError,
 )
 
 
@@ -196,7 +196,7 @@ class Game:
 
         # reduce player's remaining moves
         self.current_player.use_move()
-        
+
         # If a hit occurred, Game could update player/checker states
         # (we rely on sync_checkers to reconcile)
         self.sync_checkers()

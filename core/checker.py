@@ -73,25 +73,21 @@ class Checker:
 
     def calculate_new_position(self, dice_value):
         """
-        Calculate the new position based on a dice value.
-        White checkers move in decreasing order (23->0)
-        Black checkers move in increasing order (0->23)
-
-        Args:
-            dice_value (int): Value of the dice roll (1-6)
-
-        Returns:
-            int: The new position after the move
+        Calculate the new position after moving by dice_value.
+        White moves from low to high (0->23), Black moves from high to low (23->0).
         """
         if self.state != CheckerState.ON_BOARD:
-            raise ValueError("Cannot calculate new position: checker not on board")
+            raise ValueError("Checker must be on board to calculate new position")
 
-        if self._position is None:
-            raise ValueError("Cannot calculate new position: no current position")
+        if self.position is None:
+            raise ValueError("Checker position must be set")
 
         if self.color == CheckerColor.WHITE:
-            return self._position - dice_value
-        return self._position + dice_value
+            new_position = self.position + dice_value
+        else:  # BLACK
+            new_position = self.position - dice_value
+
+        return new_position
 
     def send_to_bar(self):
         """Send this checker to the bar (after being hit)"""
@@ -99,29 +95,21 @@ class Checker:
         self._position = None
 
     def enter_from_bar(self, position):
-        """
-        Enter the checker from the bar to the board.
-
-        Args:
-            position (int): Target point index (0-23)
-
-        Raises:
-            InvalidCheckerPositionError: If the position is not a valid entry point for this color
-        """
+        """Enter a checker from the bar to the specified position."""
         if self.state != CheckerState.ON_BAR:
-            raise ValueError("Cannot enter from bar: checker not on bar")
+            return False
 
-        # White enters on points 18-23, Black enters on points 0-5
-        valid_entry_points = (
-            range(18, 24) if self.color == CheckerColor.WHITE else range(0, 6)
-        )
+        # Validate entry points based on color
+        if self.color == CheckerColor.WHITE:
+            if not (0 <= position <= 5):
+                raise InvalidCheckerPositionError(position, "0-5")
+        else:  # BLACK
+            if not (18 <= position <= 23):
+                raise InvalidCheckerPositionError(position, "18-23")
 
-        if position not in valid_entry_points:
-            valid_range = "18-23" if self.color == CheckerColor.WHITE else "0-5"
-            raise InvalidCheckerPositionError(position, valid_range)
-
-        self._position = position
+        self.position = position
         self.state = CheckerState.ON_BOARD
+        return True
 
     def bear_off(self):
         """
@@ -140,21 +128,34 @@ class Checker:
         self._position = None
 
     def is_in_home_board(self):
-        """
-        Check if the checker is in its home board.
-
-        Returns:
-            bool: True if the checker is in its home board, False otherwise
-        """
-        if self.state != CheckerState.ON_BOARD or self._position is None:
+        """Check if the checker is in its home board."""
+        if self.position is None:
             return False
 
-        # White home board is points 0-5
         if self.color == CheckerColor.WHITE:
-            return 0 <= self._position <= 5
+            return 18 <= self.position <= 23
+        else:  # BLACK
+            return 0 <= self.position <= 5
 
-        # Black home board is points 18-23
-        return 18 <= self._position <= 23
+    def can_bear_off_with_value(self, dice_value):
+        """Check if this checker can be borne off with the given dice value."""
+        if not self.is_in_home_board():
+            return False
+
+        if self.color == CheckerColor.WHITE:
+            needed_value = 24 - self.position
+        else:  # BLACK
+            needed_value = self.position + 1
+
+        return dice_value >= needed_value
+
+    def __str__(self):
+        """String representation of the checker"""
+        color_name = "White" if self.color == CheckerColor.WHITE else "Black"
+        state_name = self.state.name
+        pos_str = f"pos={self._position}"
+        return f"{color_name}({state_name}, {pos_str})"
+        return f"{color_name}({state_name}, {pos_str})"
 
     def can_bear_off_with_value(self, dice_value):
         """
@@ -169,17 +170,17 @@ class Checker:
         if not self.is_in_home_board():
             return False
 
-        # For white, position + 1 is the distance
         if self.color == CheckerColor.WHITE:
-            return dice_value >= self._position + 1
+            needed_value = 24 - self.position
+        else:  # BLACK
+            needed_value = self.position + 1
 
-        # For black, calculate distance to bear off (24 - position)
-        distance_to_bear_off = 24 - self._position
-        return dice_value >= distance_to_bear_off
+        return dice_value >= needed_value
 
     def __str__(self):
         """String representation of the checker"""
         color_name = "White" if self.color == CheckerColor.WHITE else "Black"
         state_name = self.state.name
         pos_str = f"pos={self._position}"
+        return f"{color_name}({state_name}, {pos_str})"
         return f"{color_name}({state_name}, {pos_str})"

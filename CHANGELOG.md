@@ -59,31 +59,56 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Unit tests covering initialization, setup/distribution, initial roll decision and start turn
 
 - Created UML Diagram using PlantUML extension (16/09/2025):
+
   - Complete class diagram showing all core classes and relationships
   - Documentation of Single Source of Truth pattern
   - Visual representation of SOLID principles implementation
 
-### Fixed
+- Created comprehensive exception system in `core/exceptions.py` (27/9/2025):
 
-- Resolved test failures in checker and board classes (11/09/2025):
+  - Hierarchical custom exceptions following SOLID principles
+  - Base exceptions: `BackgammonError`, `GameError`, `BoardError`, `PlayerError`, `DiceError`, `CheckerError`
+  - Specific exceptions for each domain with detailed error messages and context
+  - Game state validation to prevent operations on uninitialized or finished games
 
-  - Fixed checker test to properly place checker in home board before bearing off
-  - Corrected board bear-off logic for proper range checking
-  - Updated test expectations to match actual behavior of test setups
-  - Improved test isolation to prevent state pollution between tests
-  - Ensured all tests follow proper backgammon rules and TDD principles
+- Implemented TDD-driven exception system across core classes (27/9/2025):
 
-- Fixed TypeError in Player.distribute_checkers() method signature (16/09/2025):
+  - `InvalidPointError` with point validation in Board class methods
+  - `InvalidCheckerPositionError` for Checker position validation
+  - Enhanced existing Game class exception handling with proper validation
+  - Comprehensive test cases for all new exception scenarios
 
-  - Restored missing 'board' parameter that was accidentally removed during encapsulation changes
-  - Fixed 4 failing tests that were calling the method with board parameter
-  - All unit tests now pass successfully
+- Comprehensive exception handling tests in proper test file location (27/9/2025):
 
-- Fixed pylint errors for Board.bar property access (17/09/2025):
-  - Restored 'bar' property name instead of 'bar_dict' to maintain API consistency
-  - Added missing docstring for Checker.position setter method
-  - Resolved all E1101 no-member pylint errors while preserving encapsulation
-  - All core and test files now correctly access board.bar property
+  - Consistent test file naming across the project (tests\_\*.py pattern)
+  - Enhanced test coverage for Game class exception scenarios
+  - Test for DiceNotRolledError to verify dice values cannot be accessed before rolling
+  - Test for NoMovesRemainingError to verify player move validation
+  - Enhanced test coverage for all implemented custom exceptions
+
+- Implemented comprehensive CLI interface in `cli/cli.py` for playing Backgammon (27/9/2025):
+
+  - `BackgammonCLI` class that orchestrates game flow using existing core classes
+  - Visual board display showing all 24 points, bar, and borne-off checkers
+  - Player turn management with dice rolling and move input
+  - Proper error handling for invalid moves and game states
+  - Game initialization with player name input and initial roll
+  - Game loop with win condition checking and turn switching
+  - Followed SOLID principles with clear separation between CLI interaction and game logic
+  - Used only built-in Python functions (no external libraries)
+  - Prepared foundation for TDD testing of CLI components
+
+- Enhanced CLI interface with improved board display (28/9/2025):
+
+  - Unicode box drawing characters for better visual appeal
+  - Comprehensive welcome message and game rules explanation at startup
+  - Detailed help system accessible during gameplay with 'h' command
+  - Clear instructions for move input with examples and validation feedback
+  - Visual indicators for better user experience and clarity
+  - Display of available moves and remaining moves counter
+  - Enhanced error messages with indicators for better user feedback
+  - Special handling instructions for checkers on the bar
+  - Improved game flow with better prompts and user guidance throughout the game
 
 ### Changed
 
@@ -110,15 +135,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Implemented encapsulation improvements across all core classes (16/09/2025):
 
-  - Added private backing fields (\_points, \_bar, \_home) with public properties in Board class
-  - Added private \_position with public property in Checker class
-  - Added private \_values with public property in Dice class
-  - Added private \_checkers with public property in Player class
-  - Added private \_board, \_dice, \_player1, \_player2 with public properties in Game class
+  - Added private backing fields with public properties in all classes
   - All changes are backwards-compatible and maintain existing functionality
   - Improved API clarity and prepared foundation for future validation/access control
 
 - Achieved comprehensive Pylint compliance and code quality improvements (16/09/2025):
+
   - Added module docstrings to all core and test files for better documentation
   - Added class docstrings to all test classes following Python documentation standards
   - Added missing method docstrings for complete API documentation coverage
@@ -132,129 +154,89 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Enhanced code maintainability and readability across entire codebase
   - Established professional Python development standards and documentation practices
 
-### Added - 2024-12-19
+- Updated `Game` class to use custom exceptions instead of generic RuntimeError (27/9/2025):
 
-- Created comprehensive exception system in `core/exceptions.py`
-- Added hierarchical custom exceptions following SOLID principles:
-  - Base exceptions: `BackgammonError`, `GameError`, `BoardError`, `PlayerError`, `DiceError`, `CheckerError`
-  - Specific exceptions for each domain with detailed error messages and context
-- Enhanced error handling in `Game` class with proper exception usage
-- Added game state validation to prevent operations on uninitialized or finished games
+  - Improved error messages with more context and specific error types
+  - Added game initialization tracking for better state management
 
-### Changed - 2024-12-19
+- Refactored exceptions.py to follow TDD principles (27/9/2025):
 
-- Updated `Game` class to use custom exceptions instead of generic RuntimeError
-- Improved error messages with more context and specific error types
-- Added game initialization tracking for better state management
+  - Only implementing needed exceptions to avoid over-engineering
+  - Updated Checker class to use custom exceptions instead of generic ValueError
+  - Enhanced Board class with point validation using custom exceptions
+  - Improved error messages with contextual information and specific error attributes
 
-### Added - 2024-12-19
+- Standardized test file naming convention to match existing pattern (27/9/2025):
 
-- Implemented TDD-driven exception system across core classes
-- Added `InvalidPointError` with point validation in Board class methods
-- Added `InvalidCheckerPositionError` for Checker position validation
-- Enhanced existing Game class exception handling with proper validation
-- Added comprehensive test cases for all new exception scenarios
+  - Improved test reliability by ensuring proper game initialization
+  - Enhanced exception test coverage following TDD methodology
 
-### Changed - 2024-12-19
+- Enhanced test reliability by ensuring proper exception testing patterns (27/9/2025):
 
-- Refactored exceptions.py to follow TDD principles (only implementing needed exceptions)
-- Updated Checker class to use custom exceptions instead of generic ValueError
-- Enhanced Board class with point validation using custom exceptions
-- Improved error messages with contextual information and specific error attributes
+  - Improved consistency between test expectations and actual implementation behavior
+  - Updated tests to match the new exception-based error handling approach
 
-### Fixed - 2024-12-19
+### Fixed
 
-- Corrected exception hierarchy to avoid over-engineering unused exceptions
-- Applied SOLID principles properly by implementing exceptions incrementally based on actual needs
+- Resolved test failures in checker and board classes (11/09/2025):
 
-### Fixed - 2024-12-19
+  - Fixed checker test to properly place checker in home board before bearing off
+  - Corrected board bear-off logic for proper range checking
+  - Updated test expectations to match actual behavior of test setups
+  - Improved test isolation to prevent state pollution between tests
+  - Ensured all tests follow proper backgammon rules and TDD principles
 
-- Moved all Game class tests from `test_game.py` to `tests_game.py` to follow consistent naming convention
-- Fixed syntax errors in `core/exceptions.py` that were causing import issues
-- Updated test initialization to properly call `game.setup_game()` before testing exception scenarios
-- Ensured all tests follow TDD principles with proper setup and teardown
+- Fixed TypeError in Player.distribute_checkers() method signature (16/09/2025):
 
-### Added - 2024-12-19
+  - Restored missing 'board' parameter that was accidentally removed during encapsulation changes
+  - Fixed 4 failing tests that were calling the method with board parameter
+  - All unit tests now pass successfully
 
-- Comprehensive exception handling tests in proper test file location
-- Consistent test file naming across the project (tests\_\*.py pattern)
-- Enhanced test coverage for Game class exception scenarios
+- Fixed pylint errors for Board.bar property access (17/09/2025):
 
-### Changed - 2024-12-19
+  - Restored 'bar' property name instead of 'bar_dict' to maintain API consistency
+  - Added missing docstring for Checker.position setter method
+  - Resolved all E1101 no-member pylint errors while preserving encapsulation
+  - All core and test files now correctly access board.bar property
 
-- Standardized test file naming convention to match existing pattern
-- Improved test reliability by ensuring proper game initialization
-- Enhanced exception test coverage following TDD methodology
+- Corrected exception hierarchy to avoid over-engineering unused exceptions (27/9/2025):
 
-### Fixed - 2024-12-19
+  - Applied SOLID principles properly by implementing exceptions incrementally based on actual needs
 
-- Fixed syntax error in `core/exceptions.py` by removing duplicated class definition
-- Fixed duplicate return statement in `core/checker.py`
-- Updated failing test `test_apply_move_without_current_player_returns_false` to properly test exception behavior instead of return value
-- Corrected test logic to follow TDD principles with proper game initialization before testing exception scenarios
+- Fixed syntax error in `core/exceptions.py` by removing duplicated class definition (27/9/2025):
 
-### Changed - 2024-12-19
+  - Fixed duplicate return statement in `core/checker.py`
+  - Updated failing test to properly test exception behavior instead of return value
+  - Corrected test logic to follow TDD principles with proper game initialization before testing exception scenarios
 
-- Enhanced test reliability by ensuring proper exception testing patterns
-- Improved consistency between test expectations and actual implementation behavior
-- Updated tests to match the new exception-based error handling approach
+- Updated legacy `tests/test_game.py` to honor game initialization requirements and new exception flow before calling `start_turn` and `apply_move` (27/9/2025)
 
-### Fixed - 2024-12-19
+- Corrected initial roll logic to follow standard backgammon rules (27/9/2025):
 
-- Fixed failing dice initialization test by updating it to work with new DiceNotRolledError exception
-- Removed duplicate return statement in Checker.**str** method
-- Added proper test coverage for NoMovesRemainingError in Player class
-- Enhanced exception testing to verify proper error messages and attributes
+  - Each player rolls one die separately instead of rolling two dice together
+  - Updated `Dice.initial_roll()` to simulate separate rolls for each player
+  - Modified `Dice.get_highest_roller()` to properly compare the two player rolls
+  - Updated tests to reflect the corrected initial roll behavior
+  - Ensured game initialization follows proper backgammon rules for determining first player
 
-### Added - 2024-12-19
+- Updated CLI to display individual player rolls during initial roll determination (27/9/2025):
+  - Clarifying that each player rolls separately according to standard backgammon rules
 
-- Added test for DiceNotRolledError to verify dice values cannot be accessed before rolling
-- Added test for NoMovesRemainingError to verify player move validation
-- Enhanced test coverage for all implemented custom exceptions
+### Fixed - 2024-01-XX
 
-### Fixed - 2024-12-19
+- Fixed AttributeError in Board class where setup_starting_positions() was trying to assign to read-only points property
+- Corrected checker movement directions: White moves 0→23, Black moves 23→0
+- Fixed home board ranges: White home is points 18-23, Black home is points 0-5
+- Fixed entry points from bar: White enters points 0-5, Black enters points 18-23
+- Updated Board.enter_from_bar() to use internal \_points storage instead of property
+- Fixed Player.get_starting_positions() to return correct positions for each color
+- Corrected checker bear-off calculations for both White and Black checkers
 
-- Updated legacy `tests/test_game.py` to honor game initialization requirements and new exception flow before calling `start_turn` and `apply_move`.
+### Technical Details - 2024-01-XX
 
-### Added - 2024-12-19
-
-- Implemented comprehensive CLI interface in `cli/cli.py` for playing Backgammon
-- Created `BackgammonCLI` class that orchestrates game flow using existing core classes
-- Added visual board display showing all 24 points, bar, and borne-off checkers
-- Implemented player turn management with dice rolling and move input
-- Added proper error handling for invalid moves and game states
-- Included game initialization with player name input and initial roll
-- Added game loop with win condition checking and turn switching
-- Followed SOLID principles with clear separation between CLI interaction and game logic
-- Used only built-in Python functions (no external libraries)
-- Prepared foundation for TDD testing of CLI components
-
-### Fixed - 2024-12-19
-
-- Corrected initial roll logic to follow standard backgammon rules where each player rolls one die separately instead of rolling two dice together
-- Updated `Dice.initial_roll()` to simulate separate rolls for each player
-- Modified `Dice.get_highest_roller()` to properly compare the two player rolls
-- Updated tests to reflect the corrected initial roll behavior
-- Ensured game initialization follows proper backgammon rules for determining first player
-
-### Fixed - 2024-12-19
-
-- Updated CLI to display individual player rolls during initial roll determination, clarifying that each player rolls separately according to standard backgammon rules
-
-### Added - 2024-12-19
-
-- Enhanced CLI interface with improved board display using Unicode box drawing characters for better visual appeal
-- Added comprehensive welcome message and game rules explanation at startup
-- Implemented detailed help system accessible during gameplay with 'h' command
-- Added clear instructions for move input with examples and validation feedback
-- Included visual indicators (emojis) for better user experience and clarity
-- Added display of available moves and remaining moves counter
-- Enhanced error messages with emoji indicators for better user feedback
-- Added special handling instructions for checkers on the bar
-- Improved game flow with better prompts and user guidance throughout the game
-
-### Changed
-
-- Fixed movement directions: White moves from high to low (24→1), Black moves from low to high (1→24) - 2025-01-27
-- Updated starting positions and home boards to match correct movement directions - 2025-01-27
-- Updated CLI text to reflect correct movement rules - 2025-01-27
+- Changed Board.setup_starting_positions() to modify self.\_points instead of self.points
+- Updated all Board methods to use self.\_points for internal manipulation
+- Fixed Checker.calculate_new_position() to handle directional movement correctly
+- Corrected Checker.is_in_home_board() range validation
+- Updated Checker.enter_from_bar() validation ranges
+- Fixed Checker.can_bear_off_with_value() calculations
