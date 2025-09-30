@@ -1,5 +1,57 @@
 # Development Prompts Documentation
 
+## Attribute Naming Convention Implementation
+
+### Prompt
+
+```
+Let's change all the _attributes to __attributes__. Remember to document in prompts-desarrollo.md and in the CHANGELOG.md files.
+```
+
+### Response
+
+Implemented the critical specification requirement that "Todos los atributos de todas las clases deben contener como prefijo y postfijo los símbolos '\_\_'" by systematically converting all single underscore attributes to double underscore format across the entire codebase.
+
+**Changes Made:**
+
+1. **Board Class (`core/board.py`)**:
+
+   - `_points` → `__points__`
+   - `_bar` → `__bar__`
+   - `_home` → `__home__`
+   - Updated all property methods and internal references
+
+2. **Checker Class (`core/checker.py`)**:
+
+   - `_position` → `__position__`
+   - Updated property getter/setter methods and all position-related methods
+
+3. **Dice Class (`core/dice.py`)**:
+
+   - `_values` → `__values__`
+   - Updated property method and all internal references
+
+4. **Player Class (`core/player.py`)**:
+
+   - `_checkers` → `__checkers__`
+   - Updated property method and distribute_checkers method
+
+5. **Game Class (`core/game.py`)**:
+   - `_board` → `__board__`
+   - `_dice` → `__dice__`
+   - `_player1` → `__player1__`
+   - `_player2` → `__player2__`
+   - `_game_initialized` → `__game_initialized__`
+   - Updated all property methods and internal references
+
+**Verification:**
+
+- Ran complete test suite with 105 tests - all passed ✅
+- Maintained full functionality while meeting specification requirements
+- Followed TDD methodology by ensuring tests validate the changes
+
+This implementation ensures compliance with the mandatory project specification requirement for double underscore attribute naming convention.
+
 ## Dice Implementation for Backgammon
 
 ### Prompt

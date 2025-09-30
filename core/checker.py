@@ -34,17 +34,17 @@ class Checker:
         """
         self.color = color
         self.state = CheckerState.ON_BOARD
-        self._position = None
+        self.__position__ = None
 
     @property
     def position(self):
         """Get the current position of the checker."""
-        return self._position
+        return self.__position__
 
     @position.setter
     def position(self, value):
         """Set the position of the checker."""
-        self._position = value
+        self.__position__ = value
 
     def set_position(self, position):
         """
@@ -56,7 +56,7 @@ class Checker:
         if not 0 <= position <= 23:
             raise InvalidCheckerPositionError(position)
 
-        self._position = position
+        self.__position__ = position
         self.state = CheckerState.ON_BOARD
 
     def move_to_position(self, new_position):
@@ -69,7 +69,7 @@ class Checker:
         if not 0 <= new_position <= 23:
             raise InvalidCheckerPositionError(new_position)
 
-        self._position = new_position
+        self.__position__ = new_position
         self.state = CheckerState.ON_BOARD
 
     def calculate_new_position(self, dice_value):
@@ -93,7 +93,7 @@ class Checker:
     def send_to_bar(self):
         """Send this checker to the bar (after being hit)"""
         self.state = CheckerState.ON_BAR
-        self._position = None
+        self.__position__ = None
 
     def enter_from_bar(self, position):
         """Enter a checker from the bar to the specified position."""
@@ -126,7 +126,7 @@ class Checker:
             raise ValueError("Cannot bear off: checker not in home board")
 
         self.state = CheckerState.BORNE_OFF
-        self._position = None
+        self.__position__ = None
 
     def is_in_home_board(self):
         """Check if the checker is in its home board."""
@@ -154,5 +154,5 @@ class Checker:
         """String representation of the checker"""
         color_name = "White" if self.color == CheckerColor.WHITE else "Black"
         state_name = self.state.name
-        pos_str = f"pos={self._position}"
+        pos_str = f"pos={self.__position__}"
         return f"{color_name}({state_name}, {pos_str})"
