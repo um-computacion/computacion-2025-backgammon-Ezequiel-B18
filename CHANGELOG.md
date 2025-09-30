@@ -110,6 +110,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Special handling instructions for checkers on the bar
   - Improved game flow with better prompts and user guidance throughout the game
 
+- Added tests for the CLI (29/9/2025)
+  - Comprehensive test suite for CLI module (tests_cli.py)
+  - Tests for all CLI display methods including board rendering and player information
+  - Tests for user input handling including move parsing and validation
+  - Tests for game loop orchestration and turn management
+  - Tests for error handling and exception scenarios
+  - Tests for help system and quit functionality
+  - Integration tests for main function execution paths
+
 ### Changed
 
 - Updated CI workflow to run on entire project structure (13/09/2025):
@@ -220,23 +229,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Ensured game initialization follows proper backgammon rules for determining first player
 
 - Updated CLI to display individual player rolls during initial roll determination (27/9/2025):
+
   - Clarifying that each player rolls separately according to standard backgammon rules
 
-### Fixed - 2024-01-XX
+- Fixed some tests (28/9/2025)
 
-- Fixed AttributeError in Board class where setup_starting_positions() was trying to assign to read-only points property
-- Corrected checker movement directions: White moves 0→23, Black moves 23→0
-- Fixed home board ranges: White home is points 18-23, Black home is points 0-5
-- Fixed entry points from bar: White enters points 0-5, Black enters points 18-23
-- Updated Board.enter_from_bar() to use internal \_points storage instead of property
-- Fixed Player.get_starting_positions() to return correct positions for each color
-- Corrected checker bear-off calculations for both White and Black checkers
+  - Fixed AttributeError in Board class where setup_starting_positions() was trying to assign to read-only points property
+  - Corrected checker movement directions: White moves 0→23, Black moves 23→0
+  - Fixed home board ranges: White home is points 18-23, Black home is points 0-5
+  - Fixed entry points from bar: White enters points 0-5, Black enters points 18-23
+  - Updated Board.enter_from_bar() to use internal \_points storage instead of property
+  - Fixed Player.get_starting_positions() to return correct positions for each color
+  - Corrected checker bear-off calculations for both White and Black checkers
+
+- Fixed CLI tests errors (29/9/2025)
+  - Fixed CLI tests hanging with infinite loops during `handle_player_move` testing
+  - Fixed `test_handle_player_move_quit` by properly mocking `sys.exit` with `SystemExit` exception
+  - Fixed output verification in CLI tests by using `mock_print` instead of `StringIO`
+  - Removed duplicate `test_game.py` file that was conflicting with `tests_game.py`
+  - Ensured all CLI tests have proper exit conditions and don't cause KeyboardInterrupt
+
+### Improved - 2024-01-XX
+
+- Simplified CLI quit handling by removing sys.exit() dependency
+- Added GameQuitException for better separation of concerns in CLI
+- Improved CLI testability by using exception-based flow control instead of system exit
+- Enhanced SOLID compliance in CLI design (Single Responsibility Principle)
 
 ### Technical Details - 2024-01-XX
 
-- Changed Board.setup_starting_positions() to modify self.\_points instead of self.points
-- Updated all Board methods to use self.\_points for internal manipulation
-- Fixed Checker.calculate_new_position() to handle directional movement correctly
-- Corrected Checker.is_in_home_board() range validation
-- Updated Checker.enter_from_bar() validation ranges
-- Fixed Checker.can_bear_off_with_value() calculations
+- Replaced sys.exit() calls with GameQuitException in handle_player_move()
+- Updated game_loop() to catch and handle quit exceptions gracefully
+- Simplified CLI tests by removing complex sys.exit() mocking
+- Added test for game loop quit handling with exception verification

@@ -4,6 +4,9 @@ This module defines custom exceptions used throughout the game,
 following SOLID principles and TDD methodology.
 """
 
+class GameQuitException(Exception):
+    """Exception raised when user wants to quit the game."""
+    pass
 
 # Base Exception
 class BackgammonError(Exception):
