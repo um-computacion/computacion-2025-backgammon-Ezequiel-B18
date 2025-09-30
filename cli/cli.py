@@ -7,6 +7,7 @@ from core.exceptions import (
     GameAlreadyOverError,
     InvalidMoveError,
     NoMovesRemainingError,
+    GameQuitException,
 )
 
 
@@ -77,34 +78,39 @@ class BackgammonCLI:
 
     def game_loop(self):
         """Main game loop handling turns and moves."""
-        while not self.game.is_game_over():
-            try:
-                self.display_board()
-                self.display_current_player_info()
+        try:
+            while not self.game.is_game_over():
+                try:
+                    self.display_board()
+                    self.display_current_player_info()
 
-                # Start turn (roll dice)
-                input(f"\n{self.game.current_player.name}, press Enter to roll dice...")
-                self.game.start_turn()
+                    # Start turn (roll dice)
+                    input(f"\n{self.game.current_player.name}, press Enter to roll dice...")
+                    self.game.start_turn()
 
-                self.display_dice_roll()
-                self.display_available_moves()
+                    self.display_dice_roll()
+                    self.display_available_moves()
 
-                # Handle moves until turn is over
-                while self.game.current_player.remaining_moves > 0:
-                    self.handle_player_move()
+                    # Handle moves until turn is over
+                    while self.game.current_player.remaining_moves > 0:
+                        self.handle_player_move()
 
-                # End turn and switch players
-                self.game.current_player.end_turn()
-                self.game.switch_players()
+                    # End turn and switch players
+                    self.game.current_player.end_turn()
+                    self.game.switch_players()
 
-            except (
-                GameNotInitializedError,
-                InvalidPlayerTurnError,
-                GameAlreadyOverError,
-                InvalidMoveError,
-            ) as e:
-                print(f"Error: {e}")
-                continue
+                except (
+                    GameNotInitializedError,
+                    InvalidPlayerTurnError,
+                    GameAlreadyOverError,
+                    InvalidMoveError,
+                ) as e:
+                    print(f"Error: {e}")
+                    continue
+
+        except GameQuitException:
+            print("Game ended by player.")
+            return
 
         # Game over
         self.display_game_over()
@@ -235,8 +241,7 @@ class BackgammonCLI:
                 )
 
                 if move_input == "q":
-                    print("Game ended by player.")
-                    exit(0)
+                    raise GameQuitException()
                 elif move_input == "h":
                     self.display_help()
                     continue
