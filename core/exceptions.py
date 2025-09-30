@@ -4,40 +4,31 @@ This module defines custom exceptions used throughout the game,
 following SOLID principles and TDD methodology.
 """
 
+
 class GameQuitException(Exception):
     """Exception raised when user wants to quit the game."""
-    pass
+
 
 # Base Exception
 class BackgammonError(Exception):
     """Base exception for all backgammon game errors."""
-
-    pass
 
 
 # Game-level exceptions (already in use)
 class GameError(BackgammonError):
     """Base exception for game-level errors."""
 
-    pass
-
 
 class GameNotInitializedError(GameError):
     """Raised when trying to perform actions on an uninitialized game."""
-
-    pass
 
 
 class InvalidPlayerTurnError(GameError):
     """Raised when a player tries to act when it's not their turn."""
 
-    pass
-
 
 class GameAlreadyOverError(GameError):
     """Raised when trying to perform actions on a finished game."""
-
-    pass
 
 
 class InvalidMoveError(GameError):
@@ -57,8 +48,6 @@ class InvalidMoveError(GameError):
 class BoardError(BackgammonError):
     """Base exception for board-related errors."""
 
-    pass
-
 
 class InvalidPointError(BoardError):
     """Raised when trying to access an invalid board point."""
@@ -74,20 +63,14 @@ class InvalidPointError(BoardError):
 class PlayerError(BackgammonError):
     """Base exception for player-related errors."""
 
-    pass
-
 
 class InvalidPlayerColorError(PlayerError):
     """Raised when an invalid player color is specified."""
-
-    pass
 
 
 # Checker-level exceptions (to be used based on tests)
 class CheckerError(BackgammonError):
     """Base exception for checker-related errors."""
-
-    pass
 
 
 class InvalidCheckerPositionError(CheckerError):
@@ -102,8 +85,6 @@ class InvalidCheckerPositionError(CheckerError):
 # Dice-level exceptions (to be used based on tests)
 class DiceError(BackgammonError):
     """Base exception for dice-related errors."""
-
-    pass
 
 
 # Specific Player Exceptions
@@ -127,8 +108,6 @@ class InvalidCheckerCountError(PlayerError):
 # Specific Dice Exceptions
 class DiceNotRolledError(DiceError):
     """Raised when trying to access dice values before rolling."""
-
-    pass
 
 
 class InvalidDiceValueError(DiceError):

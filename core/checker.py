@@ -38,6 +38,7 @@ class Checker:
 
     @property
     def position(self):
+        """Get the current position of the checker."""
         return self._position
 
     @position.setter
@@ -101,10 +102,10 @@ class Checker:
 
         # Validate entry points based on color
         if self.color == CheckerColor.WHITE:
-            if not (0 <= position <= 5):
+            if not 0 <= position <= 5:
                 raise InvalidCheckerPositionError(position, "0-5")
         else:  # BLACK
-            if not (18 <= position <= 23):
+            if not 18 <= position <= 23:
                 raise InvalidCheckerPositionError(position, "18-23")
 
         self.position = position
@@ -134,8 +135,8 @@ class Checker:
 
         if self.color == CheckerColor.WHITE:
             return 18 <= self.position <= 23
-        else:  # BLACK
-            return 0 <= self.position <= 5
+        # BLACK
+        return 0 <= self.position <= 5
 
     def can_bear_off_with_value(self, dice_value):
         """Check if this checker can be borne off with the given dice value."""
@@ -154,33 +155,4 @@ class Checker:
         color_name = "White" if self.color == CheckerColor.WHITE else "Black"
         state_name = self.state.name
         pos_str = f"pos={self._position}"
-        return f"{color_name}({state_name}, {pos_str})"
-        return f"{color_name}({state_name}, {pos_str})"
-
-    def can_bear_off_with_value(self, dice_value):
-        """
-        Check if the checker can be borne off with a specific dice value.
-
-        Args:
-            dice_value (int): Value of the dice roll (1-6)
-
-        Returns:
-            bool: True if the checker can be borne off with this value, False otherwise
-        """
-        if not self.is_in_home_board():
-            return False
-
-        if self.color == CheckerColor.WHITE:
-            needed_value = 24 - self.position
-        else:  # BLACK
-            needed_value = self.position + 1
-
-        return dice_value >= needed_value
-
-    def __str__(self):
-        """String representation of the checker"""
-        color_name = "White" if self.color == CheckerColor.WHITE else "Black"
-        state_name = self.state.name
-        pos_str = f"pos={self._position}"
-        return f"{color_name}({state_name}, {pos_str})"
         return f"{color_name}({state_name}, {pos_str})"

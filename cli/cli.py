@@ -1,4 +1,5 @@
 """Command Line Interface for Backgammon game."""
+# pylint: disable=too-many-branches,too-many-statements
 
 from core.game import Game
 from core.exceptions import (
@@ -59,7 +60,8 @@ class BackgammonCLI:
         print("- You must use all dice values in your turn")
         print("- Hit opponent by landing on their single checker")
         print(
-            "- Bear off when all checkers are in your home board (points 1-6 for White, 19-24 for Black)"
+            "- Bear off when all checkers are in your home board "
+            "(points 1-6 for White, 19-24 for Black)"
         )
         print("- Type 'q' to quit, 'h' for help")
         print("=" * 60)
@@ -76,16 +78,18 @@ class BackgammonCLI:
         print("and bear them off before your opponent does!")
         print("=" * 60)
 
-    def game_loop(self):
+    def game_loop(self):  # pylint: disable=too-many-branches,too-many-statements
         """Main game loop handling turns and moves."""
-        try:
+        try:  # pylint: disable=too-many-branches,too-many-statements
             while not self.game.is_game_over():
                 try:
                     self.display_board()
                     self.display_current_player_info()
 
                     # Start turn (roll dice)
-                    input(f"\n{self.game.current_player.name}, press Enter to roll dice...")
+                    input(
+                        f"\n{self.game.current_player.name}, press Enter to roll dice..."
+                    )
                     self.game.start_turn()
 
                     self.display_dice_roll()
@@ -191,7 +195,8 @@ class BackgammonCLI:
         home_black = board.home[2]
 
         print(
-            f"Bar: White={bar_white} Black={bar_black} | Borne off: White={home_white} Black={home_black}"
+            f"Bar: White={bar_white} Black={bar_black} | "
+            f"Borne off: White={home_white} Black={home_black}"
         )
 
     def display_current_player_info(self):
@@ -234,7 +239,7 @@ class BackgammonCLI:
             try:
                 move_input = (
                     input(
-                        f"Enter move (from_point to_point) or 'h' for help, 'q' to quit: "
+                        "Enter move (from_point to_point) or 'h' for help, 'q' to quit: "
                     )
                     .strip()
                     .lower()
@@ -242,7 +247,7 @@ class BackgammonCLI:
 
                 if move_input == "q":
                     raise GameQuitException()
-                elif move_input == "h":
+                if move_input == "h":
                     self.display_help()
                     continue
 
@@ -276,8 +281,7 @@ class BackgammonCLI:
                 if success:
                     print(f"Move successful: {from_point + 1} → {to_point + 1}")
                     break
-                else:
-                    print("Invalid move. Try again or check the board.")
+                print("Invalid move. Try again or check the board.")
 
             except (InvalidMoveError, NoMovesRemainingError) as e:
                 print(f"Move error: {e}")
@@ -311,7 +315,7 @@ class BackgammonCLI:
         """Display game over information."""
         winner = self.game.get_winner()
         if winner:
-            print(f"\nGAME OVER!")
+            print("\nGAME OVER!")
             print(f"Winner: {winner.name} ({winner.color.name})")
             print("Congratulations!")
         else:
@@ -325,7 +329,11 @@ def main():
         cli.start_game()
     except KeyboardInterrupt:
         print("\nGame interrupted by user.")
-    except Exception as e:
+    except (GameQuitException, GameNotInitializedError, InvalidPlayerTurnError) as e:
+        print(f"Game error: {e}")
+    except OSError as e:
+        print(f"System error: {e}")
+    except Exception as e:  # pylint: disable=broad-exception-caught
         print(f"An unexpected error occurred: {e}")
 
 

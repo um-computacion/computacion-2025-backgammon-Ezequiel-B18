@@ -9,7 +9,6 @@ from core.exceptions import (
     InvalidPlayerTurnError,
     GameAlreadyOverError,
     InvalidMoveError,
-    NoMovesRemainingError,
 )
 
 
