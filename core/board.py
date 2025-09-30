@@ -51,7 +51,7 @@ class Board:
         return self._points
 
     @property
-    def bar(self):
+    def bar(self):  # pylint: disable=disallowed-name
         """Dictionary mapping player -> number of checkers on the bar."""
         return self._bar
 
@@ -150,7 +150,7 @@ class Board:
         try:
             if not self.is_valid_move(player, from_point, to_point):
                 return event
-        except InvalidPointError:
+        except InvalidPointError:  # pylint: disable=try-except-raise
             # Re-raise point errors to be caught by Game
             raise
 
@@ -183,10 +183,10 @@ class Board:
 
         # Validate entry points
         if player == 1:  # White enters from points 0-5
-            if not (0 <= point <= 5):
+            if not 0 <= point <= 5:
                 return False
         else:  # Black enters from points 18-23
-            if not (18 <= point <= 23):
+            if not 18 <= point <= 23:
                 return False
 
         # Check if point is blocked by opponent
@@ -231,14 +231,14 @@ class Board:
         # All on-board checkers must be in home board
         return checkers_on_board == checkers_in_home
 
-    def bear_off(self, player, point):
+    def bear_off(self, player, point):  # pylint: disable=too-many-return-statements,too-many-branches
         """Bear off a checker from the specified point."""
         # Validate point is in player's home board
         if player == 1:  # White
-            if not (18 <= point <= 23):
+            if not 18 <= point <= 23:
                 return False
         else:  # Black
-            if not (0 <= point <= 5):
+            if not 0 <= point <= 5:
                 return False
 
         # Check if all checkers are in home board

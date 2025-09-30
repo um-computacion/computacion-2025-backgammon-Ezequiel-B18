@@ -5,7 +5,7 @@ from core.board import Board
 from core.exceptions import InvalidPointError
 
 
-class TestBoard(unittest.TestCase):
+class TestBoard(unittest.TestCase):  # pylint: disable=too-many-public-methods
     """Test cases for the Board class."""
 
     def setUp(self):

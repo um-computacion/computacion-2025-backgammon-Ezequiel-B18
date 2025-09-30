@@ -9,7 +9,6 @@ from core.exceptions import (
     GameNotInitializedError,
     InvalidPlayerTurnError,
     GameAlreadyOverError,
-    InvalidMoveError,
 )
 
 
@@ -94,7 +93,7 @@ class TestGame(unittest.TestCase):
             game.start_turn()
 
     def test_apply_move_without_current_player_returns_false(self):
-        """Test that apply_move raises InvalidPlayerTurnError when no current player after initialization."""
+        """Test that apply_move raises InvalidPlayerTurnError when no current player after init."""
         game = Game()
         game.setup_game()  # Initialize the game first
         # Don't set current_player - this should raise InvalidPlayerTurnError
@@ -118,8 +117,8 @@ class TestGame(unittest.TestCase):
         game = Game()
         game.setup_game()
         # Clear the starting positions and set up a specific scenario
-        game.board._points[0] = (1, 1)  # One white checker at point 0
-        game.board._points[3] = (2, 1)  # One black checker at point 3
+        game.board.points[0] = (1, 1)  # One white checker at point 0
+        game.board.points[3] = (2, 1)  # One black checker at point 3
         # Sync the checker states to match board
         game.sync_checkers()
         game.current_player = game.player1
