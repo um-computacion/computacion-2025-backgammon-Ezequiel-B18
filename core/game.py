@@ -22,33 +22,33 @@ class Game:
     def __init__(
         self, player1_name="White", player2_name="Black", test_bearing_off=False
     ):
-        self._board = Board(test_bearing_off=test_bearing_off)
-        self._dice = Dice()
-        self._player1 = Player(player1_name, PlayerColor.WHITE)
-        self._player2 = Player(player2_name, PlayerColor.BLACK)
+        self.__board__ = Board(test_bearing_off=test_bearing_off)
+        self.__dice__ = Dice()
+        self.__player1__ = Player(player1_name, PlayerColor.WHITE)
+        self.__player2__ = Player(player2_name, PlayerColor.BLACK)
         self.current_player = None  # Will be set after initial roll
         self.other_player = None
-        self._game_initialized = False
+        self.__game_initialized__ = False
 
     @property
     def board(self):
         """Get the game board."""
-        return self._board
+        return self.__board__
 
     @property
     def dice(self):
         """Get the game dice."""
-        return self._dice
+        return self.__dice__
 
     @property
     def player1(self):
         """Get player 1."""
-        return self._player1
+        return self.__player1__
 
     @property
     def player2(self):
         """Get player 2."""
-        return self._player2
+        return self.__player2__
 
     def setup_game(self):
         """Use Board as source of truth for starting positions and sync player checkers."""
@@ -59,7 +59,7 @@ class Game:
         self.player2.distribute_checkers(self.board)
         # Game reconciles Checker objects to match Board
         self.sync_checkers()
-        self._game_initialized = True
+        self.__game_initialized__ = True
 
     def sync_checkers(self):
         """
@@ -144,7 +144,7 @@ class Game:
         Roll dice for the current player and start their turn
         (sets remaining moves).
         """
-        if not self._game_initialized:
+        if not self.__game_initialized__:
             raise GameNotInitializedError(
                 "Game must be initialized before starting turns"
             )
@@ -166,7 +166,7 @@ class Game:
         Accepts the event dict returned by board.move_checker.
         Returns True if move succeeded, False otherwise.
         """
-        if not self._game_initialized:
+        if not self.__game_initialized__:
             raise GameNotInitializedError(
                 "Game must be initialized before making moves"
             )
@@ -210,7 +210,7 @@ class Game:
 
     def switch_players(self):
         """Switch current and other players."""
-        if not self._game_initialized:
+        if not self.__game_initialized__:
             raise GameNotInitializedError(
                 "Game must be initialized before switching players"
             )

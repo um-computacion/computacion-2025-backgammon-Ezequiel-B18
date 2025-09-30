@@ -12,24 +12,24 @@ class Dice:
 
     def __init__(self):
         """Initialize two dice with default values of [0, 0]"""
-        self._values = [0, 0]
+        self.__values__ = [0, 0]
         self.initial_values = [0, 0]
 
     @property
     def values(self):
         """Get the current dice values."""
-        if self._values == [0, 0]:
+        if self.__values__ == [0, 0]:
             raise DiceNotRolledError("Dice must be rolled before accessing values")
-        return self._values
+        return self.__values__
 
     def roll(self):
         """Roll both dice and store their values"""
-        self._values = [random.randint(1, 6), random.randint(1, 6)]
+        self.__values__ = [random.randint(1, 6), random.randint(1, 6)]
         # Validate the rolled values
-        for value in self._values:
+        for value in self.__values__:
             if not 1 <= value <= 6:
                 raise InvalidDiceValueError(value)
-        return self._values
+        return self.__values__
 
     def is_doubles(self):
         """Check if both dice show the same value"""

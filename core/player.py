@@ -36,7 +36,7 @@ class Player:
         checker_color = (
             CheckerColor.WHITE if color == PlayerColor.WHITE else CheckerColor.BLACK
         )
-        self._checkers = [Checker(checker_color) for _ in range(15)]
+        self.__checkers__ = [Checker(checker_color) for _ in range(15)]
 
         # Turn and move tracking
         self.is_turn = False
@@ -45,7 +45,7 @@ class Player:
     @property
     def checkers(self):
         """Access to the player's list of checkers (element mutation allowed)."""
-        return self._checkers
+        return self.__checkers__
 
     def get_starting_positions(self):
         """

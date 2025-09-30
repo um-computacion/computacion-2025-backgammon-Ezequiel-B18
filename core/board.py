@@ -20,45 +20,45 @@ class Board:
         # Points are represented as tuples (player, count)
         # player: 0 = empty, 1 = white, 2 = black
         # count: number of checkers at that point
-        self._points = [(0, 0) for _ in range(24)]
-        self._bar = {1: 0, 2: 0}
-        self._home = {1: 0, 2: 0}
+        self.__points__ = [(0, 0) for _ in range(24)]
+        self.__bar__ = {1: 0, 2: 0}
+        self.__home__ = {1: 0, 2: 0}
 
         if test_bearing_off:
             # Special setup for bearing off tests
             # All white checkers in home board
-            self._points[18] = (1, 2)
-            self._points[19] = (1, 2)
-            self._points[20] = (1, 3)
-            self._points[21] = (1, 2)
-            self._points[22] = (1, 3)
-            self._points[23] = (1, 3)
+            self.__points__[18] = (1, 2)
+            self.__points__[19] = (1, 2)
+            self.__points__[20] = (1, 3)
+            self.__points__[21] = (1, 2)
+            self.__points__[22] = (1, 3)
+            self.__points__[23] = (1, 3)
 
             # All black checkers in their home board
-            self._points[0] = (2, 2)
-            self._points[1] = (2, 2)
-            self._points[2] = (2, 3)
-            self._points[3] = (2, 2)
-            self._points[4] = (2, 3)
-            self._points[5] = (2, 3)
+            self.__points__[0] = (2, 2)
+            self.__points__[1] = (2, 2)
+            self.__points__[2] = (2, 3)
+            self.__points__[3] = (2, 2)
+            self.__points__[4] = (2, 3)
+            self.__points__[5] = (2, 3)
         else:
             # Use the new helper to set standard starting positions
             self.setup_starting_positions()
 
     @property
     def points(self):
-        """View (mutable at element level) of board points (internal SSoT: _points)."""
-        return self._points
+        """View (mutable at element level) of board points (internal SSoT: __points__)."""
+        return self.__points__
 
     @property
     def bar(self):  # pylint: disable=disallowed-name
         """Dictionary mapping player -> number of checkers on the bar."""
-        return self._bar
+        return self.__bar__
 
     @property
     def home(self):
         """Dictionary mapping player -> number of checkers borne off (home)."""
-        return self._home
+        return self.__home__
 
     def get_player_at_point(self, point):
         """
@@ -125,19 +125,19 @@ class Board:
     def setup_starting_positions(self):
         """Set up the standard backgammon starting positions."""
         # Clear all points first
-        self._points = [(0, 0) for _ in range(24)]
+        self.__points__ = [(0, 0) for _ in range(24)]
 
         # White checkers (player 1) starting positions
-        self._points[0] = (1, 2)  # 2 white checkers on point 0
-        self._points[11] = (1, 5)  # 5 white checkers on point 11
-        self._points[16] = (1, 3)  # 3 white checkers on point 16
-        self._points[18] = (1, 5)  # 5 white checkers on point 18
+        self.__points__[0] = (1, 2)  # 2 white checkers on point 0
+        self.__points__[11] = (1, 5)  # 5 white checkers on point 11
+        self.__points__[16] = (1, 3)  # 3 white checkers on point 16
+        self.__points__[18] = (1, 5)  # 5 white checkers on point 18
 
         # Black checkers (player 2) starting positions
-        self._points[23] = (2, 2)  # 2 black checkers on point 23
-        self._points[12] = (2, 5)  # 5 black checkers on point 12
-        self._points[7] = (2, 3)  # 3 black checkers on point 7
-        self._points[5] = (2, 5)  # 5 black checkers on point 5
+        self.__points__[23] = (2, 2)  # 2 black checkers on point 23
+        self.__points__[12] = (2, 5)  # 5 black checkers on point 12
+        self.__points__[7] = (2, 3)  # 3 black checkers on point 7
+        self.__points__[5] = (2, 5)  # 5 black checkers on point 5
 
     def move_checker(self, player, from_point, to_point):
         """
@@ -190,7 +190,7 @@ class Board:
                 return False
 
         # Check if point is blocked by opponent
-        current_player, current_count = self._points[point]
+        current_player, current_count = self.__points__[point]
         if current_player != 0 and current_player != player and current_count >= 2:
             return False
 
@@ -198,13 +198,13 @@ class Board:
         if current_player != 0 and current_player != player and current_count == 1:
             # Hit opponent checker
             self.bar[current_player] += 1
-            self._points[point] = (player, 1)
+            self.__points__[point] = (player, 1)
         elif current_player == player:
             # Stack on own checker
-            self._points[point] = (player, current_count + 1)
+            self.__points__[point] = (player, current_count + 1)
         else:
             # Empty point
-            self._points[point] = (player, 1)
+            self.__points__[point] = (player, 1)
 
         # Remove from bar
         self.bar[player] -= 1
@@ -222,7 +222,7 @@ class Board:
         checkers_in_home = 0
 
         for point_idx in range(24):
-            point_player, count = self._points[point_idx]
+            point_player, count = self.__points__[point_idx]
             if point_player == player:
                 checkers_on_board += count
                 if point_idx in home_range:
@@ -246,28 +246,28 @@ class Board:
             return False
 
         # Check if there's a checker at this point
-        current_player, current_count = self._points[point]
+        current_player, current_count = self.__points__[point]
         if current_player != player or current_count == 0:
             return False
 
         # Check if there are checkers on higher points (for bearing off validation)
         if player == 1:  # White
             for higher_point in range(point + 1, 24):
-                higher_player, higher_count = self._points[higher_point]
+                higher_player, higher_count = self.__points__[higher_point]
                 if higher_player == player and higher_count > 0:
                     return False
         else:  # Black
             for higher_point in range(0, point):
-                higher_player, higher_count = self._points[higher_point]
+                higher_player, higher_count = self.__points__[higher_point]
                 if higher_player == player and higher_count > 0:
                     return False
 
         # Remove checker from point
         new_count = current_count - 1
         if new_count == 0:
-            self._points[point] = (0, 0)
+            self.__points__[point] = (0, 0)
         else:
-            self._points[point] = (player, new_count)
+            self.__points__[point] = (player, new_count)
 
         # Add to home
         self.home[player] += 1
