@@ -2,9 +2,10 @@
 
 SOLID Principles Applied:
 - SRP: Methods grouped by single responsibilities
-- ISP: Focused method interfaces  
+- ISP: Focused method interfaces
 - DIP: Depends on Game abstraction, not concrete implementations
 """
+
 # pylint: disable=too-many-branches,too-many-statements
 
 from core.game import Game
@@ -21,7 +22,7 @@ from core.exceptions import (
 class BackgammonCLI:
     """
     Command Line Interface for playing Backgammon.
-    
+
     Organized by SOLID principles:
     - Game Flow Control: start_game(), game_loop()
     - User Input: _get_player_names(), handle_player_move()
@@ -38,7 +39,7 @@ class BackgammonCLI:
     # =============================================================================
     # GAME FLOW CONTROL (SRP: Game orchestration responsibility)
     # =============================================================================
-    
+
     def start_game(self):
         """Start a new backgammon game with player setup."""
         self.display_welcome()
@@ -53,7 +54,7 @@ class BackgammonCLI:
             while not self.game.is_game_over():
                 try:
                     self._execute_player_turn()
-                    
+
                     # End turn and switch players
                     self.game.current_player.end_turn()
                     self.game.switch_players()
@@ -73,7 +74,7 @@ class BackgammonCLI:
 
         # Game over
         self.display_game_over()
-    
+
     def _execute_player_turn(self):
         """Execute a single player turn."""
         self.display_board()
@@ -89,16 +90,16 @@ class BackgammonCLI:
         # Handle moves until turn is over
         while self.game.current_player.remaining_moves > 0:
             self.handle_player_move()
-    
+
     # =============================================================================
     # GAME SETUP (SRP: Initial game configuration responsibility)
     # =============================================================================
-    
+
     def _get_player_names(self):
         """Get player names from user input."""
         self.player1_name = input("Enter Player 1 (White) name: ").strip() or "White"
         self.player2_name = input("Enter Player 2 (Black) name: ").strip() or "Black"
-    
+
     def _setup_initial_game(self):
         """Setup the game and handle initial roll."""
         # Initialize game
@@ -110,7 +111,9 @@ class BackgammonCLI:
         self.game.setup_game()
 
         # Initial roll to determine who goes first
-        print("\\nINITIAL ROLL - Each player rolls one die to determine who goes first!")
+        print(
+            "\\nINITIAL ROLL - Each player rolls one die to determine who goes first!"
+        )
         winner = self.game.initial_roll_until_decided()
         print(f"{self.player1_name} rolls: {self.game.dice.initial_values[0]}")
         print(f"{self.player2_name} rolls: {self.game.dice.initial_values[1]}")
@@ -119,7 +122,7 @@ class BackgammonCLI:
             print(f"{self.player1_name} (White) goes first!")
         else:
             print(f"{self.player2_name} (Black) goes first!")
-    
+
     def _display_game_instructions(self):
         """Display game instructions to players."""
         print("\\n" + "=" * 60)
@@ -139,7 +142,7 @@ class BackgammonCLI:
     # =============================================================================
     # USER INPUT HANDLING (SRP: Input parsing and move validation responsibility)
     # =============================================================================
-    
+
     def handle_player_move(self):
         """Handle a single move from the current player."""
         while True:
@@ -197,7 +200,7 @@ class BackgammonCLI:
     # =============================================================================
     # DISPLAY METHODS (SRP: User interface and visualization responsibility)
     # =============================================================================
-    
+
     def display_welcome(self):
         """Display welcome message and basic rules."""
         print("WELCOME TO BACKGAMMON!")

@@ -231,7 +231,9 @@ class Board:
         # All on-board checkers must be in home board
         return checkers_on_board == checkers_in_home
 
-    def bear_off(self, player, point):  # pylint: disable=too-many-return-statements,too-many-branches
+    def bear_off(
+        self, player, point
+    ):  # pylint: disable=too-many-return-statements,too-many-branches
         """Bear off a checker from the specified point."""
         # Validate point is in player's home board
         if player == 1:  # White
