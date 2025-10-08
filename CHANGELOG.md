@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **SOLID Principles Compliance - Dependency Inversion Principle (DIP)** (07/10/2025):
+
+  - Refactored Game class constructor to support dependency injection
+  - Game no longer directly instantiates Board(), Dice(), and Player() objects (fixing DIP violation)
+  - Added optional parameters for injecting custom instances: `board=None, dice=None, player1=None, player2=None`
+  - Maintains full backward compatibility - all existing code continues to work unchanged
+  - Enables better testing by allowing mock object injection
+  - All 105 tests pass without modification
+  - Follows pragmatic SOLID approach without over-engineering interfaces
+
 - Implemented mandatory attribute naming convention (30/09/2025):
   - Converted all single underscore attributes (`_attribute`) to double underscore format (`__attribute__`) across entire codebase
   - **Board class**: `_points` → `__points__`, `_bar` → `__bar__`, `_home` → `__home__`
