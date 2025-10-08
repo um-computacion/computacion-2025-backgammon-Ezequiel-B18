@@ -1,5 +1,37 @@
 # Development Prompts Documentation
 
+# CLI SOLID Refactoring - Internal Organization Approach
+
+**User Request**: Apply SOLID principles to CLI class, specifically SRP and ISP violations, but maintain single file instead of creating separate classes.
+
+**Analysis**: The CLI class had 341 lines with multiple responsibilities mixed together:
+
+- Game flow control (start_game, game_loop)
+- User input handling (handle_player_move, input parsing)
+- Display methods (display*board, display*\*, help)
+- Game setup (\_get_player_names, \_setup_initial_game)
+
+**Solution Applied**: Internal reorganization by responsibility sections:
+
+1. **Game Flow Control**: Methods responsible for game orchestration
+2. **Game Setup**: Initial configuration and setup methods
+3. **User Input Handling**: Input parsing and move validation
+4. **Display Methods**: All UI and visualization methods
+
+**SOLID Principles Addressed**:
+
+- **SRP**: Each method section has a single, clear responsibility
+- **ISP**: Methods are focused and don't force unnecessary dependencies
+- **DIP**: CLI depends on Game abstraction, not concrete implementations
+
+**Implementation**: Added clear section headers with SOLID principle explanations, organized methods by responsibility, improved documentation.
+
+**Testing**: All 25 CLI tests pass, full test suite (105 tests) passes.
+
+**Result**: CLI class now follows SOLID principles while maintaining single file as requested by user. Code is more maintainable and organized.
+
+---
+
 ## SOLID Principles Refactoring - Dependency Inversion Principle (DIP)
 
 ### Prompt

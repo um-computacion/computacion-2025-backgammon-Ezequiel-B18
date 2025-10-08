@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **SOLID Principles Compliance - Single Responsibility Principle (SRP) & Interface Segregation Principle (ISP)** (07/10/2025):
+
+  - Refactored CLI class internal organization to follow SRP by grouping methods by single responsibilities
+  - Organized 341-line CLI class into clear sections: Game Flow Control, Game Setup, User Input Handling, Display Methods
+  - Each method section now has a single, focused responsibility (SRP compliance)
+  - Methods have focused interfaces without unnecessary dependencies (ISP compliance)
+  - Added comprehensive SOLID principles documentation in code comments
+  - Maintained single file approach as requested, avoiding over-engineering with separate classes
+  - All 25 CLI tests pass, full test suite (105 tests) continues to pass
+  - Code is now more maintainable and organized while preserving existing functionality
+
 - **SOLID Principles Compliance - Dependency Inversion Principle (DIP)** (07/10/2025):
 
   - Refactored Game class constructor to support dependency injection
