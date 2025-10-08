@@ -23,7 +23,9 @@ class TestBackgammonCLI(unittest.TestCase):  # pylint: disable=too-many-public-m
     @patch("builtins.input")
     @patch("builtins.print")
     @patch.object(BackgammonCLI, "game_loop")
-    def test_start_game_with_custom_names(self, mock_game_loop, mock_print, mock_input):  # pylint: disable=unused-argument
+    def test_start_game_with_custom_names(
+        self, mock_game_loop, mock_print, mock_input
+    ):  # pylint: disable=unused-argument
         """Test starting a game with custom player names."""
         mock_input.side_effect = ["Alice", "Bob", ""]
 
@@ -373,7 +375,11 @@ class TestBackgammonCLI(unittest.TestCase):  # pylint: disable=too-many-public-m
     @patch.object(BackgammonCLI, "display_current_player_info")
     @patch.object(BackgammonCLI, "handle_player_move")
     def test_game_loop_with_quit(
-        self, mock_handle_move, mock_display_info, mock_display_board, mock_input  # pylint: disable=unused-argument
+        self,
+        mock_handle_move,
+        mock_display_info,
+        mock_display_board,
+        mock_input,  # pylint: disable=unused-argument
     ):
         """Test game loop handling quit exception."""
         mock_input.return_value = ""

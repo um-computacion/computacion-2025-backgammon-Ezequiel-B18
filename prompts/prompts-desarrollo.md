@@ -1,5 +1,151 @@
 # Development Prompts Documentation
 
+# CLI SOLID Refactoring - Internal Organization Approach
+
+**User Request**: Apply SOLID principles to CLI class, specifically SRP and ISP violations, but maintain single file instead of creating separate classes.
+
+**Analysis**: The CLI class had 341 lines with multiple responsibilities mixed together:
+
+- Game flow control (start_game, game_loop)
+- User input handling (handle_player_move, input parsing)
+- Display methods (display*board, display*\*, help)
+- Game setup (\_get_player_names, \_setup_initial_game)
+
+**Solution Applied**: Internal reorganization by responsibility sections:
+
+1. **Game Flow Control**: Methods responsible for game orchestration
+2. **Game Setup**: Initial configuration and setup methods
+3. **User Input Handling**: Input parsing and move validation
+4. **Display Methods**: All UI and visualization methods
+
+**SOLID Principles Addressed**:
+
+- **SRP**: Each method section has a single, clear responsibility
+- **ISP**: Methods are focused and don't force unnecessary dependencies
+- **DIP**: CLI depends on Game abstraction, not concrete implementations
+
+**Implementation**: Added clear section headers with SOLID principle explanations, organized methods by responsibility, improved documentation.
+
+**Testing**: All 25 CLI tests pass, full test suite (105 tests) passes.
+
+**Result**: CLI class now follows SOLID principles while maintaining single file as requested by user. Code is more maintainable and organized.
+
+---
+
+## SOLID Principles Refactoring - Dependency Inversion Principle (DIP)
+
+### Prompt
+
+```
+Isn't there some other way instead of having to create an entirely new file for the interfaces? As for the game rules i dont think its necessary as backgammon already has its own set of rules which is already embedded in the code
+```
+
+### Response
+
+You're absolutely right! Taking a more pragmatic approach to SOLID compliance without over-engineering. Instead of creating separate interface files, implemented **Dependency Injection** directly in the Game class to fix the main DIP violation.
+
+**SOLID Principle Fixed: Dependency Inversion Principle (DIP)**
+
+**Problem Identified:**
+
+- Game class was directly instantiating concrete dependencies: `Board()`, `Dice()`, `Player()`
+- This violated DIP by depending on concrete classes rather than abstractions
+- Made testing difficult and reduced flexibility
+
+**Solution Implemented:**
+
+- Refactored Game constructor to accept optional dependency parameters
+- Maintained full backward compatibility with existing API
+- Enabled dependency injection for testing and flexibility
+
+**Code Changes:**
+
+```python
+# Before (DIP Violation):
+def __init__(self, player1_name="White", player2_name="Black", test_bearing_off=False):
+    self.__board__ = Board(test_bearing_off=test_bearing_off)
+    self.__dice__ = Dice()
+    self.__player1__ = Player(player1_name, PlayerColor.WHITE)
+    self.__player2__ = Player(player2_name, PlayerColor.BLACK)
+
+# After (DIP Compliant):
+def __init__(self,
+             player1_name="White", player2_name="Black", test_bearing_off=False,
+             board=None, dice=None, player1=None, player2=None):
+    self.__board__ = board if board is not None else Board(test_bearing_off=test_bearing_off)
+    self.__dice__ = dice if dice is not None else Dice()
+    self.__player1__ = player1 if player1 is not None else Player(player1_name, PlayerColor.WHITE)
+    self.__player2__ = player2 if player2 is not None else Player(player2_name, PlayerColor.BLACK)
+```
+
+**Benefits Achieved:**
+
+- ✅ **DIP Compliance**: Game no longer depends directly on concrete implementations
+- ✅ **Testability**: Can inject mock objects for unit testing
+- ✅ **Flexibility**: Can inject different implementations if needed
+- ✅ **Backward Compatibility**: All existing code continues to work unchanged
+- ✅ **No Over-Engineering**: Simple, pragmatic solution without unnecessary interfaces
+
+**Verification:**
+
+- All 105 existing tests pass without modification
+- Dependency injection verified with demo script
+- Both traditional and injection usage patterns work correctly
+
+Date: October 7, 2025
+
+## Attribute Naming Convention Implementation
+
+### Prompt
+
+```
+Let's change all the _attributes to __attributes__. Remember to document in prompts-desarrollo.md and in the CHANGELOG.md files.
+```
+
+### Response
+
+Implemented the critical specification requirement that "Todos los atributos de todas las clases deben contener como prefijo y postfijo los símbolos '\_\_'" by systematically converting all single underscore attributes to double underscore format across the entire codebase.
+
+**Changes Made:**
+
+1. **Board Class (`core/board.py`)**:
+
+   - `_points` → `__points__`
+   - `_bar` → `__bar__`
+   - `_home` → `__home__`
+   - Updated all property methods and internal references
+
+2. **Checker Class (`core/checker.py`)**:
+
+   - `_position` → `__position__`
+   - Updated property getter/setter methods and all position-related methods
+
+3. **Dice Class (`core/dice.py`)**:
+
+   - `_values` → `__values__`
+   - Updated property method and all internal references
+
+4. **Player Class (`core/player.py`)**:
+
+   - `_checkers` → `__checkers__`
+   - Updated property method and distribute_checkers method
+
+5. **Game Class (`core/game.py`)**:
+   - `_board` → `__board__`
+   - `_dice` → `__dice__`
+   - `_player1` → `__player1__`
+   - `_player2` → `__player2__`
+   - `_game_initialized` → `__game_initialized__`
+   - Updated all property methods and internal references
+
+**Verification:**
+
+- Ran complete test suite with 105 tests - all passed ✅
+- Maintained full functionality while meeting specification requirements
+- Followed TDD methodology by ensuring tests validate the changes
+
+This implementation ensures compliance with the mandatory project specification requirement for double underscore attribute naming convention.
+
 ## Dice Implementation for Backgammon
 
 ### Prompt

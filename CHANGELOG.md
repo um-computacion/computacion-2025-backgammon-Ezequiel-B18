@@ -7,6 +7,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **SOLID Principles Compliance - Single Responsibility Principle (SRP) & Interface Segregation Principle (ISP)** (07/10/2025):
+
+  - Refactored CLI class internal organization to follow SRP by grouping methods by single responsibilities
+  - Organized 341-line CLI class into clear sections: Game Flow Control, Game Setup, User Input Handling, Display Methods
+  - Each method section now has a single, focused responsibility (SRP compliance)
+  - Methods have focused interfaces without unnecessary dependencies (ISP compliance)
+  - Added comprehensive SOLID principles documentation in code comments
+  - Maintained single file approach as requested, avoiding over-engineering with separate classes
+  - All 25 CLI tests pass, full test suite (105 tests) continues to pass
+  - Code is now more maintainable and organized while preserving existing functionality
+
+- **SOLID Principles Compliance - Dependency Inversion Principle (DIP)** (07/10/2025):
+
+  - Refactored Game class constructor to support dependency injection
+  - Game no longer directly instantiates Board(), Dice(), and Player() objects (fixing DIP violation)
+  - Added optional parameters for injecting custom instances: `board=None, dice=None, player1=None, player2=None`
+  - Maintains full backward compatibility - all existing code continues to work unchanged
+  - Enables better testing by allowing mock object injection
+  - All 105 tests pass without modification
+  - Follows pragmatic SOLID approach without over-engineering interfaces
+
+- Implemented mandatory attribute naming convention (30/09/2025):
+  - Converted all single underscore attributes (`_attribute`) to double underscore format (`__attribute__`) across entire codebase
+  - **Board class**: `_points` → `__points__`, `_bar` → `__bar__`, `_home` → `__home__`
+  - **Checker class**: `_position` → `__position__`
+  - **Dice class**: `_values` → `__values__`
+  - **Player class**: `_checkers` → `__checkers__`
+  - **Game class**: `_board` → `__board__`, `_dice` → `__dice__`, `_player1` → `__player1__`, `_player2` → `__player2__`, `_game_initialized` → `__game_initialized__`
+  - This change fulfills the critical specification requirement: "Todos los atributos de todas las clases deben contener como prefijo y postfijo los símbolos '\_\_'"
+  - All 105 tests continue to pass, maintaining full functionality
+  - Updated property methods and internal references across all classes
+
 ### Added
 
 - Created Dice class with comprehensive functionality (30/08/2025):
