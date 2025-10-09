@@ -26,7 +26,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
       - name: Install dependencies
         run: |
@@ -84,8 +84,8 @@ jobs:
         uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: 'docs: Update automated reports [skip ci]'
-          title: 'Automated Reports Update'
+          commit-message: "docs: Update automated reports [skip ci]"
+          title: "Automated Reports Update"
           body: |
             ## Automated Reports Update
 
