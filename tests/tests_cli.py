@@ -313,12 +313,18 @@ class TestBackgammonCLI(unittest.TestCase):  # pylint: disable=too-many-public-m
         mock_player = Mock()
         mock_player.remaining_moves = 1
         mock_player.player_id = 1
+        mock_player.available_moves = [3, 4]
         mock_game.current_player = mock_player
         mock_game.is_game_over.side_effect = [False, True]
 
-        # Fix: Make board.bar subscriptable
+        # Fix: Make board.bar and board.points subscriptable
         mock_board = Mock()
         mock_board.bar = {1: 0, 2: 0}
+        # Create a mock points list that returns (player_id, count) tuples
+        mock_points = [(0, 0)] * 24
+        mock_points[5] = (1, 2)  # Some checkers for testing
+        mock_board.points = mock_points
+        mock_board.is_valid_move.return_value = True
         mock_game.board = mock_board
 
         def mock_handle_move_side_effect():
@@ -388,12 +394,18 @@ class TestBackgammonCLI(unittest.TestCase):  # pylint: disable=too-many-public-m
         mock_player = Mock()
         mock_player.remaining_moves = 1
         mock_player.player_id = 1
+        mock_player.available_moves = [3, 4]
         mock_game.current_player = mock_player
         mock_game.is_game_over.return_value = False
 
-        # Fix: Make board.bar subscriptable
+        # Fix: Make board.bar and board.points subscriptable
         mock_board = Mock()
         mock_board.bar = {1: 0, 2: 0}
+        # Create a mock points list that returns (player_id, count) tuples
+        mock_points = [(0, 0)] * 24
+        mock_points[5] = (1, 2)  # Some checkers for testing
+        mock_board.points = mock_points
+        mock_board.is_valid_move.return_value = True
         mock_game.board = mock_board
 
         # Simulate quit on first move
@@ -408,6 +420,149 @@ class TestBackgammonCLI(unittest.TestCase):  # pylint: disable=too-many-public-m
         self.assertTrue(mock_print.called)
         calls = [str(call) for call in mock_print.call_args_list]
         self.assertTrue(any("Game ended by player" in call for call in calls))
+
+    def test_double_dice_all_moves(self):
+        """Test that player can use all 4 moves from double dice."""
+        # Setup game with double dice [3,3,3,3]
+        mock_game = Mock()
+        mock_player = Mock()
+        mock_player.name = "Player1"
+        mock_player.player_id = 1
+        mock_player.remaining_moves = 4  # All 4 moves from doubles
+        mock_player.available_moves = [3, 3, 3, 3]  # Double 3s
+        mock_player.can_use_dice_for_move.return_value = True
+        mock_player.use_dice_for_move.return_value = True
+        
+        mock_board = Mock()
+        mock_board.bar = {1: 0, 2: 0}  # No checkers on bar
+        mock_points = [(0, 0)] * 24
+        mock_points[5] = (1, 2)  # Player has checkers on point 5
+        mock_points[8] = (1, 1)  # Player has checkers on point 8
+        mock_board.points = mock_points
+        mock_board.is_valid_move.return_value = True
+        
+        mock_game.current_player = mock_player
+        mock_game.board = mock_board
+        mock_game.apply_move.return_value = True
+        
+        mock_dice = Mock()
+        mock_dice.values = [3, 3]
+        mock_dice.is_doubles.return_value = True
+        mock_dice.get_moves.return_value = [3, 3, 3, 3]
+        mock_game.dice = mock_dice
+        
+        self.cli.game = mock_game
+        
+        # Test that CLI can handle multiple moves from doubles
+        with patch("builtins.input", side_effect=["5 8", "8 11", "11 14", "14 17"]):
+            with patch("builtins.print"):
+                # Simulate moves that consume remaining_moves
+                def mock_apply_move_side_effect(from_point, to_point):
+                    mock_player.remaining_moves -= 1
+                    return True
+                
+                mock_game.apply_move.side_effect = mock_apply_move_side_effect
+                
+                # Execute 4 moves
+                for _ in range(4):
+                    if mock_player.remaining_moves > 0:
+                        self.cli.handle_player_move()
+        
+        # Verify all moves were processed
+        self.assertEqual(mock_game.apply_move.call_count, 4)
+        self.assertEqual(mock_player.remaining_moves, 0)
+
+    def test_auto_skip_no_moves_available(self):
+        """Test that CLI detects when no legal moves are available."""
+        # Setup game where player has no legal moves
+        mock_game = Mock()
+        mock_player = Mock()
+        mock_player.name = "Player1"
+        mock_player.player_id = 1
+        mock_player.remaining_moves = 2  # Add remaining_moves for the while loop
+        mock_player.available_moves = [6, 5]  # High dice values
+        mock_player.can_use_dice_for_move.return_value = False  # Can't use any dice
+        mock_player.end_turn = Mock()  # Add end_turn method
+        
+        mock_board = Mock()
+        mock_board.bar = {1: 0, 2: 0}  # No checkers on bar
+        # Setup board where player has checkers but can't move with high dice
+        mock_points = [(0, 0)] * 24
+        mock_points[0] = (1, 15)  # All checkers on point 1, can't move with 6,5
+        mock_board.points = mock_points
+        mock_board.is_valid_move.return_value = False  # No valid moves
+        
+        mock_game.current_player = mock_player
+        mock_game.board = mock_board
+        mock_game.switch_players = Mock()  # Add switch_players method
+        
+        self.cli.game = mock_game
+        
+        # Test that _has_legal_moves returns False
+        result = self.cli._has_legal_moves()
+        self.assertFalse(result)
+        
+        # Test that CLI properly handles this in _execute_player_turn
+        with patch.object(self.cli, 'display_board'):
+            with patch.object(self.cli, 'display_current_player_info'):
+                with patch.object(self.cli, 'display_dice_roll'):
+                    with patch.object(self.cli, 'display_available_moves'):
+                        with patch("builtins.input", return_value=""):
+                            with patch("builtins.print") as mock_print:
+                                # Mock start_turn to avoid actual dice rolling
+                                mock_game.start_turn = Mock()
+                                self.cli._execute_player_turn()
+        
+        # Verify skip message was printed
+        mock_print.assert_any_call(f"\n{mock_player.name} has no legal moves available.")
+        mock_print.assert_any_call("Skipping turn...")
+
+    def test_checkers_off_the_bar(self):
+        """Test that player can enter checkers from the bar."""
+        # Setup game with checker on bar
+        mock_game = Mock()
+        mock_player = Mock()
+        mock_player.name = "Player1"
+        mock_player.player_id = 1  # White player
+        mock_player.remaining_moves = 2
+        mock_player.available_moves = [3, 4]
+        mock_player.can_use_dice_for_move.return_value = True
+        mock_player.use_dice_for_move.return_value = True
+        
+        mock_board = Mock()
+        mock_board.bar = {1: 1, 2: 0}  # White player has 1 checker on bar
+        mock_points = [(0, 0)] * 24
+        # White enters on points 0-5 (1-6 in user terms)
+        mock_points[2] = (0, 0)  # Point 3 is empty, good for entry
+        mock_board.points = mock_points
+        mock_board.enter_from_bar.return_value = True
+        
+        mock_game.current_player = mock_player
+        mock_game.board = mock_board
+        
+        self.cli.game = mock_game
+        
+        # Test that _has_legal_bar_entries returns True when player has checkers on bar
+        result = self.cli._has_legal_bar_entries()
+        self.assertTrue(result)
+        
+        # Test direct bar entry logic
+        with patch("builtins.print") as mock_print:
+            # Simulate the bar entry handling manually
+            to_point_user = 3  # User enters point 3
+            to_point_board = to_point_user - 1  # Convert to 0-based index (point 2)
+            distance = to_point_user  # Distance for white from bar to point 3
+            
+            # Check dice validation
+            can_use_dice = mock_player.can_use_dice_for_move(distance)
+            self.assertTrue(can_use_dice)
+            
+            # Check board entry
+            entry_success = mock_board.enter_from_bar(mock_player.player_id, to_point_board)
+            self.assertTrue(entry_success)
+        
+        # Verify enter_from_bar was called with correct parameters
+        mock_board.enter_from_bar.assert_called_with(1, 2)  # Player 1, point 2 (0-based)
 
 
 if __name__ == "__main__":

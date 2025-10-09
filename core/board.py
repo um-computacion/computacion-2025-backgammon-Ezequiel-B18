@@ -26,21 +26,21 @@ class Board:
 
         if test_bearing_off:
             # Special setup for bearing off tests
-            # All white checkers in home board
-            self.__points__[18] = (1, 2)
-            self.__points__[19] = (1, 2)
-            self.__points__[20] = (1, 3)
-            self.__points__[21] = (1, 2)
-            self.__points__[22] = (1, 3)
-            self.__points__[23] = (1, 3)
+            # All white checkers in home board (1-6, which is points 0-5 in 0-based)
+            self.__points__[0] = (1, 2)
+            self.__points__[1] = (1, 2)
+            self.__points__[2] = (1, 3)
+            self.__points__[3] = (1, 2)
+            self.__points__[4] = (1, 3)
+            self.__points__[5] = (1, 3)
 
-            # All black checkers in their home board
-            self.__points__[0] = (2, 2)
-            self.__points__[1] = (2, 2)
-            self.__points__[2] = (2, 3)
-            self.__points__[3] = (2, 2)
-            self.__points__[4] = (2, 3)
-            self.__points__[5] = (2, 3)
+            # All black checkers in their home board (19-24, which is points 18-23 in 0-based)
+            self.__points__[18] = (2, 2)
+            self.__points__[19] = (2, 2)
+            self.__points__[20] = (2, 3)
+            self.__points__[21] = (2, 2)
+            self.__points__[22] = (2, 3)
+            self.__points__[23] = (2, 3)
         else:
             # Use the new helper to set standard starting positions
             self.setup_starting_positions()
@@ -114,6 +114,14 @@ class Board:
         if self.points[from_point][0] != player or self.points[from_point][1] == 0:
             return False
 
+        # Check movement direction based on player
+        if player == 1:  # White moves from high points to low points (23 -> 0)
+            if to_point >= from_point:
+                return False  # White cannot move backwards (higher numbers)
+        else:  # Black moves from low points to high points (0 -> 23)
+            if to_point <= from_point:
+                return False  # Black cannot move backwards (lower numbers)
+
         # Check if the target point is blocked by the opponent
         # A point is blocked if it has 2 or more checkers of the opponent
         target_player, target_count = self.points[to_point]
@@ -127,17 +135,19 @@ class Board:
         # Clear all points first
         self.__points__ = [(0, 0) for _ in range(24)]
 
-        # White checkers (player 1) starting positions
-        self.__points__[0] = (1, 2)  # 2 white checkers on point 0
-        self.__points__[11] = (1, 5)  # 5 white checkers on point 11
-        self.__points__[16] = (1, 3)  # 3 white checkers on point 16
-        self.__points__[18] = (1, 5)  # 5 white checkers on point 18
+        # White checkers (player 1) starting positions - need to bear off to 1-6
+        # So they start from the far end (higher numbers)
+        self.__points__[23] = (1, 2)  # 2 white checkers on point 23
+        self.__points__[12] = (1, 5)  # 5 white checkers on point 12
+        self.__points__[7] = (1, 3)   # 3 white checkers on point 7
+        self.__points__[5] = (1, 5)   # 5 white checkers on point 5
 
-        # Black checkers (player 2) starting positions
-        self.__points__[23] = (2, 2)  # 2 black checkers on point 23
-        self.__points__[12] = (2, 5)  # 5 black checkers on point 12
-        self.__points__[7] = (2, 3)  # 3 black checkers on point 7
-        self.__points__[5] = (2, 5)  # 5 black checkers on point 5
+        # Black checkers (player 2) starting positions - need to bear off to 19-24
+        # So they start from the far end (lower numbers)
+        self.__points__[0] = (2, 2)   # 2 black checkers on point 0
+        self.__points__[11] = (2, 5)  # 5 black checkers on point 11
+        self.__points__[16] = (2, 3)  # 3 black checkers on point 16
+        self.__points__[18] = (2, 5)  # 5 black checkers on point 18
 
     def move_checker(self, player, from_point, to_point):
         """
@@ -161,7 +171,7 @@ class Board:
         else:
             self.points[from_point] = (source_player, source_count - 1)
 
-        # Handle target point
+        # Handle normal target point
         target_player, target_count = self.points[to_point]
         if target_player in (0, player):
             # Empty point or same player, add checker
@@ -181,11 +191,11 @@ class Board:
         if self.bar[player] == 0:
             return False
 
-        # Validate entry points
-        if player == 1:  # White enters from points 0-5
+        # Validate entry points based on tests
+        if player == 1:  # White enters from points 0-5 (1-6 in user terms)
             if not 0 <= point <= 5:
                 return False
-        else:  # Black enters from points 18-23
+        else:  # Black enters from points 18-23 (19-24 in user terms)
             if not 18 <= point <= 23:
                 return False
 
@@ -209,13 +219,14 @@ class Board:
         # Remove from bar
         self.bar[player] -= 1
         return True
+        return True
 
     def all_checkers_in_home_board(self, player):
         """Check if all of a player's checkers are in their home board."""
-        if player == 1:  # White player
-            home_range = range(18, 24)
-        else:  # Black player
+        if player == 1:  # White player - home board is 1-6 (0-5 in 0-based)
             home_range = range(0, 6)
+        else:  # Black player - home board is 19-24 (18-23 in 0-based)
+            home_range = range(18, 24)
 
         # Count checkers on board for this player
         checkers_on_board = 0
@@ -236,11 +247,11 @@ class Board:
     ):  # pylint: disable=too-many-return-statements,too-many-branches
         """Bear off a checker from the specified point."""
         # Validate point is in player's home board
-        if player == 1:  # White
-            if not 18 <= point <= 23:
-                return False
-        else:  # Black
+        if player == 1:  # White - home board is 1-6 (0-5 in 0-based)
             if not 0 <= point <= 5:
+                return False
+        else:  # Black - home board is 19-24 (18-23 in 0-based)
+            if not 18 <= point <= 23:
                 return False
 
         # Check if all checkers are in home board
@@ -251,18 +262,6 @@ class Board:
         current_player, current_count = self.__points__[point]
         if current_player != player or current_count == 0:
             return False
-
-        # Check if there are checkers on higher points (for bearing off validation)
-        if player == 1:  # White
-            for higher_point in range(point + 1, 24):
-                higher_player, higher_count = self.__points__[higher_point]
-                if higher_player == player and higher_count > 0:
-                    return False
-        else:  # Black
-            for higher_point in range(0, point):
-                higher_player, higher_count = self.__points__[higher_point]
-                if higher_player == player and higher_count > 0:
-                    return False
 
         # Remove checker from point
         new_count = current_count - 1

@@ -190,7 +190,7 @@ class Game:
     def apply_move(self, from_point, to_point):
         """
         Apply a move for the current player using the board.
-        Accepts the event dict returned by board.move_checker.
+        Validates that the move uses available dice values correctly.
         Returns True if move succeeded, False otherwise.
         """
         if not self.__game_initialized__:
@@ -211,6 +211,16 @@ class Game:
 
         pid = self.current_player.player_id
 
+        # Calculate move distance
+        if pid == 1:  # White moves from high to low
+            move_distance = from_point - to_point
+        else:  # Black moves from low to high
+            move_distance = to_point - from_point
+
+        # Validate that move distance matches available dice
+        if not self.current_player.can_use_dice_for_move(move_distance):
+            return False  # Invalid dice usage, return False instead of raising exception
+
         try:
             event = self.board.move_checker(pid, from_point, to_point)
         except Exception as e:
@@ -220,8 +230,10 @@ class Game:
         if not event.get("moved", False):
             return False
 
-        # reduce player's remaining moves
-        self.current_player.use_move()
+        # Consume the appropriate dice values for this move
+        if not self.current_player.use_dice_for_move(move_distance):
+            # This shouldn't happen if can_use_dice_for_move returned True
+            raise InvalidMoveError(from_point, to_point, "Failed to consume dice values")
 
         # If a hit occurred, Game could update player/checker states
         # (we rely on sync_checkers to reconcile)
