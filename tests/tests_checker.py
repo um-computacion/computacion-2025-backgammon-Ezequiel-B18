@@ -295,3 +295,31 @@ class TestChecker(unittest.TestCase):
 
         self.assertEqual(context.exception.position, 17)
         self.assertEqual(context.exception.valid_range, "18-23")
+
+    def test_enter_from_bar_invalid_state(self):
+        """Test that entering from bar when not on bar fails."""
+        # Checker is on board, not on bar
+        self.white_checker.set_position(10)
+        
+        # Should return False when not on bar
+        self.assertFalse(self.white_checker.enter_from_bar(3))
+
+    def test_enter_from_bar_wrong_entry_points(self):
+        """Test that entering from bar to wrong entry points fails."""
+        # Put white checker on bar
+        self.white_checker.send_to_bar()
+        
+        # White can only enter on points 0-5, should raise exception for point 10
+        with self.assertRaises(InvalidCheckerPositionError):
+            self.white_checker.enter_from_bar(10)
+        
+        # Put black checker on bar
+        self.black_checker.send_to_bar()
+        
+        # Black can only enter on points 18-23, should raise exception for point 10  
+        with self.assertRaises(InvalidCheckerPositionError):
+            self.black_checker.enter_from_bar(10)
+
+
+if __name__ == "__main__":
+    unittest.main()

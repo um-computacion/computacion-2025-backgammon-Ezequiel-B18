@@ -289,3 +289,48 @@ class TestBoard(unittest.TestCase):  # pylint: disable=too-many-public-methods
 
         with self.assertRaises(InvalidPointError):
             board.is_valid_move(1, 0, 24)
+
+    def test_move_checker_invalid_points_raise_error(self):
+        """Test that move_checker handles invalid points properly."""
+        # This should raise InvalidPointError which gets re-raised
+        with self.assertRaises(InvalidPointError):
+            self.board.move_checker(1, 25, 20)
+
+    def test_backwards_move_validation(self):
+        """Test that backwards moves are properly rejected."""
+        # White moves from higher numbers to lower numbers
+        self.assertFalse(self.board.is_valid_move(1, 10, 15))  # White moving backwards
+        
+        # Black moves from lower numbers to higher numbers  
+        self.assertFalse(self.board.is_valid_move(2, 15, 10))  # Black moving backwards
+
+    def test_blocked_point_validation(self):
+        """Test that moves to blocked points are rejected."""
+        # Set up a point blocked by opponent (2+ checkers)
+        self.board.points[10] = (2, 3)  # Black has 3 checkers on point 10
+        
+        # White player (1) should not be able to move to blocked point
+        # But we need a source point with white checkers first
+        self.board.points[15] = (1, 1)  # White has 1 checker on point 15
+        
+        self.assertFalse(self.board.is_valid_move(1, 15, 10))
+        
+        # Should be able to move to point with only 1 opponent checker
+        self.board.points[11] = (2, 1)  # Black has 1 checker on point 11
+        self.assertTrue(self.board.is_valid_move(1, 15, 11))
+
+    def test_setup_starting_positions_clears_board(self):
+        """Test that setup_starting_positions clears the board first."""
+        # Modify a point first
+        self.board.points[10] = (1, 5)
+        
+        # Setup starting positions
+        self.board.setup_starting_positions()
+        
+        # Verify standard positions are set and random point is cleared
+        self.assertEqual(self.board.points[10], (0, 0))
+        self.assertEqual(self.board.points[5], (1, 5))  # White starting position
+
+
+if __name__ == "__main__":
+    unittest.main()
