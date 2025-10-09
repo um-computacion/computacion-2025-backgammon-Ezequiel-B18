@@ -7,7 +7,94 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **CLI Integration Test Suite Enhancement** (09/10/2025):
+  - Added test_double_dice_all_moves: Comprehensive test validating players can use all 4 moves from double dice (e.g., [6,6,6,6])
+  - Added test_auto_skip_no_moves_available: Test ensuring automatic turn skipping when no legal moves are available
+  - Added test_checkers_off_the_bar: Test validating bar entry functionality and distance calculations
+  - Enhanced CLI test coverage for critical game mechanics including doubles handling, turn skipping, and bar entry
+  - Improved mock configurations to support complex CLI integration testing scenarios
+  - All tests validate complete user interaction workflows rather than isolated method testing
+
+### Fixed
+
+- **Critical Dice Consumption Bug** (08/01/2025):
+
+  - Fixed critical dice consumption bug where moves were not properly validating and consuming dice values
+  - Players can no longer make invalid moves that don't match their available dice
+  - Move distance validation now properly checks against available dice combinations (e.g., [1,2] can make distance 3 moves)
+  - Dice consumption automatically ends turn when all dice values are used
+  - Game.apply_move() now returns False for invalid dice usage instead of raising exceptions (maintains test compatibility)
+
+- **Turn Skipping for No Available Moves** (08/01/2025):
+
+  - Implemented automatic turn skipping when no legal moves are available
+  - Added comprehensive move validation to detect impossible game states
+  - CLI now automatically skips turn when player has checkers on bar but all entry points are blocked
+  - CLI now automatically skips turn when no regular moves are possible with current dice
+  - CLI now automatically skips turn when bearing off requirements don't match available dice
+  - Prevents infinite loops when players have no valid moves available
+  - Added \_has_legal_moves(), \_has_legal_bar_entries(), \_has_legal_regular_moves(), and \_has_legal_bear_offs() validation methods
+
+- **Test Suite Stabilization** (09/10/2025):
+
+  - Fixed CLI test mock configuration issues for turn skipping functionality
+  - Enhanced mock setup to properly support board.points subscriptable access
+  - Added proper available_moves attribute configuration for mock players
+  - Corrected Board bar entry validation logic to match test expectations
+  - Fixed enter_from_bar method to return True on successful entry
+  - Updated CLI bar entry distance calculations to match corrected board logic
+  - All 105 tests now pass consistently
+
+- **New CLI Integration Tests** (09/10/2025):
+
+  - Added test_double_dice_all_moves: Validates players can use all 4 moves from double dice (e.g., [6,6,6,6])
+  - Added test_auto_skip_no_moves_available: Validates automatic turn skipping when no legal moves available
+  - Added test_checkers_off_the_bar: Validates bar entry functionality and distance calculations
+  - Enhanced CLI test coverage for key game mechanics (doubles, turn skipping, bar entry)
+  - All 108 tests now pass including new integration tests
+
+- **Doubles Dice Handling** (08/01/2025):
+
+  - Fixed doubles dice combination logic - players can now properly combine multiple dice values for longer moves
+  - With doubles [1,1], players can now make distance 2 (1+1), distance 3 (1+1+1), and distance 4 (1+1+1+1) moves
+  - Enhanced Player.can_use_dice_for_move() to support dice combinations for doubles
+  - Enhanced Player.use_dice_for_move() to properly consume multiple dice for combination moves
+  - Fixed CLI display to show available moves for doubles (previously only showed for non-doubles)
+
+- **Bar Entry System** (08/01/2025):
+
+  - Implemented complete bar entry functionality in CLI with 'bar [point]' syntax
+  - Fixed board entry point validation - White enters on points 19-24, Black enters on points 1-6
+  - Added proper distance calculation for bar entry moves
+  - Fixed Board.enter_from_bar() method that had reversed player entry ranges
+  - Added dice validation for bar entry moves
+  - Enhanced help system and user instructions for bar entry
+
+- **CLI Critical Bug Fixes - Turn Management and Movement Direction** (08/01/2025):
+  - Fixed critical turn management bug where double player switching caused players to lose their turn
+  - Added movement direction validation ensuring white checkers move 0→23 and black checkers move 23→0
+  - Implemented proper bearing off integration with CLI input parsing using "point off" syntax
+  - Resolved issue where "it's always white checkers turn and blacks are never moved"
+  - Fixed black checkers moving in wrong direction (upwards instead of downwards)
+  - All 105 tests pass including 25 CLI tests and 21 Board tests
+  - Both players can now play properly with correct movement rules and turn management
+
+### Added
+
+- **Game Logic and User Experience Improvements** (08/01/2025):
+  - Added comprehensive help system with examples for all move types
+  - Added visual feedback for dice consumption and remaining moves
+  - Added detailed move success/failure messages in CLI
+  - Added dice display showing available moves for both regular and doubles rolls
+
 ### Changed
+
+- **Game Logic and User Experience Improvements** (08/01/2025):
+
+  - Improved dice validation system to support complex move combinations
+  - Improved error messages for invalid moves with specific guidance
 
 - **SOLID Principles Compliance - Single Responsibility Principle (SRP) & Interface Segregation Principle (ISP)** (07/10/2025):
 

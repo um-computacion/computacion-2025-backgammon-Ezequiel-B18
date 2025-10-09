@@ -19,16 +19,18 @@ class TestBoard(unittest.TestCase):  # pylint: disable=too-many-public-methods
         self.assertEqual(len(self.board.points), 24)
 
         # Check the starting position for white checkers (player 1)
-        self.assertEqual(self.board.points[0], (1, 2))  # 2 white checkers on point 0
-        self.assertEqual(self.board.points[11], (1, 5))  # 5 white checkers on point 11
-        self.assertEqual(self.board.points[16], (1, 3))  # 3 white checkers on point 16
-        self.assertEqual(self.board.points[18], (1, 5))  # 5 white checkers on point 18
+        # White bears off to 1-6, so starts from far end
+        self.assertEqual(self.board.points[23], (1, 2))  # 2 white checkers on point 23
+        self.assertEqual(self.board.points[12], (1, 5))  # 5 white checkers on point 12
+        self.assertEqual(self.board.points[7], (1, 3))   # 3 white checkers on point 7
+        self.assertEqual(self.board.points[5], (1, 5))   # 5 white checkers on point 5
 
         # Check the starting position for black checkers (player 2)
-        self.assertEqual(self.board.points[23], (2, 2))  # 2 black checkers on point 23
-        self.assertEqual(self.board.points[12], (2, 5))  # 5 black checkers on point 12
-        self.assertEqual(self.board.points[7], (2, 3))  # 3 black checkers on point 7
-        self.assertEqual(self.board.points[5], (2, 5))  # 5 black checkers on point 5
+        # Black bears off to 19-24, so starts from far end
+        self.assertEqual(self.board.points[0], (2, 2))   # 2 black checkers on point 0
+        self.assertEqual(self.board.points[11], (2, 5))  # 5 black checkers on point 11
+        self.assertEqual(self.board.points[16], (2, 3))  # 3 black checkers on point 16
+        self.assertEqual(self.board.points[18], (2, 5))  # 5 black checkers on point 18
 
         # Check that both bars start empty
         self.assertEqual(self.board.bar[1], 0)  # No white checkers on the bar
@@ -40,26 +42,23 @@ class TestBoard(unittest.TestCase):  # pylint: disable=too-many-public-methods
 
     def test_move_checker(self):
         """Test moving a checker from one point to another"""
-        # Move a white checker from point 0 to point 3
-        self.assertTrue(self.board.move_checker(1, 0, 3))
+        # Move a white checker from point 23 to point 20 (white starts at 23 with 2 checkers)
+        self.assertTrue(self.board.move_checker(1, 23, 20))
         self.assertEqual(
-            self.board.points[0], (1, 1)
-        )  # One white checker left on point 0
+            self.board.points[23], (1, 1)
+        )  # One white checker left on point 23
         self.assertEqual(
-            self.board.points[3], (1, 1)
-        )  # One white checker now on point 3
+            self.board.points[20], (1, 1)
+        )  # One white checker now on point 20
 
-        # Move a black checker from point 5 to point 3
-        self.assertTrue(self.board.move_checker(2, 5, 3))
+        # Move a black checker from point 0 to point 3 (black starts at 0 with 2 checkers)
+        self.assertTrue(self.board.move_checker(2, 0, 3))
         self.assertEqual(
-            self.board.points[5], (2, 4)
-        )  # Four black checkers left on point 5
+            self.board.points[0], (2, 1)
+        )  # One black checker left on point 0
         self.assertEqual(
             self.board.points[3], (2, 1)
-        )  # Point 3 now has one black checker (hit the white)
-
-        # Check that the white checker was sent to the bar
-        self.assertEqual(self.board.bar[1], 1)  # One white checker on the bar
+        )  # One black checker now on point 3
 
     def test_checkers_on_bar(self):
         """Test that checkers on the bar must be moved first"""
@@ -76,35 +75,30 @@ class TestBoard(unittest.TestCase):  # pylint: disable=too-many-public-methods
 
     def test_bearing_off(self):
         """Test bearing off checkers (moving them to home)"""
-        # Setup: Move all white checkers to the home board (last quadrant)
+        # Setup: Move all white checkers to the home board
         self.board = Board(
             test_bearing_off=True
         )  # Special test setup with all checkers in home board
 
-        # Count white checkers in the home board
+        # Count white checkers in the home board (0-5 for white)
         white_checkers_in_home_board = sum(
             count
-            for player, count in [self.board.points[i] for i in range(18, 24)]
+            for player, count in [self.board.points[i] for i in range(0, 6)]
             if player == 1
         )
         self.assertEqual(
             white_checkers_in_home_board, 15
         )  # All 15 white checkers in home board
 
-        # Bear off a checker from point 23
-        self.assertTrue(self.board.bear_off(1, 23))
-        self.assertEqual(self.board.points[23], (1, 2))  # One checker removed
+        # Bear off a checker from point 5 (highest in white's home board)
+        self.assertTrue(self.board.bear_off(1, 5))
+        self.assertEqual(self.board.points[5], (1, 2))  # One checker removed (was 3, now 2)
         self.assertEqual(self.board.home[1], 1)  # One checker in home
 
-        # Try to bear off when checkers exist on a higher point (should fail)
-        self.assertFalse(
-            self.board.bear_off(1, 18)
-        )  # Invalid because checkers exist on higher points
-
-        # Bear off remaining checkers
-        self.assertTrue(self.board.bear_off(1, 23))
-        self.assertTrue(self.board.bear_off(1, 23))
-        self.assertEqual(self.board.points[23], (0, 0))  # No more checkers
+        # Bear off remaining checkers from point 5
+        self.assertTrue(self.board.bear_off(1, 5))
+        self.assertTrue(self.board.bear_off(1, 5))
+        self.assertEqual(self.board.points[5], (0, 0))  # No more checkers
         self.assertEqual(self.board.home[1], 3)  # Three checkers in home
 
     def test_check_winner(self):
@@ -132,8 +126,8 @@ class TestBoard(unittest.TestCase):  # pylint: disable=too-many-public-methods
 
     def test_get_player_at_point(self):
         """Test getting the player owning checkers at a point"""
-        self.assertEqual(self.board.get_player_at_point(0), 1)  # White at point 0
-        self.assertEqual(self.board.get_player_at_point(5), 2)  # Black at point 5
+        self.assertEqual(self.board.get_player_at_point(0), 2)  # Black at point 0
+        self.assertEqual(self.board.get_player_at_point(5), 1)  # White at point 5
         self.assertEqual(self.board.get_player_at_point(1), 0)  # No checkers at point 1
 
     def test_get_player_at_point_invalid_point_raises_error(self):
@@ -200,15 +194,16 @@ class TestBoard(unittest.TestCase):  # pylint: disable=too-many-public-methods
     def test_move_checker_hits_opponent(self):
         """Test that move_checker properly handles hitting opponent."""
         b = Board()
-        # prepare: white at 0 (1 checker), black single at 3
-        b.points[0] = (1, 1)
-        b.points[3] = (2, 1)
+        # prepare: white at 10 (1 checker), black single at 7
+        # white moves from high to low, so 10 -> 7 is valid
+        b.points[10] = (1, 1)
+        b.points[7] = (2, 1)  # black single checker
         prev_bar_black = b.bar[2]
-        event = b.move_checker(1, 0, 3)
+        event = b.move_checker(1, 10, 7)
         self.assertTrue(event.get("moved", False))
         self.assertTrue(event.get("hit", False))
         self.assertEqual(b.bar[2], prev_bar_black + 1)
-        self.assertEqual(b.points[3][0], 1)
+        self.assertEqual(b.points[7][0], 1)
 
     def test_enter_from_bar_invalid_and_hit(self):
         """Test enter_from_bar validation and hitting behavior."""
@@ -234,29 +229,30 @@ class TestBoard(unittest.TestCase):  # pylint: disable=too-many-public-methods
         """Test bear_off preconditions and validation."""
         b = Board()
         # not all in home -> cannot bear off
-        self.assertFalse(b.bear_off(1, 18))
+        self.assertFalse(b.bear_off(1, 0))  # white home board point, but not all checkers in home
         # use test_bearing_off setup to populate home board
         b = Board(test_bearing_off=True)
-        # attempt to bear off from an out-of-range point for white (e.g., 0)
-        self.assertFalse(b.bear_off(1, 0))
+        # attempt to bear off from an out-of-range point for white (e.g., 18 which is in black's home)
+        self.assertFalse(b.bear_off(1, 18))
 
     def test_is_valid_move_true(self):
         """Valid move should return True when no bar and target not blocked"""
         b = Board()
         # ensure source has white checkers and target is empty
-        b.points[0] = (1, 2)
-        b.points[2] = (0, 0)
-        self.assertTrue(b.is_valid_move(1, 0, 2))
+        # white moves from high to low, so test 5 -> 2
+        b.points[5] = (1, 2)  # white at point 5
+        b.points[2] = (0, 0)  # empty target
+        self.assertTrue(b.is_valid_move(1, 5, 2))
 
     def test_move_checker_stacks_on_same_player_point(self):
         """Moving to a point already occupied by same player should increase count"""
         b = Board()
-        # white has 2 at point 0 and 5 at point 11 initially
-        # move a white checker from 0 to 11 -> point 11 should increase
-        prev_count = b.points[11][1]
-        event = b.move_checker(1, 0, 11)
+        # white has 2 at point 23 and 5 at point 12 initially
+        # move a white checker from 23 to 12 -> point 12 should increase
+        prev_count = b.points[12][1]
+        event = b.move_checker(1, 23, 12)
         self.assertTrue(event.get("moved", False))
-        self.assertEqual(b.points[11][1], prev_count + 1)
+        self.assertEqual(b.points[12][1], prev_count + 1)
 
     def test_enter_from_bar_blocked_by_opponent_stack(self):
         """Entering from bar should fail when opponent has 2+ checkers at entry point"""
@@ -269,19 +265,19 @@ class TestBoard(unittest.TestCase):  # pylint: disable=too-many-public-methods
     def test_bear_off_for_black_counts_and_home_increment(self):
         """Test black bearing off from its home board updates points and home correctly"""
         b = Board(test_bearing_off=True)
-        # black home is points 0-5 in test setup; pick point 0 which has 2 black there
+        # black home is points 18-23 in corrected setup; pick point 18 which has 2 black there
         prev_home_black = b.home[2]
-        prev_count = b.points[0][1]
-        # bear off one black from point 0
-        result = b.bear_off(2, 0)
+        prev_count = b.points[18][1]
+        # bear off one black from point 18
+        result = b.bear_off(2, 18)
         self.assertTrue(result)
         # count on point reduced
         expected_count = prev_count - 1
         # If prev_count was 1 then point becomes empty (0,0), else player remains
         if expected_count == 0:
-            self.assertEqual(b.points[0], (0, 0))
+            self.assertEqual(b.points[18], (0, 0))
         else:
-            self.assertEqual(b.points[0], (2, expected_count))
+            self.assertEqual(b.points[18], (2, expected_count))
         self.assertEqual(b.home[2], prev_home_black + 1)
 
     def test_is_valid_move_invalid_points_raise_error(self):

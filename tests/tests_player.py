@@ -40,13 +40,13 @@ class TestPlayer(unittest.TestCase):
 
     def test_get_starting_positions(self):
         """Test getting the standard starting positions for checkers"""
-        # White player's starting positions
+        # White player's starting positions (bear off to 1-6, so start from far end)
         white_positions = self.white_player.get_starting_positions()
-        self.assertEqual(white_positions, [(0, 2), (11, 5), (16, 3), (18, 5)])
+        self.assertEqual(white_positions, [(23, 2), (12, 5), (7, 3), (5, 5)])
 
-        # Black player's starting positions
+        # Black player's starting positions (bear off to 19-24, so start from far end)
         black_positions = self.black_player.get_starting_positions()
-        self.assertEqual(black_positions, [(23, 2), (12, 5), (7, 3), (5, 5)])
+        self.assertEqual(black_positions, [(0, 2), (11, 5), (16, 3), (18, 5)])
 
     def test_start_turn(self):
         """Test starting a player's turn"""
@@ -216,10 +216,10 @@ class TestPlayer(unittest.TestCase):
                 positions_count[pos] = positions_count.get(pos, 0) + 1
 
         # Check counts match starting positions
-        self.assertEqual(positions_count.get(0, 0), 2)
-        self.assertEqual(positions_count.get(11, 0), 5)
-        self.assertEqual(positions_count.get(16, 0), 3)
-        self.assertEqual(positions_count.get(18, 0), 5)
+        self.assertEqual(positions_count.get(23, 0), 2)
+        self.assertEqual(positions_count.get(12, 0), 5)
+        self.assertEqual(positions_count.get(7, 0), 3)
+        self.assertEqual(positions_count.get(5, 0), 5)
 
     def test_player_str_representation(self):
         """Test the string representation of a player"""

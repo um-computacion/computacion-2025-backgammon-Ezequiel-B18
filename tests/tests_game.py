@@ -30,16 +30,16 @@ class TestGame(unittest.TestCase):
         game = Game("P1", "P2")
         game.setup_game()
         # Check that board has expected starting occupancy for some known points
-        # White starts at 0,11,16,18
-        self.assertEqual(game.board.points[0][0], 1)
-        self.assertEqual(game.board.points[11][0], 1)
-        self.assertEqual(game.board.points[16][0], 1)
-        self.assertEqual(game.board.points[18][0], 1)
-        # Black starts at 23,12,7,5
-        self.assertEqual(game.board.points[23][0], 2)
-        self.assertEqual(game.board.points[12][0], 2)
-        self.assertEqual(game.board.points[7][0], 2)
-        self.assertEqual(game.board.points[5][0], 2)
+        # White starts at 23,12,7,5 (bear off to 1-6)
+        self.assertEqual(game.board.points[23][0], 1)
+        self.assertEqual(game.board.points[12][0], 1)
+        self.assertEqual(game.board.points[7][0], 1)
+        self.assertEqual(game.board.points[5][0], 1)
+        # Black starts at 0,11,16,18 (bear off to 19-24)
+        self.assertEqual(game.board.points[0][0], 2)
+        self.assertEqual(game.board.points[11][0], 2)
+        self.assertEqual(game.board.points[16][0], 2)
+        self.assertEqual(game.board.points[18][0], 2)
 
     def test_initial_roll_chooses_player(self):
         """Test that initial roll correctly chooses the starting player."""
@@ -109,6 +109,7 @@ class TestGame(unittest.TestCase):
         game.setup_game()
         game.current_player = game.player1
         game.current_player.remaining_moves = 1
+        game.current_player.available_moves = [2]  # Set available dice
         # attempt invalid move (no checker at 1)
         self.assertFalse(game.apply_move(1, 3))
 
@@ -117,15 +118,17 @@ class TestGame(unittest.TestCase):
         game = Game()
         game.setup_game()
         # Clear the starting positions and set up a specific scenario
-        game.board.points[0] = (1, 1)  # One white checker at point 0
-        game.board.points[3] = (2, 1)  # One black checker at point 3
+        # White moves from high to low, so test 10 -> 7 
+        game.board.points[10] = (1, 1)  # One white checker at point 10
+        game.board.points[7] = (2, 1)   # One black checker at point 7
         # Sync the checker states to match board
         game.sync_checkers()
         game.current_player = game.player1
         game.other_player = game.player2
         game.current_player.remaining_moves = 1
-        # Apply move: white from 0 to 3 -> hit black
-        moved = game.apply_move(0, 3)
+        game.current_player.available_moves = [3]  # Set available dice for distance 3
+        # Apply move: white from 10 to 7 -> hit black
+        moved = game.apply_move(10, 7)
         self.assertTrue(moved)
         # board should reflect black on bar
         self.assertEqual(game.board.bar[2], 1)
