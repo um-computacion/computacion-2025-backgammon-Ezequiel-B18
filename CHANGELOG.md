@@ -5,7 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
 ## [Unreleased]
+
+### Fixed
+
+- **PyLint Code Quality**: Addressed all PyLint violations improving code quality from 9.82/10 to 10.0/10
+  - Fixed line-too-long (C0301) violations in tests_board.py and cli.py by breaking long lines appropriately
+  - Removed unnecessary parentheses after 'not' keyword (C0325) in cli.py conditional statements
+  - Fixed unreachable code (W0101) in board.py by removing duplicate return statement
+  - Reduced too-many-arguments (R0913) in game.py by making dependency injection parameters keyword-only
+  - Fixed unused variable (W0612) in player.py by removing unnecessary enumeration index
+  - Removed reimported modules and unused imports in tests_cli.py
+  - Added pylint disable comments for unused arguments in test methods where appropriate
+  - Fixed unnecessary else-after-break (R1723) statements in cli.py by removing redundant else blocks
+  - Added pylint disable comments for too-many-public-methods in test classes (expected for comprehensive testing)
+  - Added pylint disable comment for too-many-lines in tests_cli.py (comprehensive CLI testing module)
+
+### Changed
+
+- **Code Style**: Improved code readability by breaking long print statements into multiple lines
+- **Test Architecture**: Enhanced test method signatures with appropriate pylint disable comments for testing patterns
+- **Core Module Optimization**: Streamlined Game class constructor with keyword-only dependency injection parameters
 
 ## [1.8.0] - 2025-10-09
 

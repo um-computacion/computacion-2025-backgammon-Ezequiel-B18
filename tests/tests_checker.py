@@ -5,7 +5,7 @@ from core.checker import Checker, CheckerColor, CheckerState
 from core.exceptions import InvalidCheckerPositionError
 
 
-class TestChecker(unittest.TestCase):
+class TestChecker(unittest.TestCase):  # pylint: disable=too-many-public-methods
     """Test cases for the Checker class."""
 
     def setUp(self):
@@ -300,7 +300,7 @@ class TestChecker(unittest.TestCase):
         """Test that entering from bar when not on bar fails."""
         # Checker is on board, not on bar
         self.white_checker.set_position(10)
-        
+
         # Should return False when not on bar
         self.assertFalse(self.white_checker.enter_from_bar(3))
 
@@ -308,15 +308,15 @@ class TestChecker(unittest.TestCase):
         """Test that entering from bar to wrong entry points fails."""
         # Put white checker on bar
         self.white_checker.send_to_bar()
-        
+
         # White can only enter on points 0-5, should raise exception for point 10
         with self.assertRaises(InvalidCheckerPositionError):
             self.white_checker.enter_from_bar(10)
-        
+
         # Put black checker on bar
         self.black_checker.send_to_bar()
-        
-        # Black can only enter on points 18-23, should raise exception for point 10  
+
+        # Black can only enter on points 18-23, should raise exception for point 10
         with self.assertRaises(InvalidCheckerPositionError):
             self.black_checker.enter_from_bar(10)
 

@@ -7,7 +7,7 @@ from core.checker import CheckerColor, CheckerState
 from core.exceptions import NoMovesRemainingError
 
 
-class TestPlayer(unittest.TestCase):
+class TestPlayer(unittest.TestCase):  # pylint: disable=too-many-public-methods
     """Test cases for the Player class."""
 
     def setUp(self):
@@ -246,7 +246,7 @@ class TestPlayer(unittest.TestCase):
         mock_dice = Mock()
         mock_dice.get_moves.return_value = [2, 3]
         self.white_player.start_turn(mock_dice)
-        
+
         # Should be able to make a move of 5 (2+3)
         self.assertTrue(self.white_player.can_use_dice_for_move(5))
         # Should not be able to make a move of 6
@@ -258,7 +258,7 @@ class TestPlayer(unittest.TestCase):
         mock_dice = Mock()
         mock_dice.get_moves.return_value = [2, 2, 2, 2]
         self.white_player.start_turn(mock_dice)
-        
+
         # Should be able to make a move of 6 (2+2+2)
         self.assertTrue(self.white_player.can_use_dice_for_move(6))
         # Should not be able to make a move of 5
@@ -270,7 +270,7 @@ class TestPlayer(unittest.TestCase):
         mock_dice = Mock()
         mock_dice.get_moves.return_value = [1, 1, 1, 1]
         self.white_player.start_turn(mock_dice)
-        
+
         # Should be able to make a move of 4 (1+1+1+1)
         self.assertTrue(self.white_player.can_use_dice_for_move(4))
         # Should not be able to make a move of 5
@@ -282,7 +282,7 @@ class TestPlayer(unittest.TestCase):
         mock_dice = Mock()
         mock_dice.get_moves.return_value = [3, 5]
         self.white_player.start_turn(mock_dice)
-        
+
         # Use the die value 3
         self.assertTrue(self.white_player.use_dice_for_move(3))
         self.assertEqual(self.white_player.available_moves, [5])
@@ -294,7 +294,7 @@ class TestPlayer(unittest.TestCase):
         mock_dice = Mock()
         mock_dice.get_moves.return_value = [2, 3]
         self.white_player.start_turn(mock_dice)
-        
+
         # Use both dice for a move of 5
         self.assertTrue(self.white_player.use_dice_for_move(5))
         self.assertEqual(self.white_player.available_moves, [])
@@ -306,7 +306,7 @@ class TestPlayer(unittest.TestCase):
         mock_dice = Mock()
         mock_dice.get_moves.return_value = [2, 2, 2, 2]
         self.white_player.start_turn(mock_dice)
-        
+
         # Use three dice for a move of 6
         self.assertTrue(self.white_player.use_dice_for_move(6))
         self.assertEqual(self.white_player.available_moves, [2])
@@ -318,7 +318,7 @@ class TestPlayer(unittest.TestCase):
         mock_dice = Mock()
         mock_dice.get_moves.return_value = [1, 1, 1, 1]
         self.white_player.start_turn(mock_dice)
-        
+
         # Use all four dice for a move of 4
         self.assertTrue(self.white_player.use_dice_for_move(4))
         self.assertEqual(self.white_player.available_moves, [])
@@ -330,7 +330,7 @@ class TestPlayer(unittest.TestCase):
         mock_dice = Mock()
         mock_dice.get_moves.return_value = [2, 3]
         self.white_player.start_turn(mock_dice)
-        
+
         # Try to use dice for an impossible move (e.g., 7)
         self.assertFalse(self.white_player.use_dice_for_move(7))
         # Available moves should remain unchanged

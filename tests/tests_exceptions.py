@@ -25,7 +25,7 @@ from core.exceptions import (
 )
 
 
-class TestExceptions(unittest.TestCase):
+class TestExceptions(unittest.TestCase):  # pylint: disable=too-many-public-methods
     """Test cases for custom exception classes."""
 
     def test_backgammon_error_base(self):
@@ -173,14 +173,18 @@ class TestExceptions(unittest.TestCase):
         error = InvalidCheckerStateError("INVALID", "ON_BOARD")
         self.assertEqual(error.current_state, "INVALID")
         self.assertEqual(error.expected_state, "ON_BOARD")
-        self.assertEqual(str(error), "Invalid checker state: INVALID. Expected: ON_BOARD")
+        self.assertEqual(
+            str(error), "Invalid checker state: INVALID. Expected: ON_BOARD"
+        )
 
     def test_checker_position_error(self):
         """Test CheckerPositionError exception."""
         error = CheckerPositionError(25, "ON_BOARD")
         self.assertEqual(error.position, 25)
         self.assertEqual(error.state, "ON_BOARD")
-        self.assertEqual(str(error), "Invalid position 25 for checker in state ON_BOARD")
+        self.assertEqual(
+            str(error), "Invalid position 25 for checker in state ON_BOARD"
+        )
         self.assertIsInstance(error, CheckerError)
 
     def test_game_quit_exception(self):

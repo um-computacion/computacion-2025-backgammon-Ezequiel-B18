@@ -1,17 +1,16 @@
-"""Tests for the CLI (Command Line Interface) module."""
+"""Tests for the CLI (Command Line Interface) module."""  # pylint: disable=too-many-lines
 
 import unittest
 from unittest.mock import patch, Mock
 
-from cli.cli import BackgammonCLI, GameQuitException, main
+from cli.cli import BackgammonCLI, main
 from core.exceptions import (
     NoMovesRemainingError,
-    InvalidPlayerTurnError,
     GameQuitException,
 )
 
 
-class TestBackgammonCLI(unittest.TestCase):  # pylint: disable=too-many-public-methods
+class TestBackgammonCLI(unittest.TestCase):  # pylint: disable=too-many-public-methods,protected-access
     """Test cases for the BackgammonCLI class."""
 
     def setUp(self):
@@ -386,9 +385,9 @@ class TestBackgammonCLI(unittest.TestCase):  # pylint: disable=too-many-public-m
     @patch.object(BackgammonCLI, "handle_player_move")
     def test_game_loop_with_quit(
         self,
-        mock_handle_move,
-        mock_display_info,
-        mock_display_board,
+        mock_handle_move,  # pylint: disable=unused-argument
+        mock_display_info,  # pylint: disable=unused-argument
+        mock_display_board,  # pylint: disable=unused-argument
         mock_input,  # pylint: disable=unused-argument
     ):
         """Test game loop handling quit exception."""
@@ -436,7 +435,7 @@ class TestBackgammonCLI(unittest.TestCase):  # pylint: disable=too-many-public-m
         mock_player.available_moves = [3, 3, 3, 3]  # Double 3s
         mock_player.can_use_dice_for_move.return_value = True
         mock_player.use_dice_for_move.return_value = True
-        
+
         mock_board = Mock()
         mock_board.bar = {1: 0, 2: 0}  # No checkers on bar
         mock_points = [(0, 0)] * 24
@@ -444,34 +443,34 @@ class TestBackgammonCLI(unittest.TestCase):  # pylint: disable=too-many-public-m
         mock_points[8] = (1, 1)  # Player has checkers on point 8
         mock_board.points = mock_points
         mock_board.is_valid_move.return_value = True
-        
+
         mock_game.current_player = mock_player
         mock_game.board = mock_board
         mock_game.apply_move.return_value = True
-        
+
         mock_dice = Mock()
         mock_dice.values = [3, 3]
         mock_dice.is_doubles.return_value = True
         mock_dice.get_moves.return_value = [3, 3, 3, 3]
         mock_game.dice = mock_dice
-        
+
         self.cli.game = mock_game
-        
+
         # Test that CLI can handle multiple moves from doubles
         with patch("builtins.input", side_effect=["5 8", "8 11", "11 14", "14 17"]):
             with patch("builtins.print"):
                 # Simulate moves that consume remaining_moves
-                def mock_apply_move_side_effect(from_point, to_point):
+                def mock_apply_move_side_effect(from_point, to_point):  # pylint: disable=unused-argument
                     mock_player.remaining_moves -= 1
                     return True
-                
+
                 mock_game.apply_move.side_effect = mock_apply_move_side_effect
-                
+
                 # Execute 4 moves
                 for _ in range(4):
                     if mock_player.remaining_moves > 0:
                         self.cli.handle_player_move()
-        
+
         # Verify all moves were processed
         self.assertEqual(mock_game.apply_move.call_count, 4)
         self.assertEqual(mock_player.remaining_moves, 0)
@@ -487,7 +486,7 @@ class TestBackgammonCLI(unittest.TestCase):  # pylint: disable=too-many-public-m
         mock_player.available_moves = [6, 5]  # High dice values
         mock_player.can_use_dice_for_move.return_value = False  # Can't use any dice
         mock_player.end_turn = Mock()  # Add end_turn method
-        
+
         mock_board = Mock()
         mock_board.bar = {1: 0, 2: 0}  # No checkers on bar
         # Setup board where player has checkers but can't move with high dice
@@ -495,30 +494,32 @@ class TestBackgammonCLI(unittest.TestCase):  # pylint: disable=too-many-public-m
         mock_points[0] = (1, 15)  # All checkers on point 1, can't move with 6,5
         mock_board.points = mock_points
         mock_board.is_valid_move.return_value = False  # No valid moves
-        
+
         mock_game.current_player = mock_player
         mock_game.board = mock_board
         mock_game.switch_players = Mock()  # Add switch_players method
-        
+
         self.cli.game = mock_game
-        
+
         # Test that _has_legal_moves returns False
         result = self.cli._has_legal_moves()
         self.assertFalse(result)
-        
+
         # Test that CLI properly handles this in _execute_player_turn
-        with patch.object(self.cli, 'display_board'):
-            with patch.object(self.cli, 'display_current_player_info'):
-                with patch.object(self.cli, 'display_dice_roll'):
-                    with patch.object(self.cli, 'display_available_moves'):
+        with patch.object(self.cli, "display_board"):
+            with patch.object(self.cli, "display_current_player_info"):
+                with patch.object(self.cli, "display_dice_roll"):
+                    with patch.object(self.cli, "display_available_moves"):
                         with patch("builtins.input", return_value=""):
                             with patch("builtins.print") as mock_print:
                                 # Mock start_turn to avoid actual dice rolling
                                 mock_game.start_turn = Mock()
                                 self.cli._execute_player_turn()
-        
+
         # Verify skip message was printed
-        mock_print.assert_any_call(f"\n{mock_player.name} has no legal moves available.")
+        mock_print.assert_any_call(
+            f"\n{mock_player.name} has no legal moves available."
+        )
         mock_print.assert_any_call("Skipping turn...")
 
     def test_checkers_off_the_bar(self):
@@ -544,7 +545,7 @@ class TestBackgammonCLI(unittest.TestCase):  # pylint: disable=too-many-public-m
 
         # Test that CLI recognizes when player has checkers on bar
         self.assertEqual(mock_board.bar[1], 1)
-        
+
         # Test the bar check logic
         self.assertTrue(mock_board.bar[mock_player.player_id] > 0)
 
@@ -555,13 +556,17 @@ class TestBackgammonCLI(unittest.TestCase):  # pylint: disable=too-many-public-m
         mock_game = Mock()
         mock_game.is_game_over.return_value = False
         mock_game.current_player = Mock()
-        
+
         self.cli.game = mock_game
-        
+
         # Mock _execute_player_turn to raise GameQuitException
-        with patch.object(self.cli, "_execute_player_turn", side_effect=GameQuitException("Player quit")):
+        with patch.object(
+            self.cli,
+            "_execute_player_turn",
+            side_effect=GameQuitException("Player quit"),
+        ):
             self.cli.game_loop()
-        
+
         # Verify quit message was printed and game_over was not called
         mock_print.assert_any_call("Game ended by player.")
         mock_display_game_over.assert_not_called()
@@ -571,31 +576,37 @@ class TestBackgammonCLI(unittest.TestCase):  # pylint: disable=too-many-public-m
         """Test main function handling KeyboardInterrupt."""
         with patch.object(BackgammonCLI, "start_game", side_effect=KeyboardInterrupt):
             main()
-        
+
         mock_print.assert_any_call("\nGame interrupted by user.")
 
     @patch("builtins.print")
     def test_main_game_quit_exception(self, mock_print):
         """Test main function handling GameQuitException."""
-        with patch.object(BackgammonCLI, "start_game", side_effect=GameQuitException("Quit")):
+        with patch.object(
+            BackgammonCLI, "start_game", side_effect=GameQuitException("Quit")
+        ):
             main()
-        
+
         mock_print.assert_any_call("Game error: Quit")
 
     @patch("builtins.print")
     def test_main_os_error(self, mock_print):
         """Test main function handling OSError."""
-        with patch.object(BackgammonCLI, "start_game", side_effect=OSError("File error")):
+        with patch.object(
+            BackgammonCLI, "start_game", side_effect=OSError("File error")
+        ):
             main()
-        
+
         mock_print.assert_any_call("System error: File error")
 
     @patch("builtins.print")
     def test_main_unexpected_exception(self, mock_print):
         """Test main function handling unexpected exceptions."""
-        with patch.object(BackgammonCLI, "start_game", side_effect=ValueError("Unexpected error")):
+        with patch.object(
+            BackgammonCLI, "start_game", side_effect=ValueError("Unexpected error")
+        ):
             main()
-        
+
         mock_print.assert_any_call("An unexpected error occurred: Unexpected error")
 
     def test_has_legal_bar_entries_white_player(self):
@@ -605,17 +616,17 @@ class TestBackgammonCLI(unittest.TestCase):  # pylint: disable=too-many-public-m
         mock_player.player_id = 1  # White
         mock_player.available_moves = [3, 5]
         mock_player.can_use_dice_for_move.return_value = True
-        
+
         mock_board = Mock()
         # Set up board points - entry points for white are 0-5 (points 1-6)
         mock_board.points = [(0, 0) for _ in range(24)]
         mock_board.points[2] = (1, 1)  # Point 3 has one white checker
         mock_board.points[4] = (2, 2)  # Point 5 is blocked by black
-        
+
         mock_game.current_player = mock_player
         mock_game.board = mock_board
         self.cli.game = mock_game
-        
+
         # Should find legal entry (point 3 is not blocked)
         result = self.cli._has_legal_bar_entries()
         self.assertTrue(result)
@@ -627,17 +638,17 @@ class TestBackgammonCLI(unittest.TestCase):  # pylint: disable=too-many-public-m
         mock_player.player_id = 2  # Black
         mock_player.available_moves = [2, 4]
         mock_player.can_use_dice_for_move.return_value = True
-        
+
         mock_board = Mock()
         # Set up board points - entry points for black are 18-23 (points 19-24)
         mock_board.points = [(0, 0) for _ in range(24)]
         mock_board.points[20] = (2, 1)  # Point 21 has one black checker
         mock_board.points[19] = (1, 2)  # Point 20 is blocked by white
-        
+
         mock_game.current_player = mock_player
         mock_game.board = mock_board
         self.cli.game = mock_game
-        
+
         result = self.cli._has_legal_bar_entries()
         self.assertTrue(result)
 
@@ -648,17 +659,17 @@ class TestBackgammonCLI(unittest.TestCase):  # pylint: disable=too-many-public-m
         mock_player.player_id = 1  # White
         mock_player.available_moves = [1, 2, 3, 4, 5, 6]
         mock_player.can_use_dice_for_move.return_value = True
-        
+
         mock_board = Mock()
         # Set up board where all white entry points (0-5) are blocked
         mock_board.points = [(0, 0) for _ in range(24)]
         for i in range(6):  # Block all entry points for white
             mock_board.points[i] = (2, 2)  # 2+ black checkers
-        
+
         mock_game.current_player = mock_player
         mock_game.board = mock_board
         self.cli.game = mock_game
-        
+
         result = self.cli._has_legal_bar_entries()
         self.assertFalse(result)
 
@@ -669,17 +680,17 @@ class TestBackgammonCLI(unittest.TestCase):  # pylint: disable=too-many-public-m
         mock_player.player_id = 1  # White
         mock_player.available_moves = [3, 5]
         mock_player.can_use_dice_for_move.return_value = True
-        
+
         mock_board = Mock()
         # Set up board with white checkers
         mock_board.points = [(0, 0) for _ in range(24)]
         mock_board.points[10] = (1, 2)  # White checkers at point 11
         mock_board.is_valid_move.return_value = True
-        
+
         mock_game.current_player = mock_player
         mock_game.board = mock_board
         self.cli.game = mock_game
-        
+
         result = self.cli._has_legal_regular_moves()
         self.assertTrue(result)
 
@@ -690,17 +701,17 @@ class TestBackgammonCLI(unittest.TestCase):  # pylint: disable=too-many-public-m
         mock_player.player_id = 1  # White
         mock_player.available_moves = [6]
         mock_player.can_use_dice_for_move.return_value = True
-        
+
         mock_board = Mock()
         # Set up board with white checkers but no valid moves
         mock_board.points = [(0, 0) for _ in range(24)]
         mock_board.points[23] = (1, 2)  # White checkers at point 24
         mock_board.is_valid_move.return_value = False  # All moves blocked
-        
+
         mock_game.current_player = mock_player
         mock_game.board = mock_board
         self.cli.game = mock_game
-        
+
         result = self.cli._has_legal_regular_moves()
         self.assertFalse(result)
 
@@ -711,18 +722,18 @@ class TestBackgammonCLI(unittest.TestCase):  # pylint: disable=too-many-public-m
         mock_player.player_id = 1  # White
         mock_player.available_moves = [2, 4]
         mock_player.can_use_dice_for_move.return_value = True
-        
+
         mock_board = Mock()
         mock_board.all_checkers_in_home_board.return_value = True
         # Set up home board for white (points 0-5)
         mock_board.points = [(0, 0) for _ in range(24)]
         mock_board.points[1] = (1, 2)  # White checkers at point 2
         mock_board.points[3] = (1, 1)  # White checker at point 4
-        
+
         mock_game.current_player = mock_player
         mock_game.board = mock_board
         self.cli.game = mock_game
-        
+
         result = self.cli._has_legal_bear_offs()
         self.assertTrue(result)
 
@@ -733,18 +744,18 @@ class TestBackgammonCLI(unittest.TestCase):  # pylint: disable=too-many-public-m
         mock_player.player_id = 2  # Black
         mock_player.available_moves = [3, 6]
         mock_player.can_use_dice_for_move.return_value = True
-        
+
         mock_board = Mock()
         mock_board.all_checkers_in_home_board.return_value = True
         # Set up home board for black (points 18-23)
         mock_board.points = [(0, 0) for _ in range(24)]
         mock_board.points[20] = (2, 2)  # Black checkers at point 21
         mock_board.points[18] = (2, 1)  # Black checker at point 19
-        
+
         mock_game.current_player = mock_player
         mock_game.board = mock_board
         self.cli.game = mock_game
-        
+
         result = self.cli._has_legal_bear_offs()
         self.assertTrue(result)
 
@@ -754,23 +765,23 @@ class TestBackgammonCLI(unittest.TestCase):  # pylint: disable=too-many-public-m
         mock_player = Mock()
         mock_player.player_id = 1  # White
         mock_player.available_moves = [1, 2]
-        
+
         mock_board = Mock()
         mock_board.all_checkers_in_home_board.return_value = False
-        
+
         mock_game.current_player = mock_player
         mock_game.board = mock_board
         self.cli.game = mock_game
-        
+
         result = self.cli._has_legal_bear_offs()
         self.assertFalse(result)
 
     @patch("builtins.input")
     @patch("builtins.print")
-    def test_handle_player_move_bar_entry_white(self, mock_print, mock_input):
+    def test_handle_player_move_bar_entry_white(self, mock_print, mock_input):  # pylint: disable=unused-argument
         """Test handle_player_move with bar entry for white player."""
         mock_input.side_effect = ["bar 20", "q"]  # White enters at point 20
-        
+
         mock_game = Mock()
         mock_player = Mock()
         mock_player.player_id = 1  # White
@@ -779,30 +790,32 @@ class TestBackgammonCLI(unittest.TestCase):  # pylint: disable=too-many-public-m
         mock_player.can_use_dice_for_move.return_value = True
         mock_player.use_dice_for_move.return_value = True
         mock_player.end_turn = Mock()
-        
+
         mock_board = Mock()
         mock_board.bar = {1: 1, 2: 0}  # White has checker on bar
         mock_board.enter_from_bar.return_value = True
-        
+
         mock_game.current_player = mock_player
         mock_game.board = mock_board
         mock_game.sync_checkers = Mock()
         mock_game.switch_players = Mock()
-        
+
         self.cli.game = mock_game
-        
+
         self.cli.handle_player_move()
-        
+
         # Verify bar entry was attempted
         mock_board.enter_from_bar.assert_called_once_with(1, 19)  # Point 20 -> index 19
-        mock_player.use_dice_for_move.assert_called_once_with(5)  # Distance for white to point 20
+        mock_player.use_dice_for_move.assert_called_once_with(
+            5
+        )  # Distance for white to point 20
 
     @patch("builtins.input")
     @patch("builtins.print")
-    def test_handle_player_move_bar_entry_black(self, mock_print, mock_input):
+    def test_handle_player_move_bar_entry_black(self, mock_print, mock_input):  # pylint: disable=unused-argument
         """Test handle_player_move with bar entry for black player."""
         mock_input.side_effect = ["bar 3", "q"]  # Black enters at point 3
-        
+
         mock_game = Mock()
         mock_player = Mock()
         mock_player.player_id = 2  # Black
@@ -811,121 +824,133 @@ class TestBackgammonCLI(unittest.TestCase):  # pylint: disable=too-many-public-m
         mock_player.can_use_dice_for_move.return_value = True
         mock_player.use_dice_for_move.return_value = True
         mock_player.end_turn = Mock()
-        
+
         mock_board = Mock()
         mock_board.bar = {1: 0, 2: 1}  # Black has checker on bar
         mock_board.enter_from_bar.return_value = True
-        
+
         mock_game.current_player = mock_player
         mock_game.board = mock_board
         mock_game.sync_checkers = Mock()
         mock_game.switch_players = Mock()
-        
+
         self.cli.game = mock_game
-        
+
         self.cli.handle_player_move()
-        
+
         # Verify bar entry was attempted
         mock_board.enter_from_bar.assert_called_once_with(2, 2)  # Point 3 -> index 2
-        mock_player.use_dice_for_move.assert_called_once_with(3)  # Distance for black to point 3
+        mock_player.use_dice_for_move.assert_called_once_with(
+            3
+        )  # Distance for black to point 3
 
     @patch("builtins.input")
     @patch("builtins.print")
     def test_handle_player_move_bar_entry_invalid_point(self, mock_print, mock_input):
         """Test handle_player_move with invalid bar entry point."""
         mock_input.side_effect = ["bar 25", "q", "q"]  # Invalid point, then quit
-        
+
         mock_game = Mock()
         mock_player = Mock()
         mock_player.player_id = 1  # White
         mock_player.remaining_moves = 1
         mock_player.available_moves = [6]
-        
+
         mock_board = Mock()
         mock_board.bar = {1: 1, 2: 0}  # White has checker on bar
-        
+
         mock_game.current_player = mock_player
         mock_game.board = mock_board
-        
+
         self.cli.game = mock_game
-        
+
         # Should raise GameQuitException when user enters "quit"
         with self.assertRaises(GameQuitException):
             self.cli.handle_player_move()
-        
+
         # Verify error messages were printed
         mock_print.assert_any_call("Invalid point. Points must be between 1-24.")
 
     @patch("builtins.input")
     @patch("builtins.print")
-    def test_handle_player_move_bar_entry_no_checkers_on_bar(self, mock_print, mock_input):
+    def test_handle_player_move_bar_entry_no_checkers_on_bar(
+        self, mock_print, mock_input
+    ):
         """Test handle_player_move when trying bar entry with no checkers on bar."""
         mock_input.side_effect = ["bar 20"] + ["q"] * 10
-        
+
         mock_game = Mock()
         mock_player = Mock()
         mock_player.player_id = 1  # White
         mock_player.remaining_moves = 1
-        
+
         mock_board = Mock()
         mock_board.bar = {1: 0, 2: 0}  # No checkers on bar
-        
+
         mock_game.current_player = mock_player
         mock_game.board = mock_board
-        
+
         self.cli.game = mock_game
-        
+
         with self.assertRaises(GameQuitException):
             self.cli.handle_player_move()
-        
+
         mock_print.assert_any_call("You don't have any checkers on the bar!")
 
     @patch("builtins.input")
     @patch("builtins.print")
-    def test_handle_player_move_bar_entry_wrong_range_white(self, mock_print, mock_input):
+    def test_handle_player_move_bar_entry_wrong_range_white(
+        self, mock_print, mock_input
+    ):
         """Test bar entry with wrong range for white player."""
-        mock_input.side_effect = ["bar 10"] + ["q"] * 10  # White tries point 10 (should be 19-24)
-        
+        mock_input.side_effect = ["bar 10"] + [
+            "q"
+        ] * 10  # White tries point 10 (should be 19-24)
+
         mock_game = Mock()
         mock_player = Mock()
         mock_player.player_id = 1  # White
         mock_player.remaining_moves = 1
-        
+
         mock_board = Mock()
         mock_board.bar = {1: 1, 2: 0}  # White has checker on bar
-        
+
         mock_game.current_player = mock_player
         mock_game.board = mock_board
-        
+
         self.cli.game = mock_game
-        
+
         with self.assertRaises(GameQuitException):
             self.cli.handle_player_move()
-        
+
         mock_print.assert_any_call("White must enter on points 19-24.")
 
     @patch("builtins.input")
     @patch("builtins.print")
-    def test_handle_player_move_bar_entry_wrong_range_black(self, mock_print, mock_input):
+    def test_handle_player_move_bar_entry_wrong_range_black(
+        self, mock_print, mock_input
+    ):
         """Test bar entry with wrong range for black player."""
-        mock_input.side_effect = ["bar 15"] + ["q"] * 10  # Black tries point 15 (should be 1-6)
-        
+        mock_input.side_effect = ["bar 15"] + [
+            "q"
+        ] * 10  # Black tries point 15 (should be 1-6)
+
         mock_game = Mock()
         mock_player = Mock()
         mock_player.player_id = 2  # Black
         mock_player.remaining_moves = 1
-        
+
         mock_board = Mock()
         mock_board.bar = {1: 0, 2: 1}  # Black has checker on bar
-        
+
         mock_game.current_player = mock_player
         mock_game.board = mock_board
-        
+
         self.cli.game = mock_game
-        
+
         with self.assertRaises(GameQuitException):
             self.cli.handle_player_move()
-        
+
         mock_print.assert_any_call("Black must enter on points 1-6.")
 
     @patch("builtins.input")
@@ -933,87 +958,95 @@ class TestBackgammonCLI(unittest.TestCase):  # pylint: disable=too-many-public-m
     def test_handle_player_move_bar_entry_invalid_dice(self, mock_print, mock_input):
         """Test bar entry when dice don't match distance."""
         mock_input.side_effect = ["bar 20"] + ["q"] * 10
-        
+
         mock_game = Mock()
         mock_player = Mock()
         mock_player.player_id = 1  # White
         mock_player.remaining_moves = 1
         mock_player.available_moves = [3]  # Only has 3, but needs 6 for point 20
         mock_player.can_use_dice_for_move.return_value = False
-        
+
         mock_board = Mock()
         mock_board.bar = {1: 1, 2: 0}  # White has checker on bar
-        
+
         mock_game.current_player = mock_player
         mock_game.board = mock_board
-        
+
         self.cli.game = mock_game
-        
+
         with self.assertRaises(GameQuitException):
             self.cli.handle_player_move()
-        
+
         # Verify any dice-related error message is printed
         calls = [str(call) for call in mock_print.call_args_list]
-        dice_error_found = any("dice" in call.lower() or "cannot" in call.lower() for call in calls)
-        self.assertTrue(dice_error_found, f"Expected dice error message in calls: {calls}")
+        dice_error_found = any(
+            "dice" in call.lower() or "cannot" in call.lower() for call in calls
+        )
+        self.assertTrue(
+            dice_error_found, f"Expected dice error message in calls: {calls}"
+        )
 
     @patch("builtins.input")
     @patch("builtins.print")
     def test_handle_player_move_bar_entry_blocked(self, mock_print, mock_input):
         """Test bar entry when target point is blocked."""
         mock_input.side_effect = ["bar 20"] + ["q"] * 10
-        
+
         mock_game = Mock()
         mock_player = Mock()
         mock_player.player_id = 1  # White
         mock_player.remaining_moves = 1
         mock_player.available_moves = [6]
         mock_player.can_use_dice_for_move.return_value = True
-        
+
         mock_board = Mock()
         mock_board.bar = {1: 1, 2: 0}  # White has checker on bar
         mock_board.enter_from_bar.return_value = False  # Entry blocked
-        
+
         mock_game.current_player = mock_player
         mock_game.board = mock_board
-        
+
         self.cli.game = mock_game
-        
+
         with self.assertRaises(GameQuitException):
             self.cli.handle_player_move()
-        
-        mock_print.assert_any_call("Cannot enter at that point. It may be blocked by opponent checkers.")
+
+        mock_print.assert_any_call(
+            "Cannot enter at that point. It may be blocked by opponent checkers."
+        )
 
     @patch("builtins.input")
     @patch("builtins.print")
     def test_handle_player_move_bar_entry_invalid_format(self, mock_print, mock_input):
         """Test bar entry with invalid input format."""
         mock_input.side_effect = ["bar abc"] + ["q"] * 10
-        
+
         mock_game = Mock()
         mock_player = Mock()
         mock_player.player_id = 1  # White
         mock_player.remaining_moves = 1
-        
+
         mock_board = Mock()
         mock_board.bar = {1: 1, 2: 0}  # White has checker on bar
-        
+
         mock_game.current_player = mock_player
         mock_game.board = mock_board
-        
+
         self.cli.game = mock_game
-        
+
         with self.assertRaises(GameQuitException):
             self.cli.handle_player_move()
-        
-        mock_print.assert_any_call("Invalid input. Enter 'bar' followed by a point number (e.g., 'bar 5').")
+
+        mock_print.assert_any_call(
+            "Invalid input. Enter 'bar' followed by a point number (e.g., 'bar 5')."
+        )
 
     @patch("builtins.input")
     @patch("builtins.print")
-    def test_handle_player_move_bear_off_white(self, mock_print, mock_input):
+    def test_handle_player_move_bear_off_white(self, mock_print, mock_input):  # pylint: disable=unused-argument
         """Test handle_player_move with bearing off for white player."""
         mock_input.side_effect = ["6 off", "q"]  # Bear off from point 6
-        
+
         mock_game = Mock()
         mock_player = Mock()
         mock_player.player_id = 1  # White
@@ -1022,29 +1055,31 @@ class TestBackgammonCLI(unittest.TestCase):  # pylint: disable=too-many-public-m
         mock_player.can_use_dice_for_move.return_value = True
         mock_player.use_dice_for_move.return_value = True
         mock_player.end_turn = Mock()
-        
+
         mock_board = Mock()
         mock_board.bear_off.return_value = True
-        
+
         mock_game.current_player = mock_player
         mock_game.board = mock_board
         mock_game.sync_checkers = Mock()
         mock_game.switch_players = Mock()
-        
+
         self.cli.game = mock_game
-        
+
         self.cli.handle_player_move()
-        
+
         # Verify bear off was attempted
         mock_board.bear_off.assert_called_once_with(1, 5)  # Point 6 -> index 5
-        mock_player.use_dice_for_move.assert_called_once_with(6)  # Distance for white from point 6
+        mock_player.use_dice_for_move.assert_called_once_with(
+            6
+        )  # Distance for white from point 6
 
     @patch("builtins.input")
     @patch("builtins.print")
-    def test_handle_player_move_bear_off_black(self, mock_print, mock_input):
+    def test_handle_player_move_bear_off_black(self, mock_print, mock_input):  # pylint: disable=unused-argument
         """Test handle_player_move with bearing off for black player."""
         mock_input.side_effect = ["19 off", "q"]  # Bear off from point 19
-        
+
         mock_game = Mock()
         mock_player = Mock()
         mock_player.player_id = 2  # Black
@@ -1053,44 +1088,46 @@ class TestBackgammonCLI(unittest.TestCase):  # pylint: disable=too-many-public-m
         mock_player.can_use_dice_for_move.return_value = True
         mock_player.use_dice_for_move.return_value = True
         mock_player.end_turn = Mock()
-        
+
         mock_board = Mock()
         mock_board.bear_off.return_value = True
-        
+
         mock_game.current_player = mock_player
         mock_game.board = mock_board
         mock_game.sync_checkers = Mock()
         mock_game.switch_players = Mock()
-        
+
         self.cli.game = mock_game
-        
+
         self.cli.handle_player_move()
-        
+
         # Verify bear off was attempted
         mock_board.bear_off.assert_called_once_with(2, 18)  # Point 19 -> index 18
-        mock_player.use_dice_for_move.assert_called_once_with(6)  # Distance for black from point 19
+        mock_player.use_dice_for_move.assert_called_once_with(
+            6
+        )  # Distance for black from point 19
 
     @patch("builtins.input")
     @patch("builtins.print")
     def test_handle_player_move_bear_off_invalid_point(self, mock_print, mock_input):
         """Test bearing off from invalid point."""
         mock_input.side_effect = ["25 off", "0 off"] + ["q"] * 10
-        
+
         mock_game = Mock()
         mock_player = Mock()
         mock_player.player_id = 1  # White
         mock_player.remaining_moves = 1
-        
+
         mock_board = Mock()
-        
+
         mock_game.current_player = mock_player
         mock_game.board = mock_board
-        
+
         self.cli.game = mock_game
-        
+
         with self.assertRaises(GameQuitException):
             self.cli.handle_player_move()
-        
+
         mock_print.assert_any_call("Invalid point. Points must be between 1-24.")
 
     @patch("builtins.input")
@@ -1098,74 +1135,82 @@ class TestBackgammonCLI(unittest.TestCase):  # pylint: disable=too-many-public-m
     def test_handle_player_move_bear_off_invalid_dice(self, mock_print, mock_input):
         """Test bearing off when dice don't match distance."""
         mock_input.side_effect = ["6 off"] + ["q"] * 10
-        
+
         mock_game = Mock()
         mock_player = Mock()
         mock_player.player_id = 1  # White
         mock_player.remaining_moves = 1
         mock_player.available_moves = [3]  # Only has 3, but needs 6 for point 6
         mock_player.can_use_dice_for_move.return_value = False
-        
+
         mock_board = Mock()
-        
+
         mock_game.current_player = mock_player
         mock_game.board = mock_board
-        
+
         self.cli.game = mock_game
-        
+
         with self.assertRaises(GameQuitException):
             self.cli.handle_player_move()
-        
-        mock_print.assert_any_call("Cannot bear off from point 6. Distance 6 doesn't match available dice: [3]")
+
+        mock_print.assert_any_call(
+            "Cannot bear off from point 6. Distance 6 doesn't match available dice: [3]"
+        )
 
     @patch("builtins.input")
     @patch("builtins.print")
-    def test_handle_player_move_bear_off_invalid_conditions(self, mock_print, mock_input):
+    def test_handle_player_move_bear_off_invalid_conditions(
+        self, mock_print, mock_input
+    ):
         """Test bearing off when conditions not met."""
         mock_input.side_effect = ["6 off"] + ["q"] * 10
-        
+
         mock_game = Mock()
         mock_player = Mock()
         mock_player.player_id = 1  # White
         mock_player.remaining_moves = 1
         mock_player.available_moves = [6]
         mock_player.can_use_dice_for_move.return_value = True
-        
+
         mock_board = Mock()
         mock_board.bear_off.return_value = False  # Bear off not allowed
-        
+
         mock_game.current_player = mock_player
         mock_game.board = mock_board
-        
+
         self.cli.game = mock_game
-        
+
         with self.assertRaises(GameQuitException):
             self.cli.handle_player_move()
-        
-        mock_print.assert_any_call("Invalid bear off attempt. Check that all checkers are in home board.")
+
+        mock_print.assert_any_call(
+            "Invalid bear off attempt. Check that all checkers are in home board."
+        )
 
     @patch("builtins.input")
     @patch("builtins.print")
-    def test_handle_player_move_normal_move_invalid_points(self, mock_print, mock_input):
+    def test_handle_player_move_normal_move_invalid_points(
+        self, mock_print, mock_input
+    ):
         """Test normal move with invalid point numbers."""
         mock_input.side_effect = ["25 10", "5 0"] + ["q"] * 10
-        
+
         mock_game = Mock()
         mock_player = Mock()
         mock_player.player_id = 1  # White
         mock_player.remaining_moves = 1
-        
+
         mock_board = Mock()
         mock_board.bar = {1: 0, 2: 0}  # No checkers on bar
-        
+
         mock_game.current_player = mock_player
         mock_game.board = mock_board
-        
+
         self.cli.game = mock_game
-        
+
         with self.assertRaises(GameQuitException):
             self.cli.handle_player_move()
-        
+
         mock_print.assert_any_call("Invalid points. Points must be between 1-24.")
 
     @patch("builtins.input")
@@ -1173,49 +1218,53 @@ class TestBackgammonCLI(unittest.TestCase):  # pylint: disable=too-many-public-m
     def test_handle_player_move_invalid_input_format(self, mock_print, mock_input):
         """Test handle_player_move with invalid input format."""
         mock_input.side_effect = ["abc def"] + ["q"] * 10
-        
+
         mock_game = Mock()
         mock_player = Mock()
         mock_player.player_id = 1  # White
         mock_player.remaining_moves = 1
-        
+
         mock_board = Mock()
         mock_board.bar = {1: 0, 2: 0}  # No checkers on bar
-        
+
         mock_game.current_player = mock_player
         mock_game.board = mock_board
-        
+
         self.cli.game = mock_game
-        
+
         with self.assertRaises(GameQuitException):
             self.cli.handle_player_move()
-        
-        mock_print.assert_any_call("Invalid input. Please enter valid numbers or 'off' for bearing off.")
+
+        mock_print.assert_any_call(
+            "Invalid input. Please enter valid numbers or 'off' for bearing off."
+        )
 
     @patch("builtins.input")
     @patch("builtins.print")
     def test_handle_player_move_normal_move_success(self, mock_print, mock_input):
         """Test successful normal move."""
         mock_input.side_effect = ["13 7"]  # Move from point 13 to point 7
-        
+
         mock_game = Mock()
         mock_player = Mock()
         mock_player.player_id = 1  # White
         mock_player.remaining_moves = 1
-        
+
         mock_board = Mock()
         mock_board.bar = {1: 0, 2: 0}  # No checkers on bar
-        
+
         mock_game.current_player = mock_player
         mock_game.board = mock_board
         mock_game.apply_move.return_value = True
-        
+
         self.cli.game = mock_game
-        
+
         self.cli.handle_player_move()
-        
+
         # Verify normal move was attempted
-        mock_game.apply_move.assert_called_once_with(12, 6)  # Convert from 1-based to 0-based
+        mock_game.apply_move.assert_called_once_with(
+            12, 6
+        )  # Convert from 1-based to 0-based
         mock_print.assert_any_call("Move successful: 13 → 7 (distance: 6)")
 
     @patch("builtins.input")
@@ -1223,24 +1272,24 @@ class TestBackgammonCLI(unittest.TestCase):  # pylint: disable=too-many-public-m
     def test_handle_player_move_normal_move_failed(self, mock_print, mock_input):
         """Test failed normal move."""
         mock_input.side_effect = ["13 7"] + ["q"] * 10
-        
+
         mock_game = Mock()
         mock_player = Mock()
         mock_player.player_id = 1  # White
         mock_player.remaining_moves = 1
-        
+
         mock_board = Mock()
         mock_board.bar = {1: 0, 2: 0}  # No checkers on bar
-        
+
         mock_game.current_player = mock_player
         mock_game.board = mock_board
         mock_game.apply_move.return_value = False
-        
+
         self.cli.game = mock_game
-        
+
         with self.assertRaises(GameQuitException):
             self.cli.handle_player_move()
-        
+
         mock_print.assert_any_call("Invalid move. Try again or check the board.")
 
     @patch("builtins.print")
@@ -1251,7 +1300,7 @@ class TestBackgammonCLI(unittest.TestCase):  # pylint: disable=too-many-public-m
 
         # Set up board with various checker counts including > 5
         points = [(0, 0) for _ in range(24)]
-        points[0] = (1, 8)   # 8 white checkers (should show count)
+        points[0] = (1, 8)  # 8 white checkers (should show count)
         points[5] = (2, 12)  # 12 black checkers (should show '+')
         points[12] = (1, 3)  # Normal stack
         points[18] = (2, 6)  # 6 checkers
@@ -1264,13 +1313,13 @@ class TestBackgammonCLI(unittest.TestCase):  # pylint: disable=too-many-public-m
         self.cli.game = mock_game
 
         self.cli.display_board()
-            
+
         # Verify print was called (board was displayed)
         self.assertTrue(mock_print.called)
-        
+
         # Check that specific board elements were displayed
         calls = [str(call) for call in mock_print.call_args_list]
-        
+
         # Just check that the board display method was called successfully
         # (The exact format may vary, but the method should complete)
         self.assertTrue(len(calls) > 0, "Expected some print calls from board display")
@@ -1283,7 +1332,7 @@ class TestBackgammonCLI(unittest.TestCase):  # pylint: disable=too-many-public-m
 
         # Set up mostly empty board
         points = [(0, 0) for _ in range(24)]
-        points[0] = (1, 1)   # Single white checker
+        points[0] = (1, 1)  # Single white checker
         points[23] = (2, 1)  # Single black checker
 
         mock_board.points = points
@@ -1294,7 +1343,7 @@ class TestBackgammonCLI(unittest.TestCase):  # pylint: disable=too-many-public-m
         self.cli.game = mock_game
 
         self.cli.display_board()
-            
+
         self.assertTrue(mock_print.called)
 
     @patch("builtins.print")
@@ -1304,21 +1353,23 @@ class TestBackgammonCLI(unittest.TestCase):  # pylint: disable=too-many-public-m
         mock_player = Mock()
         mock_player.player_id = 1
         mock_player.available_moves = [3, 5]
-        
+
         mock_board = Mock()
         mock_board.bar = {1: 0, 2: 0}  # No checkers on bar
-        
+
         mock_game.current_player = mock_player
         mock_game.board = mock_board
         self.cli.game = mock_game
 
         self.cli.display_available_moves()
-            
+
         self.assertTrue(mock_print.called)
         calls = [str(call) for call in mock_print.call_args_list]
-        
+
         # Should not mention specific bar warning about having checkers on bar
-        bar_warning_mentioned = any("you have checkers on the bar" in call.lower() for call in calls)
+        bar_warning_mentioned = any(
+            "you have checkers on the bar" in call.lower() for call in calls
+        )
         self.assertFalse(bar_warning_mentioned)
 
     @patch("builtins.print")
@@ -1328,22 +1379,24 @@ class TestBackgammonCLI(unittest.TestCase):  # pylint: disable=too-many-public-m
         mock_player = Mock()
         mock_player.player_id = 1
         mock_player.available_moves = [2, 4]
-        
+
         mock_board = Mock()
         mock_board.bar = {1: 0, 2: 0}
         mock_board.all_checkers_in_home_board.return_value = True
-        
+
         mock_game.current_player = mock_player
         mock_game.board = mock_board
         self.cli.game = mock_game
 
         self.cli.display_available_moves()
-            
+
         self.assertTrue(mock_print.called)
         calls = [str(call) for call in mock_print.call_args_list]
-        
+
         # Should mention move instructions (general instructions always shown)
-        move_instructions_mentioned = any("enter moves as" in call.lower() for call in calls)
+        move_instructions_mentioned = any(
+            "enter moves as" in call.lower() for call in calls
+        )
         self.assertTrue(move_instructions_mentioned)
 
     @patch("builtins.print")
@@ -1352,11 +1405,11 @@ class TestBackgammonCLI(unittest.TestCase):  # pylint: disable=too-many-public-m
         # Test with no winner
         mock_game = Mock()
         mock_game.get_winner.return_value = None
-        
+
         self.cli.game = mock_game
-        
+
         self.cli.display_game_over()
-            
+
         mock_print.assert_any_call("Game ended without a winner.")
 
     def test_display_board_edge_checker_positions(self):
@@ -1366,10 +1419,10 @@ class TestBackgammonCLI(unittest.TestCase):  # pylint: disable=too-many-public-m
 
         # Set up board with checkers in edge positions
         points = [(0, 0) for _ in range(24)]
-        points[0] = (1, 1)    # Point 1
-        points[23] = (2, 1)   # Point 24
-        points[11] = (1, 7)   # Point 12 with many checkers
-        points[12] = (2, 9)   # Point 13 with many checkers
+        points[0] = (1, 1)  # Point 1
+        points[23] = (2, 1)  # Point 24
+        points[11] = (1, 7)  # Point 12 with many checkers
+        points[12] = (2, 9)  # Point 13 with many checkers
 
         mock_board.points = points
         mock_board.bar = {1: 0, 2: 0}
@@ -1389,34 +1442,34 @@ class TestBackgammonCLI(unittest.TestCase):  # pylint: disable=too-many-public-m
         mock_player.name = "Player with Long Name"
         mock_player.color.name = "WHITE"
         mock_player.remaining_moves = 0  # No moves remaining
-        
+
         mock_game.current_player = mock_player
         self.cli.game = mock_game
 
         with patch("builtins.print") as mock_print:
             self.cli.display_current_player_info()
-            
+
         self.assertTrue(mock_print.called)
 
     def test_display_dice_roll_edge_cases(self):
         """Test display_dice_roll with various dice combinations."""
         mock_game = Mock()
         mock_dice = Mock()
-        
+
         # Test with high dice values
         mock_dice.values = [6, 6]
         mock_dice.is_doubles.return_value = True
         mock_dice.get_moves.return_value = [6, 6, 6, 6]
-        
+
         mock_game.dice = mock_dice
         self.cli.game = mock_game
 
         with patch("builtins.print") as mock_print:
             self.cli.display_dice_roll()
-            
+
         self.assertTrue(mock_print.called)
         calls = [str(call) for call in mock_print.call_args_list]
-        
+
         # Should mention doubles
         doubles_mentioned = any("doubles" in call.lower() for call in calls)
         self.assertTrue(doubles_mentioned)
@@ -1426,16 +1479,16 @@ class TestBackgammonCLI(unittest.TestCase):  # pylint: disable=too-many-public-m
         mock_game = Mock()
         mock_player = Mock()
         mock_player.player_id = 1
-        
+
         mock_board = Mock()
         mock_board.bar = {1: 1, 2: 0}  # White has checker on bar
-        
+
         mock_game.current_player = mock_player
         mock_game.board = mock_board
         self.cli.game = mock_game
-        
+
         # Mock the bar entries method to return True
-        with patch.object(self.cli, '_has_legal_bar_entries', return_value=True):
+        with patch.object(self.cli, "_has_legal_bar_entries", return_value=True):
             result = self.cli._has_legal_moves()
             self.assertTrue(result)
 
@@ -1444,17 +1497,17 @@ class TestBackgammonCLI(unittest.TestCase):  # pylint: disable=too-many-public-m
         mock_game = Mock()
         mock_player = Mock()
         mock_player.player_id = 1
-        
+
         mock_board = Mock()
         mock_board.bar = {1: 0, 2: 0}  # No checkers on bar
-        
+
         mock_game.current_player = mock_player
         mock_game.board = mock_board
         self.cli.game = mock_game
-        
+
         # Mock both regular moves and bear offs
-        with patch.object(self.cli, '_has_legal_regular_moves', return_value=True):
-            with patch.object(self.cli, '_has_legal_bear_offs', return_value=False):
+        with patch.object(self.cli, "_has_legal_regular_moves", return_value=True):
+            with patch.object(self.cli, "_has_legal_bear_offs", return_value=False):
                 result = self.cli._has_legal_moves()
                 self.assertTrue(result)
 

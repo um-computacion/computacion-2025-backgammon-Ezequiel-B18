@@ -139,12 +139,12 @@ class Board:
         # So they start from the far end (higher numbers)
         self.__points__[23] = (1, 2)  # 2 white checkers on point 23
         self.__points__[12] = (1, 5)  # 5 white checkers on point 12
-        self.__points__[7] = (1, 3)   # 3 white checkers on point 7
-        self.__points__[5] = (1, 5)   # 5 white checkers on point 5
+        self.__points__[7] = (1, 3)  # 3 white checkers on point 7
+        self.__points__[5] = (1, 5)  # 5 white checkers on point 5
 
         # Black checkers (player 2) starting positions - need to bear off to 19-24
         # So they start from the far end (lower numbers)
-        self.__points__[0] = (2, 2)   # 2 black checkers on point 0
+        self.__points__[0] = (2, 2)  # 2 black checkers on point 0
         self.__points__[11] = (2, 5)  # 5 black checkers on point 11
         self.__points__[16] = (2, 3)  # 3 black checkers on point 16
         self.__points__[18] = (2, 5)  # 5 black checkers on point 18
@@ -218,7 +218,6 @@ class Board:
 
         # Remove from bar
         self.bar[player] -= 1
-        return True
         return True
 
     def all_checkers_in_home_board(self, player):

@@ -12,7 +12,7 @@ from core.exceptions import (
 )
 
 
-class TestGame(unittest.TestCase):
+class TestGame(unittest.TestCase):  # pylint: disable=too-many-public-methods
     """Test cases for the Game class."""
 
     def test_game_initialization(self):
@@ -118,9 +118,9 @@ class TestGame(unittest.TestCase):
         game = Game()
         game.setup_game()
         # Clear the starting positions and set up a specific scenario
-        # White moves from high to low, so test 10 -> 7 
+        # White moves from high to low, so test 10 -> 7
         game.board.points[10] = (1, 1)  # One white checker at point 10
-        game.board.points[7] = (2, 1)   # One black checker at point 7
+        game.board.points[7] = (2, 1)  # One black checker at point 7
         # Sync the checker states to match board
         game.sync_checkers()
         game.current_player = game.player1
@@ -254,18 +254,18 @@ class TestGame(unittest.TestCase):
         """Test sync_checkers with multiple checkers borne off."""
         game = Game("P1", "P2")
         game.setup_game()
-        
+
         # Set up board state with multiple checkers borne off
         game.board.home[1] = 3  # 3 white checkers borne off
-        game.board.bar[1] = 2   # 2 white checkers on bar
-        
+        game.board.bar[1] = 2  # 2 white checkers on bar
+
         # Sync checkers
         game.sync_checkers()
-        
+
         # Verify checker states
         borne_off_count = game.player1.count_checkers_by_state(CheckerState.BORNE_OFF)
         on_bar_count = game.player1.count_checkers_by_state(CheckerState.ON_BAR)
-        
+
         self.assertEqual(borne_off_count, 3)
         self.assertEqual(on_bar_count, 2)
 
@@ -273,11 +273,11 @@ class TestGame(unittest.TestCase):
         """Test initial roll when player 2 wins."""
         game = Game("P1", "P2")
         game.setup_game()
-        
+
         def fake_initial_roll():
             game.dice.initial_values = [3, 5]  # Player 2 wins
             return (3, 5)
-            
+
         with patch.object(game.dice, "initial_roll", side_effect=fake_initial_roll):
             with patch.object(game.dice, "get_highest_roller", return_value=2):
                 # Test that player 2 is assigned as current player when winning initial roll
@@ -285,20 +285,20 @@ class TestGame(unittest.TestCase):
                 if winner == 2:
                     game.current_player = game.player2
                     game.other_player = game.player1
-                
+
                 self.assertEqual(winner, 2)
 
     def test_sync_checkers_skip_borne_off_checkers(self):
         """Test that sync_checkers skips already borne off checkers."""
-        game = Game("P1", "P2") 
+        game = Game("P1", "P2")
         game.setup_game()
-        
+
         # Set up the board to have checkers borne off
         game.board.home[1] = 2  # Board says 2 borne off
-        
+
         # Sync should set checkers to borne off state
         game.sync_checkers()
-        
+
         # Check that some checkers are now borne off
         borne_off_count = game.player1.count_checkers_by_state(CheckerState.BORNE_OFF)
         self.assertEqual(borne_off_count, 2)
