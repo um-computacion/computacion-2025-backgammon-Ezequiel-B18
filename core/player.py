@@ -113,47 +113,47 @@ class Player:
     def can_use_dice_for_move(self, move_distance):
         """
         Check if a move of given distance can be made with available dice.
-        
+
         Args:
             move_distance (int): Distance of the move
-            
+
         Returns:
             bool: True if move is possible with available dice
         """
         # For single dice value moves
         if move_distance in self.available_moves:
             return True
-            
+
         # For combined dice moves
         # Check if we can combine two dice to make this move
         for i, die1 in enumerate(self.available_moves):
-            for j, die2 in enumerate(self.available_moves[i+1:], i+1):
+            for j, die2 in enumerate(self.available_moves[i + 1 :], i + 1):
                 if die1 + die2 == move_distance:
                     return True
-                    
+
         # For doubles, check if we can combine 3 dice (e.g., 1+1+1=3)
         if len(self.available_moves) >= 3:
             for i, die1 in enumerate(self.available_moves):
-                for j, die2 in enumerate(self.available_moves[i+1:], i+1):
-                    for k, die3 in enumerate(self.available_moves[j+1:], j+1):
+                for j, die2 in enumerate(self.available_moves[i + 1 :], i + 1):
+                    for die3 in self.available_moves[j + 1 :]:
                         if die1 + die2 + die3 == move_distance:
                             return True
-                            
+
         # For doubles, check if we can combine 4 dice (e.g., 1+1+1+1=4)
         if len(self.available_moves) >= 4:
             total = sum(self.available_moves[:4])
             if total == move_distance:
                 return True
-        
+
         return False
 
     def use_dice_for_move(self, move_distance):
         """
         Consume the appropriate dice values for a move.
-        
+
         Args:
             move_distance (int): Distance of the move
-            
+
         Returns:
             bool: True if dice were successfully consumed
         """
@@ -162,22 +162,22 @@ class Player:
             self.available_moves.remove(move_distance)
             self.remaining_moves -= 1
             return True
-            
+
         # Try combined dice - 2 dice
         for i, die1 in enumerate(self.available_moves):
-            for j, die2 in enumerate(self.available_moves[i+1:], i+1):
+            for j, die2 in enumerate(self.available_moves[i + 1 :], i + 1):
                 if die1 + die2 == move_distance:
                     # Remove both dice values (remove higher index first)
                     self.available_moves.pop(j)
                     self.available_moves.pop(i)
                     self.remaining_moves -= 2
                     return True
-                    
+
         # Try combined dice - 3 dice (for doubles)
         if len(self.available_moves) >= 3:
             for i, die1 in enumerate(self.available_moves):
-                for j, die2 in enumerate(self.available_moves[i+1:], i+1):
-                    for k, die3 in enumerate(self.available_moves[j+1:], j+1):
+                for j, die2 in enumerate(self.available_moves[i + 1 :], i + 1):
+                    for k, die3 in enumerate(self.available_moves[j + 1 :], j + 1):
                         if die1 + die2 + die3 == move_distance:
                             # Remove all three dice (remove highest index first)
                             self.available_moves.pop(k)
@@ -185,7 +185,7 @@ class Player:
                             self.available_moves.pop(i)
                             self.remaining_moves -= 3
                             return True
-                            
+
         # Try combined dice - 4 dice (for doubles)
         if len(self.available_moves) >= 4:
             total = sum(self.available_moves[:4])
@@ -195,7 +195,7 @@ class Player:
                     self.available_moves.pop(0)
                 self.remaining_moves -= 4
                 return True
-        
+
         return False
 
     def get_checkers_by_state(self, state):

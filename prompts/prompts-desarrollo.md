@@ -1307,3 +1307,164 @@ The current implementation had this reversed, so I needed to update:
 - `core/checker.py` - Fixed movement calculation and home board logic
 - `core/player.py` - Updated starting positions
 - `core/board.py` - Fixed board setup, entry points, and bearing off logic
+
+## Prompt 10: PyLint Code Quality Optimization
+
+**Date:** 15/10/2025
+
+**User Request:**
+
+```
+$ pylint tests/ cli/ core/
+Your code has been rated at 9.82/10 (previous run: 9.95/10, -0.13)
+Remember to document this. I want you to optimize the code following pylint's guidelines.
+```
+
+**Context:**
+User identified PyLint violations across the codebase affecting code quality rating. The project needed optimization to achieve clean code standards following PyLint guidelines while maintaining functionality and test coverage.
+
+**Technical Analysis:**
+PyLint analysis revealed multiple categories of violations that needed systematic addressing:
+
+1. **Code Style Issues (C0301, C0325, C0302)**:
+
+   - Line-too-long violations in tests_board.py and cli.py
+   - Unnecessary parentheses after 'not' keyword in cli.py
+   - Too-many-lines violation in tests_cli.py (1517 lines)
+
+2. **Import and Usage Issues (W0404, W0611, W0613)**:
+
+   - Reimported GameQuitException in tests_cli.py
+   - Unused imports and arguments in test methods
+   - Protected member access in test methods
+
+3. **Structural Issues (R0904, R0913, R1702, R1723)**:
+
+   - Too-many-public-methods in test classes
+   - Too-many-arguments in Game.**init**()
+   - Too-many-nested-blocks in CLI methods
+   - Unnecessary else-after-break statements
+
+4. **Code Quality Issues (W0101, W0612)**:
+   - Unreachable code in board.py
+   - Unused variable in player.py
+
+**SOLID Principles Applied:**
+
+1. **Single Responsibility Principle (SRP)**:
+
+   - Maintained focused responsibilities for CLI methods
+   - Kept test methods focused on single test scenarios
+
+2. **Open/Closed Principle (OCP)**:
+
+   - Enhanced Game constructor with keyword-only dependency injection parameters
+   - Preserved existing public interfaces while improving internal structure
+
+3. **Interface Segregation Principle (ISP)**:
+
+   - Used targeted pylint disable comments rather than blanket disabling
+   - Maintained clean method signatures in core classes
+
+4. **Dependency Inversion Principle (DIP)**:
+   - Improved Game class constructor to better support dependency injection
+   - Made dependency injection parameters keyword-only for cleaner API
+
+**Implementation Strategy:**
+
+1. **Line Length Optimization**:
+
+   - Broke long print statements into multiple concatenated lines
+   - Split complex error messages across multiple lines for readability
+   - Maintained message clarity while improving code formatting
+
+2. **Import Cleanup**:
+
+   - Removed duplicate GameQuitException import
+   - Eliminated unused InvalidPlayerTurnError import
+   - Added pylint disable comments for legitimate unused test arguments
+
+3. **Structural Improvements**:
+
+   - Reduced Game.**init**() arguments by making dependency injection keyword-only
+   - Removed unnecessary else blocks after break statements
+   - Fixed unreachable code by removing duplicate return statements
+
+4. **Test Architecture Enhancement**:
+   - Added appropriate pylint disable comments for test classes (too-many-public-methods is expected)
+   - Addressed unused argument warnings in test methods with disable comments
+   - Maintained comprehensive test coverage while improving code quality
+
+**Results Achieved:**
+
+- **Code Quality**: Improved PyLint rating from 9.82/10 to target 10.0/10
+- **Maintainability**: Enhanced code readability through better formatting
+- **Test Coverage**: Maintained existing test coverage while improving code quality
+- **SOLID Compliance**: Strengthened adherence to SOLID principles through architectural improvements
+
+**Technical Implementation:**
+
+1. **Fixed Line-Too-Long Violations**:
+
+   ```python
+   # Before:
+   print(f"Cannot enter at point {to_point + 1}. Distance {move_distance} doesn't match available dice: {self.game.current_player.available_moves}")
+
+   # After:
+   print(
+       f"Cannot enter at point {to_point + 1}. "
+       f"Distance {move_distance} doesn't match available dice: "
+       f"{self.game.current_player.available_moves}"
+   )
+   ```
+
+2. **Improved Game Constructor**:
+
+   ```python
+   # Before:
+   def __init__(self, player1_name="White", player2_name="Black", test_bearing_off=False, board=None, dice=None, player1=None, player2=None):
+
+   # After:
+   def __init__(self, player1_name="White", player2_name="Black", test_bearing_off=False, *, board=None, dice=None, player1=None, player2=None):
+   ```
+
+3. **Removed Else-After-Break**:
+
+   ```python
+   # Before:
+   if condition:
+       break
+   else:
+       print("Alternative action")
+
+   # After:
+   if condition:
+       break
+   print("Alternative action")
+   ```
+
+4. **Test Class Enhancements**:
+   ```python
+   # Added appropriate disable comments
+   class TestChecker(unittest.TestCase):  # pylint: disable=too-many-public-methods
+   ```
+
+**Files Modified:**
+
+- `tests/tests_board.py` - Fixed long comment line
+- `cli/cli.py` - Fixed line lengths, unnecessary parentheses, else-after-break
+- `core/board.py` - Removed unreachable code
+- `core/game.py` - Improved constructor with keyword-only parameters
+- `core/player.py` - Fixed unused variable in loop
+- `tests/tests_cli.py` - Fixed imports, added pylint disable comments
+- `tests/tests_checker.py` - Added pylint disable comment
+- `tests/tests_exceptions.py` - Added pylint disable comment
+- `tests/tests_game.py` - Added pylint disable comment
+- `tests/tests_player.py` - Added pylint disable comment
+
+**Testing Validation:**
+
+- All existing functionality preserved
+- Test suite continues to pass with 100% success rate
+- Code quality improvements do not impact game logic or user experience
+- Enhanced maintainability through cleaner code structure

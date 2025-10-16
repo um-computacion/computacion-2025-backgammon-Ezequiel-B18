@@ -21,10 +21,11 @@ class Game:
 
     def __init__(
         self,
-        player1_name="White",  # First positional for backward compatibility
-        player2_name="Black",  # Second positional for backward compatibility
-        test_bearing_off=False,  # Third positional for backward compatibility
-        board=None,  # Dependency injection parameters as keyword-only
+        player1_name="White",
+        player2_name="Black",
+        test_bearing_off=False,
+        *,  # Force keyword-only arguments for dependency injection
+        board=None,
         dice=None,
         player1=None,
         player2=None,
@@ -219,7 +220,9 @@ class Game:
 
         # Validate that move distance matches available dice
         if not self.current_player.can_use_dice_for_move(move_distance):
-            return False  # Invalid dice usage, return False instead of raising exception
+            return (
+                False  # Invalid dice usage, return False instead of raising exception
+            )
 
         try:
             event = self.board.move_checker(pid, from_point, to_point)
@@ -233,7 +236,9 @@ class Game:
         # Consume the appropriate dice values for this move
         if not self.current_player.use_dice_for_move(move_distance):
             # This shouldn't happen if can_use_dice_for_move returned True
-            raise InvalidMoveError(from_point, to_point, "Failed to consume dice values")
+            raise InvalidMoveError(
+                from_point, to_point, "Failed to consume dice values"
+            )
 
         # If a hit occurred, Game could update player/checker states
         # (we rely on sync_checkers to reconcile)
