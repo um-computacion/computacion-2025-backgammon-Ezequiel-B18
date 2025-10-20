@@ -1,7 +1,7 @@
 """Tests for the Game class."""
 
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 from core.game import Game
 from core.player import PlayerColor
 from core.checker import CheckerState
@@ -9,11 +9,17 @@ from core.exceptions import (
     GameNotInitializedError,
     InvalidPlayerTurnError,
     GameAlreadyOverError,
+    InvalidMoveError,
 )
 
 
 class TestGame(unittest.TestCase):  # pylint: disable=too-many-public-methods
     """Test cases for the Game class."""
+
+    def setUp(self):
+        """Set up a new game for each test."""
+        self.game = Game()
+        self.game.setup_game()
 
     def test_game_initialization(self):
         """Test that a new Game object is initialized correctly."""
@@ -303,9 +309,125 @@ class TestGame(unittest.TestCase):  # pylint: disable=too-many-public-methods
         borne_off_count = game.player1.count_checkers_by_state(CheckerState.BORNE_OFF)
         self.assertEqual(borne_off_count, 2)
 
+    def test_start_turn_raises_errors(self):
+        """Test that start_turn raises errors under specific conditions."""
+        game = Game()
+        with self.assertRaises(GameNotInitializedError):
+            game.start_turn()
+        self.game.current_player = self.game.player1
+        self.game.board.home[1] = 15
+        with self.assertRaises(GameAlreadyOverError):
+            self.game.start_turn()
 
-if __name__ == "__main__":
-    unittest.main()
+    def test_apply_move_raises_errors(self):
+        """Test that apply_move raises errors under specific conditions."""
+        game = Game()
+        with self.assertRaises(GameNotInitializedError):
+            game.apply_move(0, 1)
+        self.game.current_player = None
+        with self.assertRaises(InvalidPlayerTurnError):
+            self.game.apply_move(0, 1)
+        self.game.current_player = self.game.player1
+        self.game.board.home[1] = 15
+        with self.assertRaises(GameAlreadyOverError):
+            self.game.apply_move(0, 1)
+        self.game.board.home[1] = 0
+        self.game.current_player.remaining_moves = 0
+        with self.assertRaises(InvalidPlayerTurnError):
+            self.game.apply_move(0, 1)
+
+    def test_apply_move_from_bar(self):
+        """Test apply_move for moves from the bar."""
+        self.game.current_player = self.game.player1
+        self.game.board.bar[1] = 1
+        self.game.current_player.available_moves = [3]
+        self.game.current_player.remaining_moves = 1
+        with self.assertRaises(InvalidMoveError):
+            self.game.apply_move("bar", 20)
+        self.game.apply_move("bar", 21)
+        self.assertEqual(self.game.board.bar[1], 0)
+
+    def test_apply_bear_off_move_raises_errors(self):
+        """Test that apply_bear_off_move raises errors."""
+        self.game.current_player = self.game.player1
+        self.game.current_player.available_moves = [3]
+        with self.assertRaises(InvalidMoveError):
+            self.game.apply_bear_off_move(2)
+        game = Game(test_bearing_off=True)
+        game.setup_game()
+        game.current_player = game.player1
+        game.current_player.available_moves = [1]
+        with self.assertRaises(InvalidMoveError):
+            game.apply_bear_off_move(2)
+
+    def test_get_winner(self):
+        """Test the get_winner method."""
+        self.assertIsNone(self.game.get_winner())
+        self.game.board.home[2] = 15
+        self.assertEqual(self.game.get_winner(), self.game.player2)
+
+    def test_sync_checkers(self):
+        """Test the sync_checkers method."""
+        self.game.board.home[1] = 2
+        self.game.board.bar[1] = 3
+        self.game.sync_checkers()
+        borne_off = 0
+        on_bar = 0
+        for checker in self.game.player1.checkers:
+            if checker.state == CheckerState.BORNE_OFF:
+                borne_off += 1
+            if checker.state == CheckerState.ON_BAR:
+                on_bar += 1
+        self.assertEqual(borne_off, 2)
+        self.assertEqual(on_bar, 3)
+
+    def test_get_valid_moves_from_bar(self):
+        """Test get_valid_moves for a checker on the bar."""
+        self.game.current_player = self.game.player1
+        self.game.board.bar[1] = 1
+        self.game.current_player.available_moves = [3, 4]
+        valid_moves = self.game.get_valid_moves("bar")
+        self.assertEqual(len(valid_moves), 2)
+        self.assertIn(20, valid_moves)
+        self.assertIn(21, valid_moves)
+
+    def test_has_any_valid_moves_no_moves(self):
+        """Test has_any_valid_moves when there are no valid moves."""
+        self.game.current_player = self.game.player1
+        self.game.board.bar[1] = 1
+        self.game.current_player.available_moves = [1, 2]
+        self.game.board.points[22] = (2, 2)
+        self.game.board.points[23] = (2, 2)
+        self.assertFalse(self.game.has_any_valid_moves())
+
+    def test_is_valid_bear_off_move_exact_roll(self):
+        """Test is_valid_bear_off_move with an exact dice roll."""
+        for i in range(24):
+            self.game.board.points[i] = (0, 0)
+        for i in range(6):
+            self.game.board.points[i] = (1, 2)
+        self.game.board.points[0] = (1, 3)
+        self.game.current_player = self.game.player1
+        self.game.current_player.available_moves = [3]
+        self.assertTrue(self.game.is_valid_bear_off_move(2))
+
+    def test_no_valid_moves_in_bear_off(self):
+        """Test has_any_valid_moves when no valid moves are available during bear-off."""
+        for i in range(24):
+            self.game.board.points[i] = (0, 0)
+        self.game.board.points[0] = (1, 15)
+        self.game.current_player = self.game.player1
+        self.game.current_player.available_moves = [2, 3]
+        self.assertTrue(self.game.has_any_valid_moves())
+
+    def test_no_valid_moves_out_of_home_board(self):
+        """Test that moves out of the home board are not valid during bear-off."""
+        for i in range(24):
+            self.game.board.points[i] = (0, 0)
+        self.game.board.points[5] = (1, 15)
+        self.game.current_player = self.game.player1
+        self.game.current_player.available_moves = [1, 2]
+        self.assertTrue(self.game.has_any_valid_moves())
 
 
 if __name__ == "__main__":

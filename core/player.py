@@ -87,9 +87,8 @@ class Player:
             dice: The dice roll
         """
         self.is_turn = True
-        moves = dice.get_moves()
-        self.available_moves = moves.copy()  # Store actual dice values
-        self.remaining_moves = len(moves)
+        self.available_moves = dice.get_moves()
+        self.remaining_moves = len(self.available_moves)
 
     def end_turn(self):
         """End the player's turn."""

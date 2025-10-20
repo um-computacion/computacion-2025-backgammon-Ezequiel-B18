@@ -5,14 +5,38 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-# Changelog
-
-All notable changes to this project will be documented in this file.
-
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
 ## [Unreleased]
+
+## [1.0.0] - 2025-10-20
+
+This is the fully functional version of the Backgammon game, i still have to make some changes on the README.md for instructions
+
+### Added
+- **Pygame UI:** A full graphical user interface for the Backgammon game, built with Pygame.
+  - Includes a start screen for player name input.
+  - A main game screen with a visual board, checkers, and an info panel.
+  - A winner screen with a "Play Again" option.
+- **`DESIGN_CHOICES.md`:** A new documentation file that summarizes the entire development process of the Pygame UI.
+- **Comprehensive Test Coverage:** A new suite of unit tests for the core game logic in `core/game.py` to ensure all new and existing functionality is robust and fully tested.
+
+### Changed
+- **Game Logic:** The core game logic in `core/game.py` was significantly refactored to support the new UI and correctly implement complex game rules.
+  - Centralized move validation and execution in new methods (`get_valid_moves`, `apply_move`, `apply_bear_off_move`, `has_any_valid_moves`).
+- **Bear-Off Rule:** Re-implemented the standard backgammon rule that allows a player to use a higher dice roll to bear off a checker from their highest occupied point.
+
+### Fixed
+- **Critical Turn-Switching Bug:** Resolved a persistent bug where the player turn would not switch correctly, especially when a player had no valid moves.
+- **Bar Entry Crash:** Fixed a crash that occurred when a checker was trying to re-enter from the bar.
+- **`TypeError` in Bear-Off:** Resolved a `TypeError` that occurred when a checker on the bar was selected.
+- **Visual Bugs:**
+  - Corrected the color contrast of the board to make white checkers more visible.
+  - Fixed the numbering of the points on the bottom of the board.
+  - Resolved a visual glitch where borne-off checkers would disappear or be drawn incorrectly.
+- **Empty Space Bear-Off:** Fixed a bug that allowed players to bear off from empty spaces.
+- **Info Panel:**
+  - Improved the legibility of the info panel by changing the font color to black.
+  - Correctly displays four moves for double dice rolls.
+
 
 ### Fixed
 
@@ -33,8 +57,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Code Style**: Improved code readability by breaking long print statements into multiple lines
 - **Test Architecture**: Enhanced test method signatures with appropriate pylint disable comments for testing patterns
 - **Core Module Optimization**: Streamlined Game class constructor with keyword-only dependency injection parameters
-
-## [1.8.0] - 2025-10-09
 
 ### Fixed
 

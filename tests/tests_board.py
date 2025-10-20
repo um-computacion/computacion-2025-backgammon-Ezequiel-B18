@@ -66,12 +66,12 @@ class TestBoard(unittest.TestCase):  # pylint: disable=too-many-public-methods
         self.board.bar[1] = 1
 
         # Try to move a regular checker (should fail because bar must be emptied first)
-        self.assertFalse(self.board.is_valid_move(1, 0, 3))
+        self.assertFalse(self.board.is_valid_move(1, 20, 18))
 
-        # Move the checker from the bar (for white, entering from point 0-5)
-        self.assertTrue(self.board.enter_from_bar(1, 3))
+        # Move the checker from the bar (for white, entering from point 18-23)
+        self.assertTrue(self.board.enter_from_bar(1, 20))
         self.assertEqual(self.board.bar[1], 0)  # Bar now empty
-        self.assertEqual(self.board.points[3], (1, 1))  # Checker entered at point 3
+        self.assertEqual(self.board.points[20], (1, 1))  # Checker entered at point 20
 
     def test_bearing_off(self):
         """Test bearing off checkers (moving them to home)"""
@@ -211,11 +211,11 @@ class TestBoard(unittest.TestCase):  # pylint: disable=too-many-public-methods
         """Test enter_from_bar validation and hitting behavior."""
         b = Board()
         # no checker on bar -> can't enter
-        self.assertFalse(b.enter_from_bar(1, 3))
-        # simulate a white checker on the bar and a single black on point 3
+        self.assertFalse(b.enter_from_bar(1, 20))
+        # simulate a white checker on the bar and a single black on point 20
         b.bar[1] = 1
-        b.points[3] = (2, 1)
-        result = b.enter_from_bar(1, 3)
+        b.points[20] = (2, 1)
+        result = b.enter_from_bar(1, 20)
         self.assertTrue(result)
         # black should have been hit and moved to bar
         self.assertEqual(b.bar[2], 1)
