@@ -22,6 +22,11 @@ class Dice:
             raise DiceNotRolledError("Dice must be rolled before accessing values")
         return self.__values__
 
+    @property
+    def rolled(self):
+        """Check if the dice have been rolled."""
+        return self.__values__ != [0, 0]
+
     def roll(self):
         """Roll both dice and store their values"""
         self.__values__ = [random.randint(1, 6), random.randint(1, 6)]

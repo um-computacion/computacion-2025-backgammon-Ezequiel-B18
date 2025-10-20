@@ -10,7 +10,9 @@ from core.exceptions import (
 )
 
 
-class TestBackgammonCLI(unittest.TestCase):  # pylint: disable=too-many-public-methods,protected-access
+class TestBackgammonCLI(
+    unittest.TestCase
+):  # pylint: disable=too-many-public-methods,protected-access
     """Test cases for the BackgammonCLI class."""
 
     def setUp(self):
@@ -460,7 +462,9 @@ class TestBackgammonCLI(unittest.TestCase):  # pylint: disable=too-many-public-m
         with patch("builtins.input", side_effect=["5 8", "8 11", "11 14", "14 17"]):
             with patch("builtins.print"):
                 # Simulate moves that consume remaining_moves
-                def mock_apply_move_side_effect(from_point, to_point):  # pylint: disable=unused-argument
+                def mock_apply_move_side_effect(
+                    from_point, to_point
+                ):  # pylint: disable=unused-argument
                     mock_player.remaining_moves -= 1
                     return True
 
@@ -778,7 +782,9 @@ class TestBackgammonCLI(unittest.TestCase):  # pylint: disable=too-many-public-m
 
     @patch("builtins.input")
     @patch("builtins.print")
-    def test_handle_player_move_bar_entry_white(self, mock_print, mock_input):  # pylint: disable=unused-argument
+    def test_handle_player_move_bar_entry_white(
+        self, mock_print, mock_input
+    ):  # pylint: disable=unused-argument
         """Test handle_player_move with bar entry for white player."""
         mock_input.side_effect = ["bar 20", "q"]  # White enters at point 20
 
@@ -812,7 +818,9 @@ class TestBackgammonCLI(unittest.TestCase):  # pylint: disable=too-many-public-m
 
     @patch("builtins.input")
     @patch("builtins.print")
-    def test_handle_player_move_bar_entry_black(self, mock_print, mock_input):  # pylint: disable=unused-argument
+    def test_handle_player_move_bar_entry_black(
+        self, mock_print, mock_input
+    ):  # pylint: disable=unused-argument
         """Test handle_player_move with bar entry for black player."""
         mock_input.side_effect = ["bar 3", "q"]  # Black enters at point 3
 
@@ -1043,7 +1051,9 @@ class TestBackgammonCLI(unittest.TestCase):  # pylint: disable=too-many-public-m
 
     @patch("builtins.input")
     @patch("builtins.print")
-    def test_handle_player_move_bear_off_white(self, mock_print, mock_input):  # pylint: disable=unused-argument
+    def test_handle_player_move_bear_off_white(
+        self, mock_print, mock_input
+    ):  # pylint: disable=unused-argument
         """Test handle_player_move with bearing off for white player."""
         mock_input.side_effect = ["6 off", "q"]  # Bear off from point 6
 
@@ -1076,7 +1086,9 @@ class TestBackgammonCLI(unittest.TestCase):  # pylint: disable=too-many-public-m
 
     @patch("builtins.input")
     @patch("builtins.print")
-    def test_handle_player_move_bear_off_black(self, mock_print, mock_input):  # pylint: disable=unused-argument
+    def test_handle_player_move_bear_off_black(
+        self, mock_print, mock_input
+    ):  # pylint: disable=unused-argument
         """Test handle_player_move with bearing off for black player."""
         mock_input.side_effect = ["19 off", "q"]  # Bear off from point 19
 

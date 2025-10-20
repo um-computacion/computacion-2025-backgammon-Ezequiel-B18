@@ -1468,3 +1468,79 @@ PyLint analysis revealed multiple categories of violations that needed systemati
 - Test suite continues to pass with 100% success rate
 - Code quality improvements do not impact game logic or user experience
 - Enhanced maintainability through cleaner code structure
+
+### Pygame
+
+This document summarizes the development process of the Pygame UI for the Backgammon game, including all user prompts and the design choices made in response.
+
+## Initial UI Implementation
+
+**User Prompt:** Create a Pygame UI for the Backgammon game, based on a provided image for the color scheme and layout. The UI should be similar to the CLI version and include a separation in the middle for the bar.
+
+**Design Choices:**
+- A new `pygame_ui/ui.py` module was created to house all UI-related code.
+- A `BackgammonUI` class was created to manage the game loop, UI state, and all rendering.
+- The UI was designed with a state machine to handle the start screen, game screen, and winner screen.
+- Colors and layout were based on the provided image, with adjustments made for clarity and playability.
+
+## Bug Fixes and Feature Iterations
+
+Over the course of development, numerous bugs were fixed and features were added based on user feedback.
+
+### First Iteration: Core Functionality and UI Polish
+
+**User Prompts:**
+- The info panel is not very legible; make the font black.
+- Re-organize the info panel to a specific layout.
+- Display four moves for double dice rolls.
+- Improve the color contrast between the white checkers and the board.
+- Correct the bar entry logic to ensure checkers enter the opponent's home board.
+- Implement the bear-off mechanic with a dedicated button.
+- Automatically skip a player's turn if they have no available moves.
+- Correct the numbering of the points on the bottom of the board.
+
+**Design Choices:**
+- The info panel was completely redesigned to match the user's specification, with black text for readability.
+- The `core/player.py` and `core/dice.py` modules were updated to correctly handle and report double dice rolls.
+- The color scheme of the board was adjusted to provide better contrast.
+- The `core/game.py` and `core/board.py` modules were refactored to correctly implement the bar entry logic.
+- A "Bear Off" button was added to the UI, and the core game logic was updated to handle bear-off moves.
+- A `has_any_valid_moves` method was added to `core/game.py` to detect when a player has no legal moves, triggering an automatic turn skip.
+- The board drawing logic in `pygame_ui/ui.py` was updated to correctly number the points.
+
+### Second Iteration: Crash Fixes and Logic Refinements
+
+**User Prompts:**
+- The game crashes when a checker has to get off the bar.
+- Available moves are not being displayed in the info panel.
+- The game crashes with a `TypeError` during the bear-off phase.
+
+**Design Choices:**
+- The bar entry logic in `core/game.py` and `core/board.py` was further refined to fix the crash.
+- The info panel drawing logic was corrected to ensure available moves are always displayed.
+- A type check was added to the `handle_click` method in `pygame_ui/ui.py` to prevent the `TypeError` during the bear-off phase.
+
+### Third Iteration: Win Condition and Final Polish
+
+**User Prompts:**
+- The game does not detect the win condition.
+- The bear-off logic is still not quite right, and the game can get stuck.
+- Implement a winner screen with a "Play Again" option.
+- Add a separating line between the board and the info panel, and center the "Bear Off" button.
+- Fix a visual bug where borne-off checkers are drawn incorrectly.
+
+**Design Choices:**
+- A win condition check was added to the main game loop, which transitions the UI to a new "winner screen" state.
+- The bear-off logic was updated to implement the standard backgammon rule where a higher dice roll can be used to bear off a checker from the highest point.
+- The UI was updated to include the separating line and a centered "Bear Off" button.
+- The `draw_bear_off_area` method was corrected to ensure all borne-off checkers are visible and correctly stacked.
+
+### Final Iteration: Edge Case Bug Fixes
+
+**User Prompts:**
+- The game crashes with a `TypeError` when a checker on the bar is selected.
+- The turn-skipping logic is still failing in a specific bear-off scenario.
+
+**Design Choices:**
+- A type check was added to the `is_valid_bear_off_move` method in `core/game.py` to prevent the `TypeError`.
+- The `get_valid_moves` method was refined to correctly handle the final edge case in the turn-skipping logic, ensuring that the game never gets stuck.

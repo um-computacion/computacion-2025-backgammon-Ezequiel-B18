@@ -192,11 +192,11 @@ class Board:
             return False
 
         # Validate entry points based on tests
-        if player == 1:  # White enters from points 0-5 (1-6 in user terms)
-            if not 0 <= point <= 5:
-                return False
-        else:  # Black enters from points 18-23 (19-24 in user terms)
+        if player == 1:  # White enters from points 18-23 (19-24 in user terms)
             if not 18 <= point <= 23:
+                return False
+        else:  # Black enters from points 0-5 (1-6 in user terms)
+            if not 0 <= point <= 5:
                 return False
 
         # Check if point is blocked by opponent
