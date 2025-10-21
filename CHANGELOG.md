@@ -463,14 +463,10 @@ This is the fully functional version of the Backgammon game, i still have to mak
   - Removed duplicate `test_game.py` file that was conflicting with `tests_game.py`
   - Ensured all CLI tests have proper exit conditions and don't cause KeyboardInterrupt
 
-### Improved - 2024-01-XX
-
 - Simplified CLI quit handling by removing sys.exit() dependency
 - Added GameQuitException for better separation of concerns in CLI
 - Improved CLI testability by using exception-based flow control instead of system exit
 - Enhanced SOLID compliance in CLI design (Single Responsibility Principle)
-
-### Technical Details - 2024-01-XX
 
 - Replaced sys.exit() calls with GameQuitException in handle_player_move()
 - Updated game_loop() to catch and handle quit exceptions gracefully

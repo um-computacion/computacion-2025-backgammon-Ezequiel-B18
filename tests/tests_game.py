@@ -1,7 +1,8 @@
 """Tests for the Game class."""
 
 import unittest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
+from core.dice import Dice
 from core.game import Game
 from core.player import PlayerColor
 from core.checker import CheckerState
@@ -309,7 +310,8 @@ class TestGame(unittest.TestCase):  # pylint: disable=too-many-public-methods
         borne_off_count = game.player1.count_checkers_by_state(CheckerState.BORNE_OFF)
         self.assertEqual(borne_off_count, 2)
 
-    def test_start_turn_raises_errors(self):
+
+    def test_start_turn_raises_errors_from_coverage(self):
         """Test that start_turn raises errors under specific conditions."""
         game = Game()
         with self.assertRaises(GameNotInitializedError):
@@ -319,7 +321,7 @@ class TestGame(unittest.TestCase):  # pylint: disable=too-many-public-methods
         with self.assertRaises(GameAlreadyOverError):
             self.game.start_turn()
 
-    def test_apply_move_raises_errors(self):
+    def test_apply_move_raises_errors_from_coverage(self):
         """Test that apply_move raises errors under specific conditions."""
         game = Game()
         with self.assertRaises(GameNotInitializedError):
@@ -336,7 +338,7 @@ class TestGame(unittest.TestCase):  # pylint: disable=too-many-public-methods
         with self.assertRaises(InvalidPlayerTurnError):
             self.game.apply_move(0, 1)
 
-    def test_apply_move_from_bar(self):
+    def test_apply_move_from_bar_from_coverage(self):
         """Test apply_move for moves from the bar."""
         self.game.current_player = self.game.player1
         self.game.board.bar[1] = 1
@@ -347,7 +349,7 @@ class TestGame(unittest.TestCase):  # pylint: disable=too-many-public-methods
         self.game.apply_move("bar", 21)
         self.assertEqual(self.game.board.bar[1], 0)
 
-    def test_apply_bear_off_move_raises_errors(self):
+    def test_apply_bear_off_move_raises_errors_from_coverage(self):
         """Test that apply_bear_off_move raises errors."""
         self.game.current_player = self.game.player1
         self.game.current_player.available_moves = [3]
@@ -360,13 +362,13 @@ class TestGame(unittest.TestCase):  # pylint: disable=too-many-public-methods
         with self.assertRaises(InvalidMoveError):
             game.apply_bear_off_move(2)
 
-    def test_get_winner(self):
+    def test_get_winner_from_coverage(self):
         """Test the get_winner method."""
         self.assertIsNone(self.game.get_winner())
         self.game.board.home[2] = 15
         self.assertEqual(self.game.get_winner(), self.game.player2)
 
-    def test_sync_checkers(self):
+    def test_sync_checkers_from_coverage(self):
         """Test the sync_checkers method."""
         self.game.board.home[1] = 2
         self.game.board.bar[1] = 3
@@ -381,7 +383,7 @@ class TestGame(unittest.TestCase):  # pylint: disable=too-many-public-methods
         self.assertEqual(borne_off, 2)
         self.assertEqual(on_bar, 3)
 
-    def test_get_valid_moves_from_bar(self):
+    def test_get_valid_moves_from_bar_from_logic(self):
         """Test get_valid_moves for a checker on the bar."""
         self.game.current_player = self.game.player1
         self.game.board.bar[1] = 1
@@ -391,7 +393,7 @@ class TestGame(unittest.TestCase):  # pylint: disable=too-many-public-methods
         self.assertIn(20, valid_moves)
         self.assertIn(21, valid_moves)
 
-    def test_has_any_valid_moves_no_moves(self):
+    def test_has_any_valid_moves_no_moves_from_logic(self):
         """Test has_any_valid_moves when there are no valid moves."""
         self.game.current_player = self.game.player1
         self.game.board.bar[1] = 1
@@ -400,7 +402,7 @@ class TestGame(unittest.TestCase):  # pylint: disable=too-many-public-methods
         self.game.board.points[23] = (2, 2)
         self.assertFalse(self.game.has_any_valid_moves())
 
-    def test_is_valid_bear_off_move_exact_roll(self):
+    def test_is_valid_bear_off_move_exact_roll_from_logic(self):
         """Test is_valid_bear_off_move with an exact dice roll."""
         for i in range(24):
             self.game.board.points[i] = (0, 0)
@@ -411,7 +413,7 @@ class TestGame(unittest.TestCase):  # pylint: disable=too-many-public-methods
         self.game.current_player.available_moves = [3]
         self.assertTrue(self.game.is_valid_bear_off_move(2))
 
-    def test_no_valid_moves_in_bear_off(self):
+    def test_no_valid_moves_in_bear_off_from_logic(self):
         """Test has_any_valid_moves when no valid moves are available during bear-off."""
         for i in range(24):
             self.game.board.points[i] = (0, 0)
@@ -420,7 +422,7 @@ class TestGame(unittest.TestCase):  # pylint: disable=too-many-public-methods
         self.game.current_player.available_moves = [2, 3]
         self.assertTrue(self.game.has_any_valid_moves())
 
-    def test_no_valid_moves_out_of_home_board(self):
+    def test_no_valid_moves_out_of_home_board_from_logic(self):
         """Test that moves out of the home board are not valid during bear-off."""
         for i in range(24):
             self.game.board.points[i] = (0, 0)
@@ -428,6 +430,69 @@ class TestGame(unittest.TestCase):  # pylint: disable=too-many-public-methods
         self.game.current_player = self.game.player1
         self.game.current_player.available_moves = [1, 2]
         self.assertTrue(self.game.has_any_valid_moves())
+    
+    def test_roll_dice_for_turn_handles_multiple_skips(self):
+        """
+        Tests that `roll_dice_for_turn` correctly handles multiple consecutive
+        turn skips by verifying the sequence of method calls.
+        """
+        game = self.game
+        game.current_player = game.player1
+        game.other_player = game.player2
+
+        # Mock the methods that are called inside the loop
+        with patch.object(game, 'start_turn') as mock_start_turn, \
+             patch.object(game, 'has_any_valid_moves', side_effect=[False, False, True]) as mock_has_moves, \
+             patch.object(game, 'switch_players') as mock_switch_players:
+
+            game.roll_dice_for_turn()
+
+            # --- Assertions ---
+            # The loop should run 3 times before has_any_valid_moves returns True
+            self.assertEqual(mock_start_turn.call_count, 3, "start_turn should be called 3 times")
+            self.assertEqual(mock_has_moves.call_count, 3, "has_any_valid_moves should be called 3 times")
+            
+            # Since the first two turns are skipped, players should be switched twice
+            self.assertEqual(mock_switch_players.call_count, 2, "switch_players should be called twice")
+
+    def test_turn_skips_after_bar_move_with_no_more_valid_moves(self):
+        """
+        Tests that the turn automatically skips if a player makes a move from
+        the bar and has no other valid moves with the remaining dice.
+        """
+        # --- Setup ---
+        # Clear the board to create a specific, controlled scenario
+        for i in range(24):
+            self.game.board.points[i] = (0, 0)
+        
+        # Player 2 (Black) has one checker on the bar and one on point 0
+        self.game.board.bar[2] = 1
+        self.game.board.points[0] = (2, 1) # This checker cannot move
+        self.game.sync_checkers()
+        
+        # Player 2's turn, rolls a 5 and a 2
+        self.game.current_player = self.game.player2
+        self.game.other_player = self.game.player1
+        self.game.current_player.available_moves = [5, 2]
+        self.game.current_player.remaining_moves = 2
+
+        # Point 4 is OPEN for the dice roll of 5 (entry for bar checker)
+        # Point 1 is BLOCKED for the dice roll of 2 (entry for bar checker)
+        self.game.board.points[1] = (1, 2) 
+        # Point 2 is BLOCKED for the dice roll of 2 (for the checker on point 0)
+        self.game.board.points[2] = (1, 2)
+        # Point 6 is BLOCKED for the dice roll of 2 (for the checker that will land on point 4)
+        self.game.board.points[6] = (1, 2)
+        
+        # --- Action ---
+        # Player 2 makes their only valid move: entering from the bar to point 4
+        move_successful = self.game.apply_move("bar", 4)
+        self.assertTrue(move_successful, "The valid move from the bar should be successful")
+        
+        # --- Assertion ---
+        # After the move, Player 2 has one dice left (2) but no valid moves.
+        # The turn should have automatically switched to Player 1.
+        self.assertIs(self.game.current_player, self.game.player1, "Turn should switch to Player 1")
 
 
 if __name__ == "__main__":

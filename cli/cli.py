@@ -647,6 +647,5 @@ def main():
     except Exception as e:  # pylint: disable=broad-exception-caught
         print(f"An unexpected error occurred: {e}")
 
-
 if __name__ == "__main__":
     main()
