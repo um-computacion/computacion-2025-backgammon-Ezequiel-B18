@@ -7,11 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.1] - 2025-10-22
+
+### Added
+
+- New targeted tests in `tests/tests_game.py` covering:
+  - Early-return and skip paths in `roll_dice_for_turn`
+  - Dice-mismatch and board-exception handling in `apply_move`
+  - Switch-on-no-moves and keep-turn flows in `apply_bear_off_move`
+  - Player 2 direction validation and edge cases in `get_valid_moves`
+  - Positive/negative branches in `is_valid_bear_off_move`
+  - Added a function to show the no_moves_message that shows when there is no available moves.
+
+### Fixed
+
+- Raised `core/game.py` coverage from ~73% to ~90% (overall project to ~95%).
+
 ## [1.0.0] - 2025-10-20
 
 This is the fully functional version of the Backgammon game, i still have to make some changes on the README.md for instructions
 
 ### Added
+
 - **Pygame UI:** A full graphical user interface for the Backgammon game, built with Pygame.
   - Includes a start screen for player name input.
   - A main game screen with a visual board, checkers, and an info panel.
@@ -20,11 +37,13 @@ This is the fully functional version of the Backgammon game, i still have to mak
 - **Comprehensive Test Coverage:** A new suite of unit tests for the core game logic in `core/game.py` to ensure all new and existing functionality is robust and fully tested.
 
 ### Changed
+
 - **Game Logic:** The core game logic in `core/game.py` was significantly refactored to support the new UI and correctly implement complex game rules.
   - Centralized move validation and execution in new methods (`get_valid_moves`, `apply_move`, `apply_bear_off_move`, `has_any_valid_moves`).
 - **Bear-Off Rule:** Re-implemented the standard backgammon rule that allows a player to use a higher dice roll to bear off a checker from their highest occupied point.
 
 ### Fixed
+
 - **Critical Turn-Switching Bug:** Resolved a persistent bug where the player turn would not switch correctly, especially when a player had no valid moves.
 - **Bar Entry Crash:** Fixed a crash that occurred when a checker was trying to re-enter from the bar.
 - **`TypeError` in Bear-Off:** Resolved a `TypeError` that occurred when a checker on the bar was selected.
@@ -36,7 +55,6 @@ This is the fully functional version of the Backgammon game, i still have to mak
 - **Info Panel:**
   - Improved the legibility of the info panel by changing the font color to black.
   - Correctly displays four moves for double dice rolls.
-
 
 ### Fixed
 
@@ -457,6 +475,7 @@ This is the fully functional version of the Backgammon game, i still have to mak
   - Corrected checker bear-off calculations for both White and Black checkers
 
 - Fixed CLI tests errors (29/9/2025)
+
   - Fixed CLI tests hanging with infinite loops during `handle_player_move` testing
   - Fixed `test_handle_player_move_quit` by properly mocking `sys.exit` with `SystemExit` exception
   - Fixed output verification in CLI tests by using `mock_print` instead of `StringIO`

@@ -57,6 +57,7 @@ class Game:
         self.current_player = None  # Will be set after initial roll
         self.other_player = None
         self.__game_initialized__ = False
+        self.turn_was_skipped = False # Flag for UI to show "no moves" message
 
     @property
     def board(self):
@@ -197,7 +198,19 @@ class Game:
         player is able to make a move. This centralizes the turn-skipping
         logic within the game core.
         """
+        self.turn_was_skipped = False
         max_skips = 10 # A safeguard against potential infinite loops
+        
+        # We need to check if the first player has moves before entering the loop
+        self.start_turn()
+        if self.has_any_valid_moves():
+            return
+
+        # If the first player has no moves, we start the skipping process
+        self.turn_was_skipped = True
+        self.current_player.end_turn()
+        self.switch_players()
+
         for _ in range(max_skips):
             self.start_turn()
             if self.has_any_valid_moves():
@@ -218,6 +231,7 @@ class Game:
         Validates that the move uses available dice values correctly.
         Returns True if move succeeded, False otherwise.
         """
+        self.turn_was_skipped = False
         if not self.__game_initialized__:
             raise GameNotInitializedError(
                 "Game must be initialized before making moves"
@@ -261,6 +275,7 @@ class Game:
             elif not self.has_any_valid_moves():
                 self.current_player.end_turn()
                 self.switch_players()
+                self.turn_was_skipped = True
             
             return True
 
@@ -304,6 +319,7 @@ class Game:
         elif not self.has_any_valid_moves():
             self.current_player.end_turn()
             self.switch_players()
+            self.turn_was_skipped = True
 
         return True
 
@@ -428,6 +444,7 @@ class Game:
         Returns:
             bool: True if the move was successful, False otherwise.
         """
+        self.turn_was_skipped = False
         if not self.board.all_checkers_in_home_board(self.current_player.player_id):
             raise InvalidMoveError(from_point, "off", "Not all checkers are in home board.")
         
@@ -474,6 +491,7 @@ class Game:
         elif not self.has_any_valid_moves():
             self.current_player.end_turn()
             self.switch_players()
+            self.turn_was_skipped = True
         
         return True
 

@@ -338,13 +338,15 @@ class BackgammonUI:
         if roll_button.collidepoint(pos) and not self.dice_rolled_this_turn:
             self.game.roll_dice_for_turn()
             self.dice_rolled_this_turn = True
-            if not self.game.has_any_valid_moves():
+            if self.game.turn_was_skipped:
                 self.show_no_moves_message()
             return
 
         if self.bear_off_button.collidepoint(pos):
             if self.selected_checker_point is not None and self.game.is_valid_bear_off_move(self.selected_checker_point):
                 self.game.apply_bear_off_move(self.selected_checker_point)
+                if self.game.turn_was_skipped:
+                    self.show_no_moves_message()
                 self.selected_checker_point = None
                 self.highlighted_moves = []
             return
@@ -357,6 +359,9 @@ class BackgammonUI:
                     else:
                         self.game.apply_move(self.selected_checker_point, move)
                     
+                    if self.game.turn_was_skipped:
+                        self.show_no_moves_message()
+
                     self.selected_checker_point = None
                     self.highlighted_moves = []
                     
