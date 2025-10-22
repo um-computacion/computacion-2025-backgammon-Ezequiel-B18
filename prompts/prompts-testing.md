@@ -776,3 +776,77 @@ self.assertFalse(bar_warning_mentioned)
 - Used defensive mocking: `+ ["q"] * 10` pattern prevents StopIteration
 - Maintained SOLID principles: each test has single responsibility
 - Ensured comprehensive coverage without sacrificing test reliability
+
+---
+
+## Game coverage increase - October 22, 2025
+
+**User Request:**
+
+```
+$ coverage run -m unittest && coverage report -m
+...
+core\\game.py           317     86    73%   ...
+
+We need to make the coverage from core\\game.py go up. Therefore we need to make tests for all those lines it specifies inside tests\\tests_game.py, document this in prompts-testing.md (See <attachments> above for file contents. You may not need to search or read the file again.)
+```
+
+**Goal:** Raise coverage of `core/game.py` significantly by adding targeted unit tests to `tests/tests_game.py`, following TDD and SOLID.
+
+**Approach:**
+
+- Analyzed uncovered regions from coverage output and mapped them to branches in `Game` methods.
+- Added focused tests for error paths, edge cases, and success flows not previously exercised.
+- Kept tests small, deterministic, and isolated; used `unittest.mock.patch` where needed.
+
+**New tests added (highlights):**
+
+- Turn management
+  - `test_roll_dice_for_turn_sets_turn_was_skipped_flag`
+  - `test_roll_dice_for_turn_returns_early_when_moves_exist`
+  - `test_switch_players_after_initialized`
+- Move application
+  - `test_apply_move_returns_false_when_dice_not_available`
+  - `test_apply_move_wraps_board_exception_as_invalid_move`
+  - `test_apply_move_event_false_when_target_blocked`
+  - `test_apply_move_raises_if_fail_to_consume_dice`
+  - `test_turn_skips_after_bar_move_with_no_more_valid_moves` (existing scenario extended)
+- Valid move enumeration
+  - `test_get_valid_moves_includes_bear_off`
+  - `test_get_valid_moves_from_bar_with_no_bar_checkers_is_empty`
+  - `test_get_valid_moves_returns_empty_when_not_own_checker`
+  - `test_player2_valid_moves_direction`
+- Bear off logic
+  - `test_apply_bear_off_move_exact_success`
+  - `test_apply_bear_off_move_uses_higher_dice_when_highest`
+  - `test_bear_off_move_with_remaining_moves_and_other_moves_keeps_turn`
+  - `test_bear_off_move_with_remaining_moves_but_no_moves_switches_and_skips`
+  - `test_is_valid_bear_off_move_true_with_higher_die`
+  - `test_is_valid_bear_off_move_false_when_higher_die_but_not_highest`
+  - `test_is_valid_bear_off_move_false_for_non_int`
+- Bar/has-moves checks
+  - `test_has_any_valid_moves_true_with_bar_entry`
+  - `test_has_any_valid_moves_no_moves_from_logic` (existing)
+
+**Result:**
+
+- Tests: increased from 203 to 226.
+- Coverage overall: 90% → 95%.
+- `core/game.py` coverage: 73% → 90%.
+
+**Files updated:**
+
+- `tests/tests_game.py` — appended 23 tests covering previously missing branches.
+
+**Notes on SOLID/TDD:**
+
+- SRP: Each test exercises one behavior/branch.
+- OCP: No production code changes required; extended test suite only.
+- TDD: Wrote failing tests against uncovered lines, iterated until green; verified with coverage.
+
+**Verification:**
+
+```
+Ran 226 tests in ~0.1s — OK
+core\\game.py coverage: 90%
+```

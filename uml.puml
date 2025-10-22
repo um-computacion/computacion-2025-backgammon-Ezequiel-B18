@@ -1,117 +1,148 @@
-// UML DIAGRAM ALT+D to run
+@startuml Backgammon
+' https://plantuml.com/class-diagram
 
-@startuml Diagrama de clases
-package core {
-  class Board {
-    - points: list[(player:int,count:int)]
-    - bar: dict[int,int]
-    - home: dict[int,int]
-    + __init__(test_bearing_off=False)
-    + setup_starting_positions()
-    + get_player_at_point(point:int): int
-    + get_checkers_count(point:int): int
-    + is_valid_move(player:int, from_point:int, to_point:int): bool
-    + move_checker(player:int, from_point:int, to_point:int): dict
-    + enter_from_bar(player:int, point:int): bool
-    + all_checkers_in_home_board(player:int): bool
-    + bear_off(player:int, point:int): bool
-    + check_winner(): int
-  }
+' --- Overall Style ---
+skinparam classAttributeIconSize 0
+skinparam classBackgroundColor LightBlue
+skinparam arrowColor Black
 
-  enum CheckerColor
-  enum CheckerState {
-    ON_BOARD
-    ON_BAR
-    BORNE_OFF
-  }
+' --- Class Definitions ---
 
-  class Checker {
-    - color: CheckerColor
-    - state: CheckerState
-    - position: int | None
-    + __init__(color: CheckerColor)
-    + set_position(position:int)
-    + move_to_position(new_position:int)
-    + calculate_new_position(dice_value:int): int
-    + send_to_bar()
-    + enter_from_bar(position:int)
-    + bear_off()
-    + is_in_home_board(): bool
-    + can_bear_off_with_value(dice_value:int): bool
-    + __str__(): str
-  }
-
-  class Dice {
-    - values: list[int]
-    - initial_values: list[int]
-    + __init__()
-    + roll(): list[int]
-    + is_doubles(): bool
-    + get_moves(): list[int]
-    + initial_roll(): tuple
-    + is_initial_tie(): bool
-    + get_highest_roller(): int
-  }
-
-  enum PlayerColor
-
-  class Player {
-    - name: str
-    - color: PlayerColor
-    - player_id: int
-    - checkers: list[Checker]
-    - is_turn: bool
-    - remaining_moves: int
-    + __init__(name:str, color:PlayerColor)
-    + get_starting_positions(): list[(point:int,count:int)]
-    + distribute_checkers(board:Board)
-    + start_turn(dice:Dice)
-    + end_turn()
-    + use_move(): bool
-    + get_checkers_by_state(state:CheckerState): list[Checker]
-    + count_checkers_by_state(state:CheckerState): int
-    + has_checkers_on_bar(): bool
-    + has_won(): bool
-    + __str__(): str
-  }
-
-  class Game {
-    - board: Board
-    - dice: Dice
-    - player1: Player
-    - player2: Player
-    - current_player: Player | None
-    - other_player: Player | None
-    + __init__(player1_name:str="White", player2_name:str="Black", test_bearing_off:bool=False)
-    + setup_game()
-    + sync_checkers()
-    + initial_roll_until_decided(): int
-    + start_turn()
-    + apply_move(from_point:int, to_point:int): bool
-    + switch_players()
-    + is_game_over(): bool
-    + get_winner(): Player | None
-  }
+class Game {
+  - __board__: Board
+  - __dice__: Dice
+  - __player1__: Player
+  - __player2__: Player
+  - current_player: Player
+  - other_player: Player
+  - __game_initialized__: bool
+  + setup_game()
+  + sync_checkers()
+  + _reset_checker_states(player_obj)
+  + _assign_borne_off_checkers(player_obj, player_id)
+  + _assign_bar_checkers(player_obj, player_id)
+  + _assign_board_positions(player_obj, player_id)
+  + initial_roll_until_decided()
+  + start_turn()
+  + apply_move(from_point, to_point)
+  + apply_bear_off_move(from_point)
+  + switch_players()
+  + is_game_over(): bool
+  + get_winner(): Player
+  + get_valid_moves(from_point): list
+  + has_any_valid_moves(): bool
+  + is_valid_bear_off_move(from_point): bool
 }
 
-' Relationships
-Game --> Board : usa API de Board (mutaciones hechas por Game)
-Game --> Dice : solicita tiradas
-Game --> Player : coordina jugadores
-Player "1" *-- "15" Checker : posee 15 fichas
-Board ..> Checker : fuente única de verdad (SSoT)
-Board ..> Player : informa (vía Game.sync_checkers)
-Dice ..> Game : suministra tiradas
+class Player {
+  - name: str
+  - color: PlayerColor
+  - player_id: int
+  - __checkers__: list<Checker>
+  - is_turn: bool
+  - remaining_moves: int
+  - available_moves: list<int>
+  + get_starting_positions()
+  + distribute_checkers(board)
+  + start_turn(dice)
+  + end_turn()
+  + use_move()
+  + can_use_dice_for_move(move_distance): bool
+  + use_dice_for_move(move_distance): bool
+  + get_checkers_by_state(state)
+  + count_checkers_by_state(state)
+  + has_checkers_on_bar()
+  + has_won()
+  + __str__()
+}
 
-' Nota SSoT más explícita (mejor explicación en español)
-note top of Board
-  SSoT = "Single Source of Truth" para el estado del tablero:
-  - Board mantiene: points (ocupación por punto), bar (fichas en la barra), home (fichas borne-off).
-  - Solo Board debe mutar estos campos. Las mutaciones se realizan mediante sus metodos:
-    p.ej. Board.move_checker(...), Board.enter_from_bar(...), Board.bear_off(...).
-  - Game es el componente autorizado para invocar esos metodos y coordinar la actualización:
-    1) Game llama a Board.move_checker(...) (Board muta el estado).
-    2) Game.sync_checkers() lee Board y actualiza Player.checkers para que reflejen la SSoT.
-  - Otros componentes (UI/tests) deben leer desde Board o desde Player tras la sincronización; evitar que Player modifique Board directamente.
-end note
+class Board {
+  - __points__: list<tuple>
+  - __bar__: dict
+  - __home__: dict
+  + get_player_at_point(point)
+  + get_checkers_count(point)
+  + setup_starting_positions()
+  + move_checker(player, from_point, to_point): dict
+  + enter_from_bar(player, point): bool
+  + bear_off(player, point): bool
+  + is_valid_move(player, from_point, to_point): bool
+  + all_checkers_in_home_board(player): bool
+  + check_winner(): int
+}
+
+class Dice {
+  - __values__: list<int>
+  - initial_values: list<int>
+  + roll()
+  + is_doubles(): bool
+  + get_moves(): list<int>
+  + initial_roll(): tuple
+  + is_initial_tie()
+  + get_highest_roller()
+}
+
+class Checker {
+  - color: CheckerColor
+  - state: CheckerState
+  - position: int
+  + set_position(position)
+  + move_to_position(new_position)
+  + calculate_new_position(dice_value)
+  + send_to_bar()
+  + enter_from_bar(position)
+  + bear_off()
+  + is_in_home_board()
+  + can_bear_off_with_value(dice_value)
+  + __str__()
+}
+
+' --- Enum Definitions ---
+
+enum PlayerColor {
+  WHITE
+  BLACK
+}
+
+enum CheckerColor {
+  WHITE
+  BLACK
+}
+
+enum CheckerState {
+  ON_BOARD
+  ON_BAR
+  BORNE_OFF
+}
+
+' --- Relationships ---
+
+Game "1" *-- "1" Board
+Game "1" *-- "1" Dice
+Game "1" *-- "2" Player
+
+Player "1" *-- "15" Checker
+Player -- PlayerColor
+
+Checker -- CheckerColor
+Checker -- CheckerState
+
+' --- Exception Hierarchy ---
+
+package "exceptions" {
+  class BackgammonError
+  class GameError
+  class BoardError
+  class PlayerError
+  
+  BackgammonError <|-- GameError
+  BackgammonError <|-- BoardError
+  BackgammonError <|-- PlayerError
+  
+  GameError <|-- GameNotInitializedError
+  GameError <|-- InvalidPlayerTurnError
+  GameError <|-- GameAlreadyOverError
+  GameError <|-- InvalidMoveError
+}
+
 @enduml
