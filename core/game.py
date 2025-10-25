@@ -455,13 +455,13 @@ class Game:
             bool: True if the move was successful, False otherwise.
         """
         self.turn_was_skipped = False
-        if not self.board.all_checkers_in_home_board(self.current_player.player_id):
-            raise InvalidMoveError(
-                from_point, "off", "Not all checkers are in home board."
-            )
-
         player_id = self.current_player.player_id
 
+        # 1. Perform all the same validation checks as is_valid_bear_off_move
+        if not self.is_valid_bear_off_move(from_point):
+            raise InvalidMoveError(from_point, "off", "The bear-off move is not valid.")
+
+        # 2. Determine which dice value to use.
         if player_id == 1:
             required_dice = from_point + 1
         else:
@@ -471,36 +471,22 @@ class Game:
         if self.current_player.can_use_dice_for_move(required_dice):
             dice_to_use = required_dice
         else:
+            # If we are here, is_valid_bear_off_move must have confirmed
+            # that using a larger dice is a valid move.
             available_dice = self.current_player.available_moves
             larger_dice = [d for d in available_dice if d > required_dice]
-            if larger_dice:
-                is_highest_checker = True
-                if player_id == 1:
-                    for p in range(from_point + 1, 6):
-                        if self.board.points[p][0] == player_id:
-                            is_highest_checker = False
-                            break
-                else:
-                    for p in range(18, from_point):
-                        if self.board.points[p][0] == player_id:
-                            is_highest_checker = False
-                            break
+            dice_to_use = min(larger_dice)
 
-                if is_highest_checker:
-                    dice_to_use = min(larger_dice)
-
-        if dice_to_use == 0:
-            raise InvalidMoveError(
-                from_point, "off", "No valid dice available for bearing off."
-            )
-
+        # 3. Apply the move.
         success = self.board.bear_off(player_id, from_point)
         if not success:
+            # This should not be reachable if is_valid_bear_off_move is correct.
             raise InvalidMoveError(from_point, "off", "Board rejected bear off.")
 
         self.current_player.use_dice_for_move(dice_to_use)
         self.sync_checkers()
 
+        # 4. Handle turn progression.
         if self.current_player.remaining_moves <= 0:
             self.current_player.end_turn()
             self.switch_players()
@@ -554,35 +540,46 @@ class Game:
         if not isinstance(from_point, int):
             return False
 
-        if not self.board.all_checkers_in_home_board(self.current_player.player_id):
-            return False
-
         player_id = self.current_player.player_id
 
+        # 1. The point must have a checker belonging to the current player.
+        if self.board.points[from_point][0] != player_id:
+            return False
+
+        # 2. All of the player's checkers must be in their home board.
+        if not self.board.all_checkers_in_home_board(player_id):
+            return False
+
+        # 3. Determine the required dice roll for an exact bear-off.
         if player_id == 1:
             required_dice = from_point + 1
         else:
             required_dice = 24 - from_point
 
+        # 4. Check if an exact dice roll is available.
         if self.current_player.can_use_dice_for_move(required_dice):
             return True
 
+        # 5. If not, check if a higher dice roll can be used.
+        # This is only allowed if there are no checkers on higher points.
         available_dice = self.current_player.available_moves
         larger_dice = [d for d in available_dice if d > required_dice]
-        if larger_dice:
-            is_highest_checker = True
-            if player_id == 1:
-                for p in range(from_point + 1, 6):
-                    if self.board.points[p][0] == player_id:
-                        is_highest_checker = False
-                        break
-            else:
-                for p in range(18, from_point):
-                    if self.board.points[p][0] == player_id:
-                        is_highest_checker = False
-                        break
 
-            if is_highest_checker:
-                return True
+        if not larger_dice:
+            return False
 
-        return False
+        # Check if the selected checker is the highest one on the board.
+        is_highest_checker = True
+        if player_id == 1:  # White's home board is 0-5
+            for p in range(from_point + 1, 6):
+                if self.board.points[p][0] == player_id:
+                    is_highest_checker = False
+                    break
+        else:  # Black's home board is 18-23
+            # For Black, the "highest" checker is the one on the lowest numbered point.
+            for p in range(18, from_point):
+                if self.board.points[p][0] == player_id:
+                    is_highest_checker = False
+                    break
+
+        return is_highest_checker

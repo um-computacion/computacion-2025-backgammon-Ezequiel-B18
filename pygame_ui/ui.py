@@ -33,12 +33,14 @@ POINT_HEIGHT = 300
 POINT_WIDTH = (SCREEN_WIDTH - 2 * BOARD_MARGIN - BAR_WIDTH - 200) / 12
 CHECKER_RADIUS = int(POINT_WIDTH / 2) - 2
 
+
 class BackgammonUI:
     """
     The main class for the Backgammon UI.
 
     This class handles the game loop, drawing the UI elements, and processing user input.
     """
+
     def __init__(self):
         """Initializes the Pygame UI."""
         pygame.init()
@@ -602,6 +604,7 @@ class BackgammonUI:
             pygame.display.flip()
 
         pygame.quit()
+
 
 if __name__ == "__main__":
     ui = BackgammonUI()
