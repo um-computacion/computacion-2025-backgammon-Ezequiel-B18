@@ -286,3 +286,23 @@ class Board:
         if self.home[2] == 15:
             return 2
         return 0
+    
+    def to_dict(self):
+        """Converts the Board object to a dictionary."""
+        return {
+            "points": self.points,
+            "bar": self.bar,
+            "home": self.home,
+        }
+
+    @staticmethod
+    def from_dict(data):
+        """Creates a Board object from a dictionary."""
+        board = Board()
+        board.points[:] = data["points"]
+        # JSON keys are strings, so convert them back to integers
+        board.bar.clear()
+        board.bar.update({int(k): v for k, v in data["bar"].items()})
+        board.home.clear()
+        board.home.update({int(k): v for k, v in data["home"].items()})
+        return board

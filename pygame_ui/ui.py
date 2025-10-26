@@ -9,8 +9,7 @@ the bar and bearing off.
 
 import pygame
 import sys
-
-from core.game import Game
+import requests
 
 # --- Constants ---
 # Colors used in the UI, based on the provided image.
@@ -32,6 +31,77 @@ BAR_WIDTH = 50
 POINT_HEIGHT = 300
 POINT_WIDTH = (SCREEN_WIDTH - 2 * BOARD_MARGIN - BAR_WIDTH - 200) / 12
 CHECKER_RADIUS = int(POINT_WIDTH / 2) - 2
+
+API_URL = "http://127.0.0.1:5000"
+
+
+class APIClient:
+    """A simple client to interact with the backgammon server."""
+
+    def get_game(self):
+        """Fetches the current game state."""
+        try:
+            response = requests.get(f"{API_URL}/game")
+            if response.status_code == 404:
+                return None
+            response.raise_for_status()
+            return response.json()
+        except requests.exceptions.RequestException as e:
+            print(f"Error fetching game state: {e}")
+            return None
+
+    def new_game(self, player1_name, player2_name):
+        """Starts a new game."""
+        try:
+            payload = {"player1_name": player1_name, "player2_name": player2_name}
+            response = requests.post(f"{API_URL}/game", json=payload)
+            response.raise_for_status()
+            return response.json()
+        except requests.exceptions.RequestException as e:
+            print(f"Error starting new game: {e}")
+            return None
+
+    def roll_dice(self):
+        """Rolls the dice for the current player."""
+        try:
+            response = requests.post(f"{API_URL}/game/roll")
+            response.raise_for_status()
+            return response.json()
+        except requests.exceptions.RequestException as e:
+            print(f"Error rolling dice: {e}")
+            return None
+
+    def move(self, from_point, to_point):
+        """Applies a move for the current player."""
+        try:
+            payload = {"from_point": from_point, "to_point": to_point}
+            response = requests.post(f"{API_URL}/game/move", json=payload)
+            response.raise_for_status()
+            return response.json()
+        except requests.exceptions.RequestException as e:
+            print(f"Error making move: {e}")
+            return None
+
+    def bear_off(self, from_point):
+        """Applies a bear-off move for the current player."""
+        try:
+            payload = {"from_point": from_point}
+            response = requests.post(f"{API_URL}/game/bear_off", json=payload)
+            response.raise_for_status()
+            return response.json()
+        except requests.exceptions.RequestException as e:
+            print(f"Error bearing off: {e}")
+            return None
+
+    def get_valid_moves(self, from_point):
+        """Gets valid moves for a given point."""
+        try:
+            response = requests.get(f"{API_URL}/game/valid_moves/{from_point}")
+            response.raise_for_status()
+            return response.json()
+        except requests.exceptions.RequestException as e:
+            print(f"Error getting valid moves: {e}")
+            return []
 
 
 class BackgammonUI:
@@ -56,7 +126,8 @@ class BackgammonUI:
             "player1": pygame.Rect(400, 200, 200, 40),
             "player2": pygame.Rect(400, 300, 200, 40),
         }
-        self.game = None
+        self.api_client = APIClient()
+        self.game_data = None
         self.selected_checker_point = None
         self.highlighted_moves = []
         self.dice_rolled_this_turn = False
@@ -84,6 +155,8 @@ class BackgammonUI:
         panel_x = SCREEN_WIDTH - 200 - BOARD_MARGIN
         self.bear_off_button = pygame.Rect(panel_x + 25, SCREEN_HEIGHT - 100, 150, 50)
         self.play_again_button = pygame.Rect(400, 400, 200, 50)
+        self.resume_button = pygame.Rect(400, 250, 200, 50)
+        self.start_new_button = pygame.Rect(400, 350, 200, 50)
 
     def calculate_point_rects(self):
         """
@@ -190,9 +263,9 @@ class BackgammonUI:
 
     def draw_checkers(self):
         """Draws the checkers on the board based on the current game state."""
-        if not self.game:
+        if not self.game_data:
             return
-        for i, (player, count) in enumerate(self.game.board.points):
+        for i, (player, count) in enumerate(self.game_data["board"]["points"]):
             if count > 0:
                 color = WHITE if player == 1 else BLACK
                 for j in range(count):
@@ -231,14 +304,14 @@ class BackgammonUI:
 
     def draw_bar_checkers(self):
         """Draws the checkers on the bar."""
-        if not self.game:
+        if not self.game_data:
             return
         bar_x = BOARD_MARGIN + 6 * POINT_WIDTH + BAR_WIDTH / 2
-        for player_id, count in self.game.board.bar.items():
+        for player_id, count in self.game_data["board"]["bar"].items():
             if count > 0:
-                color = WHITE if player_id == 1 else BLACK
+                color = WHITE if int(player_id) == 1 else BLACK
                 for i in range(count):
-                    if player_id == 1:  # White checkers on top part of the bar
+                    if int(player_id) == 1:  # White checkers on top part of the bar
                         y = (
                             BOARD_MARGIN
                             + 150
@@ -259,16 +332,16 @@ class BackgammonUI:
 
     def draw_bear_off_area(self):
         """Draws the bear-off areas for both players."""
-        if not self.game:
+        if not self.game_data:
             return
         pygame.draw.rect(self.screen, TAN, self.bear_off_rects[1])
         pygame.draw.rect(self.screen, TAN, self.bear_off_rects[2])
 
-        for player_id, count in self.game.board.home.items():
+        for player_id, count in self.game_data["board"]["home"].items():
             if count > 0:
-                color = WHITE if player_id == 1 else BLACK
+                color = WHITE if int(player_id) == 1 else BLACK
                 for i in range(count):
-                    if player_id == 1:  # White checkers (top right)
+                    if int(player_id) == 1:  # White checkers (top right)
                         x = self.bear_off_rects[1].centerx
                         y = (
                             self.bear_off_rects[1].bottom
@@ -283,26 +356,34 @@ class BackgammonUI:
                             - CHECKER_RADIUS
                         )
 
-                    if y > self.bear_off_rects[player_id].top + CHECKER_RADIUS:
+                    if y > self.bear_off_rects[int(player_id)].top + CHECKER_RADIUS:
                         pygame.draw.circle(
                             self.screen, color, (int(x), int(y)), CHECKER_RADIUS
                         )
 
     def draw_highlights(self):
         """Highlights the valid moves for the selected checker."""
+        if not self.game_data:
+            return
+        current_player_ref = self.game_data.get("current_player")
+        if not current_player_ref:
+            return
+        current_player = self.game_data[current_player_ref]
+        player_id = 1 if current_player["color"] == "WHITE" else 2
+
         for move in self.highlighted_moves:
             if move == "bear_off":
                 highlight_surface = pygame.Surface(
                     (
-                        self.bear_off_rects[self.game.current_player.player_id].width,
-                        self.bear_off_rects[self.game.current_player.player_id].height,
+                        self.bear_off_rects[player_id].width,
+                        self.bear_off_rects[player_id].height,
                     ),
                     pygame.SRCALPHA,
                 )
                 highlight_surface.fill(HIGHLIGHT_COLOR)
                 self.screen.blit(
                     highlight_surface,
-                    self.bear_off_rects[self.game.current_player.player_id].topleft,
+                    self.bear_off_rects[player_id].topleft,
                 )
             else:
                 to_point = move
@@ -334,11 +415,11 @@ class BackgammonUI:
             2,
         )
 
-        if self.game and self.game.current_player:
-            player_name = self.game.current_player.name
-            player_color = (
-                "White" if self.game.current_player.player_id == 1 else "Black"
-            )
+        if self.game_data and self.game_data.get("current_player"):
+            current_player_ref = self.game_data["current_player"]
+            current_player = self.game_data[current_player_ref]
+            player_name = current_player["name"]
+            player_color = "White" if current_player["color"] == "WHITE" else "Black"
 
             # Truncate long player names
             if len(player_name) > 10:
@@ -363,15 +444,15 @@ class BackgammonUI:
                 roll_text_rect = roll_text.get_rect(center=roll_button.center)
                 self.screen.blit(roll_text, roll_text_rect)
             else:
-                moves = self.game.current_player.available_moves
+                moves = current_player["available_moves"]
                 dice_text_str = str(moves)
                 dice_text = self.font.render(dice_text_str, True, BLACK)
                 text_x = panel_x + (panel_rect.width - dice_text.get_width()) / 2
                 self.screen.blit(dice_text, (text_x, panel_y + 125))
 
             # Bear off counters
-            home_white = self.game.board.home.get(1, 0)
-            home_black = self.game.board.home.get(2, 0)
+            home_white = self.game_data["board"]["home"].get("1", 0)
+            home_black = self.game_data["board"]["home"].get("2", 0)
 
             bear_off_title = self.font.render("Borne Off", True, BLACK)
             title_x = panel_x + (panel_rect.width - bear_off_title.get_width()) / 2
@@ -388,11 +469,8 @@ class BackgammonUI:
             self.screen.blit(black_count_text, (panel_x + 140, panel_y + 255))
 
             # Bear Off Button
-            can_bear_off = (
-                self.selected_checker_point is not None
-                and self.game.is_valid_bear_off_move(self.selected_checker_point)
-            )
-            button_color = LIGHT_BROWN if can_bear_off else DARK_BROWN
+            can_bear_off = "bear_off" in self.highlighted_moves
+            button_color = DARK_BROWN if can_bear_off else LIGHT_BROWN
             pygame.draw.rect(self.screen, button_color, self.bear_off_button)
             bear_off_text = self.font.render(
                 "Bear Off", True, WHITE if can_bear_off else BLACK
@@ -444,8 +522,8 @@ class BackgammonUI:
     def draw_winner_screen(self):
         """Draws the winner screen."""
         self.screen.fill(CREAM)
-        winner = self.game.get_winner()
-        winner_name = winner.name if winner else "Unknown"
+        winner = self.game_data.get("winner")
+        winner_name = winner["name"] if winner else "Unknown"
 
         title_text = self.font.render(f"{winner_name} Wins!", True, BLACK)
         self.screen.blit(
@@ -457,6 +535,26 @@ class BackgammonUI:
         self.screen.blit(
             play_again_text,
             (self.play_again_button.x + 50, self.play_again_button.y + 15),
+        )
+
+    def draw_resume_screen(self):
+        """Draws the screen asking to resume or start a new game."""
+        self.screen.fill(CREAM)
+        title_text = self.font.render("Resume Game?", True, BLACK)
+        self.screen.blit(
+            title_text, (SCREEN_WIDTH // 2 - title_text.get_width() // 2, 150)
+        )
+
+        pygame.draw.rect(self.screen, DARK_BROWN, self.resume_button)
+        resume_text = self.font.render("Resume Game", True, WHITE)
+        self.screen.blit(
+            resume_text, (self.resume_button.x + 40, self.resume_button.y + 15)
+        )
+
+        pygame.draw.rect(self.screen, DARK_BROWN, self.start_new_button)
+        new_game_text = self.font.render("Start New Game", True, WHITE)
+        self.screen.blit(
+            new_game_text, (self.start_new_button.x + 25, self.start_new_button.y + 15)
         )
 
     def show_no_moves_message(self):
@@ -483,65 +581,58 @@ class BackgammonUI:
         roll_button = pygame.Rect(panel_x + 25, panel_y + 110, 150, 50)
 
         if roll_button.collidepoint(pos) and not self.dice_rolled_this_turn:
-            self.game.roll_dice_for_turn()
+            self.game_data = self.api_client.roll_dice()
             self.dice_rolled_this_turn = True
-            if self.game.turn_was_skipped:
+            if self.game_data and self.game_data["turn_was_skipped"]:
                 self.show_no_moves_message()
             return
 
-        if self.bear_off_button.collidepoint(pos):
-            if (
-                self.selected_checker_point is not None
-                and self.game.is_valid_bear_off_move(self.selected_checker_point)
-            ):
-                self.game.apply_bear_off_move(self.selected_checker_point)
-                if self.game.turn_was_skipped:
-                    self.show_no_moves_message()
-                self.selected_checker_point = None
-                self.highlighted_moves = []
+        if (
+            "bear_off" in self.highlighted_moves
+            and self.bear_off_button.collidepoint(pos)
+            and self.selected_checker_point is not None
+        ):
+            self.game_data = self.api_client.bear_off(self.selected_checker_point)
+            if self.game_data and self.game_data.get("turn_was_skipped"):
+                self.show_no_moves_message()
+            self.selected_checker_point = None
+            self.highlighted_moves = []
             return
 
         if self.selected_checker_point is not None:
             for move in self.highlighted_moves:
                 if isinstance(move, int) and self.point_rects[move].collidepoint(pos):
-                    if self.selected_checker_point == "bar":
-                        self.game.apply_move("bar", move)
-                    else:
-                        self.game.apply_move(self.selected_checker_point, move)
-
-                    if self.game.turn_was_skipped:
+                    self.game_data = self.api_client.move(
+                        self.selected_checker_point, move
+                    )
+                    if self.game_data and self.game_data.get("turn_was_skipped"):
                         self.show_no_moves_message()
-
                     self.selected_checker_point = None
                     self.highlighted_moves = []
-
                     return
 
-        if self.game.board.bar[self.game.current_player.player_id] > 0:
-            if self.bar_rects[self.game.current_player.player_id].collidepoint(pos):
+        current_player_ref = self.game_data["current_player"]
+        current_player = self.game_data[current_player_ref]
+        player_id_str = "1" if current_player["color"] == "WHITE" else "2"
+        if int(self.game_data["board"]["bar"][player_id_str]) > 0:
+            if self.bar_rects[int(player_id_str)].collidepoint(pos):
                 self.selected_checker_point = "bar"
-                self.highlighted_moves = self.game.get_valid_moves("bar")
+                self.highlighted_moves = self.api_client.get_valid_moves("bar")
             return
-
-        if self.game.board.all_checkers_in_home_board(
-            self.game.current_player.player_id
-        ):
-            if self.bear_off_rects[self.game.current_player.player_id].collidepoint(
-                pos
-            ):
-                # Unselect checker to bear off
-                self.selected_checker_point = None
-                self.highlighted_moves = []
-                return
 
         for i, rect in enumerate(self.point_rects):
             if rect.collidepoint(pos):
                 self.selected_checker_point = i
-                self.highlighted_moves = self.game.get_valid_moves(i)
+                self.highlighted_moves = self.api_client.get_valid_moves(i)
                 return
 
     def run(self):
         """The main game loop."""
+        self.game_data = self.api_client.get_game()
+        if self.game_data:
+            self.game_state = "RESUME_SCREEN"
+        else:
+            self.game_state = "START_SCREEN"
         start_button = pygame.Rect(400, 400, 200, 50)
         while self.running:
             for event in pygame.event.get():
@@ -549,7 +640,14 @@ class BackgammonUI:
                     self.running = False
                     sys.exit()
 
-                if self.game_state == "START_SCREEN":
+                if self.game_state == "RESUME_SCREEN":
+                    if event.type == pygame.MOUSEBUTTONDOWN:
+                        if self.resume_button.collidepoint(event.pos):
+                            self.game_state = "GAME_SCREEN"
+                        elif self.start_new_button.collidepoint(event.pos):
+                            self.game_state = "START_SCREEN"
+                            self.game_data = None
+                elif self.game_state == "START_SCREEN":
                     if event.type == pygame.MOUSEBUTTONDOWN:
                         if self.input_boxes["player1"].collidepoint(event.pos):
                             self.active_input = "player1"
@@ -557,10 +655,11 @@ class BackgammonUI:
                             self.active_input = "player2"
                         elif start_button.collidepoint(event.pos):
                             if self.player1_name and self.player2_name:
-                                self.game = Game(self.player1_name, self.player2_name)
-                                self.game.setup_game()
-                                self.game.initial_roll_until_decided()
-                                self.game_state = "GAME_SCREEN"
+                                self.game_data = self.api_client.new_game(
+                                    self.player1_name, self.player2_name
+                                )
+                                if self.game_data:
+                                    self.game_state = "GAME_SCREEN"
 
                     if event.type == pygame.KEYDOWN:
                         if self.active_input == "player1":
@@ -575,21 +674,28 @@ class BackgammonUI:
                                 self.player2_name += event.unicode
 
                 elif self.game_state == "GAME_SCREEN":
-                    if self.game.current_player.remaining_moves == 0:
-                        self.dice_rolled_this_turn = False
-                    if event.type == pygame.MOUSEBUTTONDOWN:
-                        self.handle_click(event.pos)
-                    if self.game.is_game_over():
-                        self.game_state = "WINNER_SCREEN"
+                    if self.game_data:
+                        current_player_ref = self.game_data.get("current_player")
+                        if current_player_ref:
+                            current_player = self.game_data[current_player_ref]
+                            if current_player["remaining_moves"] == 0:
+                                self.dice_rolled_this_turn = False
+                        if event.type == pygame.MOUSEBUTTONDOWN:
+                            self.handle_click(event.pos)
+                        if self.game_data and self.game_data["winner"]:
+                            self.game_state = "WINNER_SCREEN"
+
                 elif self.game_state == "WINNER_SCREEN":
                     if event.type == pygame.MOUSEBUTTONDOWN:
                         if self.play_again_button.collidepoint(event.pos):
                             self.game_state = "START_SCREEN"
                             self.player1_name = ""
                             self.player2_name = ""
-                            self.game = None
+                            self.game_data = None
 
-            if self.game_state == "START_SCREEN":
+            if self.game_state == "RESUME_SCREEN":
+                self.draw_resume_screen()
+            elif self.game_state == "START_SCREEN":
                 self.draw_start_screen()
             elif self.game_state == "GAME_SCREEN":
                 self.draw_board()

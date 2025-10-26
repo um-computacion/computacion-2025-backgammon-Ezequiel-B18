@@ -583,3 +583,46 @@ class Game:
                     break
 
         return is_highest_checker
+    
+    def to_dict(self):
+        """Converts the Game object to a dictionary."""
+        current_player_ref = None
+        if self.current_player is self.player1:
+            current_player_ref = "player1"
+        elif self.current_player is self.player2:
+            current_player_ref = "player2"
+
+        return {
+            "board": self.board.to_dict(),
+            "dice": self.dice.to_dict(),
+            "player1": self.player1.to_dict(),
+            "player2": self.player2.to_dict(),
+            "current_player": current_player_ref,
+            "game_initialized": self.__game_initialized__,
+            "turn_was_skipped": self.turn_was_skipped,
+        }
+
+    @staticmethod
+    def from_dict(data):
+        """Creates a Game object from a dictionary."""
+        board = Board.from_dict(data["board"])
+        dice = Dice.from_dict(data["dice"])
+        player1 = Player.from_dict(data["player1"])
+        player2 = Player.from_dict(data["player2"])
+
+        game = Game(board=board, dice=dice, player1=player1, player2=player2)
+
+        game.__game_initialized__ = data["game_initialized"]
+        game.turn_was_skipped = data["turn_was_skipped"]
+
+        if data["current_player"] == "player1":
+            game.current_player = game.player1
+            game.other_player = game.player2
+        elif data["current_player"] == "player2":
+            game.current_player = game.player2
+            game.other_player = game.player1
+        else:
+            game.current_player = None
+            game.other_player = None
+
+        return game
