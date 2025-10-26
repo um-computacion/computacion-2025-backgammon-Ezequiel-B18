@@ -1,5 +1,4 @@
 @startuml Backgammon
-' https://plantuml.com/class-diagram
 
 ' --- Overall Style ---
 skinparam classAttributeIconSize 0
@@ -16,6 +15,7 @@ class Game {
   - current_player: Player
   - other_player: Player
   - __game_initialized__: bool
+  - turn_was_skipped: bool
   + setup_game()
   + sync_checkers()
   + _reset_checker_states(player_obj)
@@ -24,6 +24,7 @@ class Game {
   + _assign_board_positions(player_obj, player_id)
   + initial_roll_until_decided()
   + start_turn()
+  + roll_dice_for_turn()
   + apply_move(from_point, to_point)
   + apply_bear_off_move(from_point)
   + switch_players()
