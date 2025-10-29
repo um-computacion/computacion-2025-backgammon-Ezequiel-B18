@@ -75,3 +75,18 @@ class Dice:
         if self.initial_values[1] > self.initial_values[0]:
             return 2
         return 0
+    
+    def to_dict(self):
+        """Converts the Dice object to a dictionary."""
+        return {
+            "values": self.__values__,
+            "initial_values": self.initial_values,
+        }
+
+    @staticmethod
+    def from_dict(data):
+        """Creates a Dice object from a dictionary."""
+        dice = Dice()
+        dice.__values__ = data["values"]
+        dice.initial_values = data["initial_values"]
+        return dice

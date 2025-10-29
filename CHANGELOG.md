@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2025-10-29
+
+### Added
+
+- Complete functionality of docker + redis, now the database initializes with the server. This change was made for UX
+
+### Changed
+
+- I eliminated several lines of unnecesary code, as well as its tests. Most of them were from cli/
+
+### Fixed
+
+- Centered some UI components in pygame_ui.ui 
+
 ## [1.0.1] - 2025-10-22
 
 ### Added

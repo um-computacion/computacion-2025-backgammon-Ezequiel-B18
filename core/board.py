@@ -2,6 +2,15 @@
 
 from core.exceptions import InvalidPointError
 
+# Constants for player IDs
+EMPTY = 0
+PLAYER_WHITE = 1
+PLAYER_BLACK = 2
+
+# Constants for board layout
+NUM_POINTS = 24
+WHITE_HOME_RANGE = range(0, 6)
+BLACK_HOME_RANGE = range(18, 24)
 
 class Board:
     """
@@ -20,27 +29,27 @@ class Board:
         # Points are represented as tuples (player, count)
         # player: 0 = empty, 1 = white, 2 = black
         # count: number of checkers at that point
-        self.__points__ = [(0, 0) for _ in range(24)]
-        self.__bar__ = {1: 0, 2: 0}
-        self.__home__ = {1: 0, 2: 0}
+        self.__points__ = [(EMPTY, 0) for _ in range(NUM_POINTS)]
+        self.__bar__ = {PLAYER_WHITE: 0, PLAYER_BLACK: 0}
+        self.__home__ = {PLAYER_WHITE: 0, PLAYER_BLACK: 0}
 
         if test_bearing_off:
             # Special setup for bearing off tests
             # All white checkers in home board (1-6, which is points 0-5 in 0-based)
-            self.__points__[0] = (1, 2)
-            self.__points__[1] = (1, 2)
-            self.__points__[2] = (1, 3)
-            self.__points__[3] = (1, 2)
-            self.__points__[4] = (1, 3)
-            self.__points__[5] = (1, 3)
+            self.__points__[0] = (PLAYER_WHITE, 2)
+            self.__points__[1] = (PLAYER_WHITE, 2)
+            self.__points__[2] = (PLAYER_WHITE, 3)
+            self.__points__[3] = (PLAYER_WHITE, 2)
+            self.__points__[4] = (PLAYER_WHITE, 3)
+            self.__points__[5] = (PLAYER_WHITE, 3)
 
             # All black checkers in their home board (19-24, which is points 18-23 in 0-based)
-            self.__points__[18] = (2, 2)
-            self.__points__[19] = (2, 2)
-            self.__points__[20] = (2, 3)
-            self.__points__[21] = (2, 2)
-            self.__points__[22] = (2, 3)
-            self.__points__[23] = (2, 3)
+            self.__points__[18] = (PLAYER_BLACK, 2)
+            self.__points__[19] = (PLAYER_BLACK, 2)
+            self.__points__[20] = (PLAYER_BLACK, 3)
+            self.__points__[21] = (PLAYER_BLACK, 2)
+            self.__points__[22] = (PLAYER_BLACK, 3)
+            self.__points__[23] = (PLAYER_BLACK, 3)
         else:
             # Use the new helper to set standard starting positions
             self.setup_starting_positions()
@@ -70,7 +79,7 @@ class Board:
         Returns:
             int: Player number (0 if empty, 1 for white, 2 for black)
         """
-        if not 0 <= point <= 23:
+        if not 0 <= point <= NUM_POINTS - 1:
             raise InvalidPointError(point)
         return self.points[point][0]
 
@@ -84,7 +93,7 @@ class Board:
         Returns:
             int: Number of checkers at the point
         """
-        if not 0 <= point <= 23:
+        if not 0 <= point <= NUM_POINTS - 1:
             raise InvalidPointError(point)
         return self.points[point][1]
 
@@ -101,10 +110,8 @@ class Board:
             bool: True if the move is valid, False otherwise
         """
         # Validate point indices
-        if not 0 <= from_point <= 23:
-            raise InvalidPointError(from_point)
-        if not 0 <= to_point <= 23:
-            raise InvalidPointError(to_point)
+        if not (0 <= from_point < NUM_POINTS and 0 <= to_point < NUM_POINTS):
+            raise InvalidPointError(from_point if not 0 <= from_point < NUM_POINTS else to_point)
 
         # Check if there are checkers on the bar that must be entered first
         if self.bar[player] > 0:
@@ -115,7 +122,7 @@ class Board:
             return False
 
         # Check movement direction based on player
-        if player == 1:  # White moves from high points to low points (23 -> 0)
+        if player == PLAYER_WHITE:  # White moves from high points to low points (23 -> 0)
             if to_point >= from_point:
                 return False  # White cannot move backwards (higher numbers)
         else:  # Black moves from low points to high points (0 -> 23)
@@ -125,7 +132,7 @@ class Board:
         # Check if the target point is blocked by the opponent
         # A point is blocked if it has 2 or more checkers of the opponent
         target_player, target_count = self.points[to_point]
-        if target_player != 0 and target_player != player and target_count >= 2:
+        if target_player != EMPTY and target_player != player and target_count >= 2:
             return False
 
         return True
@@ -133,21 +140,21 @@ class Board:
     def setup_starting_positions(self):
         """Set up the standard backgammon starting positions."""
         # Clear all points first
-        self.__points__ = [(0, 0) for _ in range(24)]
+        self.__points__ = [(EMPTY, 0) for _ in range(NUM_POINTS)]
 
         # White checkers (player 1) starting positions - need to bear off to 1-6
         # So they start from the far end (higher numbers)
-        self.__points__[23] = (1, 2)  # 2 white checkers on point 23
-        self.__points__[12] = (1, 5)  # 5 white checkers on point 12
-        self.__points__[7] = (1, 3)  # 3 white checkers on point 7
-        self.__points__[5] = (1, 5)  # 5 white checkers on point 5
+        self.__points__[23] = (PLAYER_WHITE, 2)  # 2 white checkers on point 23
+        self.__points__[12] = (PLAYER_WHITE, 5)  # 5 white checkers on point 12
+        self.__points__[7] = (PLAYER_WHITE, 3)  # 3 white checkers on point 7
+        self.__points__[5] = (PLAYER_WHITE, 5)  # 5 white checkers on point 5
 
         # Black checkers (player 2) starting positions - need to bear off to 19-24
         # So they start from the far end (lower numbers)
-        self.__points__[0] = (2, 2)  # 2 black checkers on point 0
-        self.__points__[11] = (2, 5)  # 5 black checkers on point 11
-        self.__points__[16] = (2, 3)  # 3 black checkers on point 16
-        self.__points__[18] = (2, 5)  # 5 black checkers on point 18
+        self.__points__[0] = (PLAYER_BLACK, 2)  # 2 black checkers on point 0
+        self.__points__[11] = (PLAYER_BLACK, 5)  # 5 black checkers on point 11
+        self.__points__[16] = (PLAYER_BLACK, 3)  # 3 black checkers on point 16
+        self.__points__[18] = (PLAYER_BLACK, 5)  # 5 black checkers on point 18
 
     def move_checker(self, player, from_point, to_point):
         """
@@ -167,13 +174,13 @@ class Board:
         # Remove checker from source point
         source_player, source_count = self.points[from_point]
         if source_count == 1:
-            self.points[from_point] = (0, 0)
+            self.points[from_point] = (EMPTY, 0)
         else:
             self.points[from_point] = (source_player, source_count - 1)
 
         # Handle normal target point
         target_player, target_count = self.points[to_point]
-        if target_player in (0, player):
+        if target_player in (EMPTY, player):
             # Empty point or same player, add checker
             self.points[to_point] = (player, target_count + 1)
         elif target_count == 1:
@@ -192,20 +199,20 @@ class Board:
             return False
 
         # Validate entry points based on tests
-        if player == 1:  # White enters from points 18-23 (19-24 in user terms)
-            if not 18 <= point <= 23:
+        if player == PLAYER_WHITE:  # White enters from points 18-23 (19-24 in user terms)
+            if point not in BLACK_HOME_RANGE:
                 return False
         else:  # Black enters from points 0-5 (1-6 in user terms)
-            if not 0 <= point <= 5:
+            if point not in WHITE_HOME_RANGE:
                 return False
 
         # Check if point is blocked by opponent
         current_player, current_count = self.__points__[point]
-        if current_player != 0 and current_player != player and current_count >= 2:
+        if current_player != EMPTY and current_player != player and current_count >= 2:
             return False
 
         # Handle hitting
-        if current_player != 0 and current_player != player and current_count == 1:
+        if current_player != EMPTY and current_player != player and current_count == 1:
             # Hit opponent checker
             self.bar[current_player] += 1
             self.__points__[point] = (player, 1)
@@ -222,16 +229,13 @@ class Board:
 
     def all_checkers_in_home_board(self, player):
         """Check if all of a player's checkers are in their home board."""
-        if player == 1:  # White player - home board is 1-6 (0-5 in 0-based)
-            home_range = range(0, 6)
-        else:  # Black player - home board is 19-24 (18-23 in 0-based)
-            home_range = range(18, 24)
+        home_range = WHITE_HOME_RANGE if player == PLAYER_WHITE else BLACK_HOME_RANGE
 
         # Count checkers on board for this player
         checkers_on_board = 0
         checkers_in_home = 0
 
-        for point_idx in range(24):
+        for point_idx in range(NUM_POINTS):
             point_player, count = self.__points__[point_idx]
             if point_player == player:
                 checkers_on_board += count
@@ -241,20 +245,10 @@ class Board:
         # All on-board checkers must be in home board
         return checkers_on_board == checkers_in_home
 
-    def bear_off(
-        self, player, point
-    ):  # pylint: disable=too-many-return-statements,too-many-branches
+    def bear_off(self, player, point):
         """Bear off a checker from the specified point."""
-        # Validate point is in player's home board
-        if player == 1:  # White - home board is 1-6 (0-5 in 0-based)
-            if not 0 <= point <= 5:
-                return False
-        else:  # Black - home board is 19-24 (18-23 in 0-based)
-            if not 18 <= point <= 23:
-                return False
-
-        # Check if all checkers are in home board
-        if not self.all_checkers_in_home_board(player):
+        home_range = WHITE_HOME_RANGE if player == PLAYER_WHITE else BLACK_HOME_RANGE
+        if point not in home_range:
             return False
 
         # Check if there's a checker at this point
@@ -265,7 +259,7 @@ class Board:
         # Remove checker from point
         new_count = current_count - 1
         if new_count == 0:
-            self.__points__[point] = (0, 0)
+            self.__points__[point] = (EMPTY, 0)
         else:
             self.__points__[point] = (player, new_count)
 
@@ -281,8 +275,28 @@ class Board:
         Returns:
             int: 0 if no winner, 1 if white wins, 2 if black wins
         """
-        if self.home[1] == 15:
-            return 1
-        if self.home[2] == 15:
-            return 2
-        return 0
+        if self.home[PLAYER_WHITE] == 15:
+            return PLAYER_WHITE
+        if self.home[PLAYER_BLACK] == 15:
+            return PLAYER_BLACK
+        return EMPTY
+    
+    def to_dict(self):
+        """Converts the Board object to a dictionary."""
+        return {
+            "points": self.points,
+            "bar": self.bar,
+            "home": self.home,
+        }
+
+    @staticmethod
+    def from_dict(data):
+        """Creates a Board object from a dictionary."""
+        board = Board()
+        board.points[:] = data["points"]
+        # JSON keys are strings, so convert them back to integers
+        board.bar.clear()
+        board.bar.update({int(k): v for k, v in data["bar"].items()})
+        board.home.clear()
+        board.home.update({int(k): v for k, v in data["home"].items()})
+        return board

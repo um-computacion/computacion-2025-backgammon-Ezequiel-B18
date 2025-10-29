@@ -13,8 +13,6 @@
 3. [Módulo Core - Lógica de Negocio](#módulo-core---lógica-de-negocio)
 4. [Interfaces de Usuario](#interfaces-de-usuario)
 5. [Sistema de Excepciones](#sistema-de-excepciones)
-6. [Testing y Calidad](#testing-y-calidad)
-7. [Decisiones de Diseño y Trade-offs](#decisiones-de-diseño-y-trade-offs)
 
 ---
 
@@ -95,7 +93,7 @@ Cada clase tiene una única razón para cambiar:
 
 ### core/board.py - Clase Board
 
-**Propósito:** Board es el **Single Source of Truth** para el estado del tablero. Mantiene la posición de todas las fichas, gestiona la barra y las fichas que han salido del tablero.
+**Propósito:** Mantiene la posición de todas las fichas, gestiona la barra y las fichas que han salido del tablero.
 
 #### Atributos
 

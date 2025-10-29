@@ -319,13 +319,7 @@ class Game:
 
         # If a bear-off event is to be supported by Board later,
         # handle 'borne_off' here.
-        if self.current_player.remaining_moves <= 0:
-            self.current_player.end_turn()
-            self.switch_players()
-        elif not self.has_any_valid_moves():
-            self.current_player.end_turn()
-            self.switch_players()
-            self.turn_was_skipped = True
+        self._end_turn_if_no_moves()
 
         return True
 
@@ -363,37 +357,58 @@ class Game:
             list: A list of valid destination points, which can include integers for
                   points on the board or the string "bear_off".
         """
-        valid_moves = []
         if not self.current_player or not self.current_player.available_moves:
-            return valid_moves
+            return []
 
         player_id = self.current_player.player_id
-        opponent_id = 2 if player_id == 1 else 1
+        opponent_id = self._get_opponent_id(player_id)
         available_dice = set(self.current_player.available_moves)
 
         if from_point == "bar":
-            if self.board.bar[player_id] > 0:
-                for dice_value in available_dice:
-                    if player_id == 1:  # White enters on points 19-24 (18-23)
-                        to_point = 24 - dice_value
-                    else:  # Black enters on points 1-6 (0-5)
-                        to_point = dice_value - 1
+            return self._get_valid_bar_moves(player_id, opponent_id, available_dice)
 
-                    if 0 <= to_point < 24:
-                        target_player, target_count = self.board.points[to_point]
-                        if target_player != opponent_id or target_count < 2:
-                            valid_moves.append(to_point)
-            return list(set(valid_moves))
-
-        if not isinstance(from_point, int) or not (0 <= from_point < 24):
+        if not self._can_move_from_point(player_id, from_point):
             return []
 
+        valid_moves = self._get_valid_regular_moves(
+            player_id, from_point, available_dice
+        )
+        if self.board.all_checkers_in_home_board(player_id):
+            valid_moves.extend(
+                self._get_valid_bear_off_moves(player_id, from_point, available_dice)
+            )
+
+        return list(set(valid_moves))
+
+    def _get_valid_bar_moves(self, player_id, opponent_id, available_dice):
+        """Calculates valid moves from the bar."""
+        valid_moves = []
         if self.board.bar[player_id] > 0:
-            return []
+            for dice_value in available_dice:
+                if player_id == 1:  # White enters on points 19-24 (18-23)
+                    to_point = 24 - dice_value
+                else:  # Black enters on points 1-6 (0-5)
+                    to_point = dice_value - 1
 
+                if 0 <= to_point < 24:
+                    target_player, target_count = self.board.points[to_point]
+                    if target_player != opponent_id or target_count < 2:
+                        valid_moves.append(to_point)
+        return list(set(valid_moves))
+
+    def _can_move_from_point(self, player_id, from_point):
+        """Checks if a player can move from a given point."""
+        if not isinstance(from_point, int) or not (0 <= from_point < 24):
+            return False
+        if self.board.bar[player_id] > 0:
+            return False
         if self.board.points[from_point][0] != player_id:
-            return []
+            return False
+        return True
 
+    def _get_valid_regular_moves(self, player_id, from_point, available_dice):
+        """Calculates valid regular moves from a point."""
+        valid_moves = []
         for dice_value in available_dice:
             if player_id == 1:
                 to_point = from_point - dice_value
@@ -409,40 +424,40 @@ class Game:
                         valid_moves.append(to_point)
                 else:
                     valid_moves.append(to_point)
+        return valid_moves
 
-        if self.board.all_checkers_in_home_board(player_id):
-            if player_id == 1:
-                home_board_range = range(6)
-                required_dice = from_point + 1
+    def _get_valid_bear_off_moves(self, player_id, from_point, available_dice):
+        """Calculates valid bear-off moves from a point."""
+        valid_moves = []
+        if player_id == 1:
+            home_board_range = range(6)
+            required_dice = from_point + 1
+        else:
+            home_board_range = range(18, 24)
+            required_dice = 24 - from_point
+
+        if from_point in home_board_range:
+            if self.current_player.can_use_dice_for_move(required_dice):
+                valid_moves.append("bear_off")
             else:
-                home_board_range = range(18, 24)
-                required_dice = 24 - from_point
-
-            if from_point in home_board_range:
-                if self.current_player.can_use_dice_for_move(required_dice):
+                larger_dice_available = any(d > required_dice for d in available_dice)
+                if larger_dice_available and self._is_highest_checker(
+                    player_id, from_point
+                ):
                     valid_moves.append("bear_off")
-                else:
-                    # Check if a higher dice roll can be used
-                    larger_dice_available = any(
-                        d > required_dice for d in available_dice
-                    )
-                    if larger_dice_available:
-                        # Check if this is the highest checker
-                        is_highest = True
-                        if player_id == 1:
-                            for p in range(from_point + 1, 6):
-                                if self.board.points[p][0] == player_id:
-                                    is_highest = False
-                                    break
-                        else:  # Player 2
-                            for p in range(18, from_point):
-                                if self.board.points[p][0] == player_id:
-                                    is_highest = False
-                                    break
-                        if is_highest:
-                            valid_moves.append("bear_off")
+        return valid_moves
 
-        return list(set(valid_moves))
+    def _is_highest_checker(self, player_id, from_point):
+        """Checks if the checker is the highest one on the board."""
+        if player_id == 1:
+            for p in range(from_point + 1, 6):
+                if self.board.points[p][0] == player_id:
+                    return False
+        else:  # Player 2
+            for p in range(18, from_point):
+                if self.board.points[p][0] == player_id:
+                    return False
+        return True
 
     def apply_bear_off_move(self, from_point):
         """
@@ -487,13 +502,7 @@ class Game:
         self.sync_checkers()
 
         # 4. Handle turn progression.
-        if self.current_player.remaining_moves <= 0:
-            self.current_player.end_turn()
-            self.switch_players()
-        elif not self.has_any_valid_moves():
-            self.current_player.end_turn()
-            self.switch_players()
-            self.turn_was_skipped = True
+        self._end_turn_if_no_moves()
 
         return True
 
@@ -527,6 +536,28 @@ class Game:
 
         return False
 
+    def _end_turn_if_no_moves(self):
+        """Checks if the current player has moves and ends the turn if not."""
+        if self.current_player.remaining_moves <= 0:
+            self.current_player.end_turn()
+            self.switch_players()
+        elif not self.has_any_valid_moves():
+            self.current_player.end_turn()
+            self.switch_players()
+            self.turn_was_skipped = True
+            
+    def _get_player_by_id(self, player_id):
+        """Returns the player object for the given player ID."""
+        if player_id == 1:
+            return self.player1
+        if player_id == 2:
+            return self.player2
+        return None
+
+    def _get_opponent_id(self, player_id):
+        """Returns the opponent's ID."""
+        return 2 if player_id == 1 else 1
+    
     def is_valid_bear_off_move(self, from_point):
         """
         Checks if a bear-off move is valid for the selected checker.
@@ -583,3 +614,46 @@ class Game:
                     break
 
         return is_highest_checker
+    
+    def to_dict(self):
+        """Converts the Game object to a dictionary."""
+        current_player_ref = None
+        if self.current_player is self.player1:
+            current_player_ref = "player1"
+        elif self.current_player is self.player2:
+            current_player_ref = "player2"
+
+        return {
+            "board": self.board.to_dict(),
+            "dice": self.dice.to_dict(),
+            "player1": self.player1.to_dict(),
+            "player2": self.player2.to_dict(),
+            "current_player": current_player_ref,
+            "game_initialized": self.__game_initialized__,
+            "turn_was_skipped": self.turn_was_skipped,
+        }
+
+    @staticmethod
+    def from_dict(data):
+        """Creates a Game object from a dictionary."""
+        board = Board.from_dict(data["board"])
+        dice = Dice.from_dict(data["dice"])
+        player1 = Player.from_dict(data["player1"])
+        player2 = Player.from_dict(data["player2"])
+
+        game = Game(board=board, dice=dice, player1=player1, player2=player2)
+
+        game.__game_initialized__ = data["game_initialized"]
+        game.turn_was_skipped = data["turn_was_skipped"]
+
+        if data["current_player"] == "player1":
+            game.current_player = game.player1
+            game.other_player = game.player2
+        elif data["current_player"] == "player2":
+            game.current_player = game.player2
+            game.other_player = game.player1
+        else:
+            game.current_player = None
+            game.other_player = None
+
+        return game

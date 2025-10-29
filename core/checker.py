@@ -156,3 +156,20 @@ class Checker:
         state_name = self.state.name
         pos_str = f"pos={self.__position__}"
         return f"{color_name}({state_name}, {pos_str})"
+
+    def to_dict(self):
+        """Converts the Checker object to a dictionary."""
+        return {
+            "color": self.color.name,
+            "state": self.state.name,
+            "position": self.position,
+        }
+
+    @staticmethod
+    def from_dict(data):
+        """Creates a Checker object from a dictionary."""
+        color = CheckerColor[data["color"]]
+        checker = Checker(color)
+        checker.state = CheckerState[data["state"]]
+        checker.position = data["position"]
+        return checker

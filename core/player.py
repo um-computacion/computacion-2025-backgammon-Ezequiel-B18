@@ -253,3 +253,27 @@ class Player:
             f"{self.name} ({self.color.name}): {on_board} on board, "
             f"{on_bar} on bar, {borne_off} borne off, {turn_status}"
         )
+    
+    def to_dict(self):
+        """Converts the Player object to a dictionary."""
+        return {
+            "name": self.name,
+            "color": self.color.name,
+            "is_turn": self.is_turn,
+            "remaining_moves": self.remaining_moves,
+            "available_moves": self.available_moves,
+            "checkers": [checker.to_dict() for checker in self.checkers],
+        }
+
+    @staticmethod
+    def from_dict(data):
+        """Creates a Player object from a dictionary."""
+        color = PlayerColor[data["color"]]
+        player = Player(data["name"], color)
+        player.is_turn = data["is_turn"]
+        player.remaining_moves = data["remaining_moves"]
+        player.available_moves = data["available_moves"]
+        player.checkers.clear()
+        for checker_data in data["checkers"]:
+            player.checkers.append(Checker.from_dict(checker_data))
+        return player
