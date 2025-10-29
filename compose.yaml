@@ -1,19 +1,24 @@
 services:
-  backgammon:
-    build: .
-    container_name: backgammon
-    environment:
-      - DISPLAY=:99
-      - REDIS_HOST=redis
-    volumes:
-      - .:/app
-    stdin_open: true
-    tty: true
-    ports:
-      - 8000:8000
-    depends_on:
-      - redis
   redis:
     image: redis:alpine
+    container_name: backgammon-redis
     ports:
       - "6379:6379"
+    networks:
+      - backgammon-network
+
+  server:
+    build: .
+    container_name: backgammon-server
+    environment:
+      - REDIS_HOST=redis
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis
+    networks:
+      - backgammon-network
+
+networks:
+  backgammon-network:
+    driver: bridge

@@ -88,7 +88,7 @@ class BackgammonCLI:
         # Handle moves until turn is over
         while self.game.current_player.remaining_moves > 0:
             # Check if any legal moves are possible
-            if not self._has_legal_moves():
+            if not self.game.has_any_valid_moves():
                 print(
                     f"\n{self.game.current_player.name} has no legal moves available."
                 )
@@ -98,110 +98,6 @@ class BackgammonCLI:
                 break
 
             self.handle_player_move()
-
-    def _has_legal_moves(self):
-        """
-        Check if the current player has any legal moves available.
-
-        Returns:
-            bool: True if at least one legal move exists, False otherwise
-        """
-        player = self.game.current_player
-        board = self.game.board
-
-        # Check if player has checkers on bar - must enter first
-        if board.bar[player.player_id] > 0:
-            return self._has_legal_bar_entries()
-
-        # Check regular moves and bearing off
-        return self._has_legal_regular_moves() or self._has_legal_bear_offs()
-
-    def _has_legal_bar_entries(self):
-        """Check if player can enter any checkers from bar."""
-        player = self.game.current_player
-        board = self.game.board
-
-        # Determine entry points based on player (corrected to match tests)
-        if player.player_id == 1:  # White
-            entry_points = range(0, 6)  # Points 1-6 in user terms
-        else:  # Black
-            entry_points = range(18, 24)  # Points 19-24 in user terms
-
-        # Check each entry point with each available dice value
-        for point in entry_points:
-            # Calculate distance for this entry
-            if player.player_id == 1:  # White
-                distance = point + 1  # Distance from bar to points 1-6
-            else:  # Black
-                distance = 25 - (point + 1)  # Distance from bar to points 19-24
-
-            # Check if we have dice for this distance
-            if player.can_use_dice_for_move(distance):
-                # Check if point is not blocked by opponent (2+ checkers)
-                current_player, current_count = board.points[point]
-                if current_player != player.player_id and current_count >= 2:
-                    continue  # Point is blocked
-
-                return True  # Found at least one legal entry
-
-        return False
-
-    def _has_legal_regular_moves(self):
-        """Check if player can make any regular moves on the board."""
-        player = self.game.current_player
-        board = self.game.board
-
-        # Check all points where player has checkers
-        for from_point in range(24):
-            point_player, point_count = board.points[from_point]
-            if point_player == player.player_id and point_count > 0:
-                # Try moves with each available dice value
-                for dice_value in set(player.available_moves):
-                    if player.can_use_dice_for_move(dice_value):
-                        # Calculate destination
-                        if player.player_id == 1:  # White moves from high to low
-                            to_point = from_point - dice_value
-                        else:  # Black moves from low to high
-                            to_point = from_point + dice_value
-
-                        # Check if move is valid (within board and not blocked)
-                        if 0 <= to_point <= 23 and board.is_valid_move(
-                            player.player_id, from_point, to_point
-                        ):
-                            return True
-
-        return False
-
-    def _has_legal_bear_offs(self):
-        """Check if player can bear off any checkers."""
-        player = self.game.current_player
-        board = self.game.board
-
-        # Check if all checkers are in home board first
-        if not board.all_checkers_in_home_board(player.player_id):
-            return False
-
-        # Determine home board range
-        if player.player_id == 1:  # White
-            home_points = range(0, 6)  # Points 1-6 in user terms
-        else:  # Black
-            home_points = range(18, 24)  # Points 19-24 in user terms
-
-        # Check each point in home board
-        for point in home_points:
-            point_player, point_count = board.points[point]
-            if point_player == player.player_id and point_count > 0:
-                # Calculate bearing off distance
-                if player.player_id == 1:  # White
-                    distance = point + 1
-                else:  # Black
-                    distance = 24 - point
-
-                # Check if we have dice for this distance
-                if player.can_use_dice_for_move(distance):
-                    return True
-
-        return False
 
     # =============================================================================
     # GAME SETUP (SRP: Initial game configuration responsibility)
@@ -295,72 +191,8 @@ class BackgammonCLI:
 
                         to_point -= 1  # Convert to 0-based
 
-                        # Check if player has checkers on bar
-                        if self.game.board.bar[self.game.current_player.player_id] == 0:
-                            print("You don't have any checkers on the bar!")
-                            continue
-
-                        # Validate entry points based on player
-                        if self.game.current_player.player_id == 1:  # White
-                            valid_range = "19-24"
-                            if not 19 <= (to_point + 1) <= 24:
-                                print(f"White must enter on points {valid_range}.")
-                                continue
-                        else:  # Black
-                            valid_range = "1-6"
-                            if not 1 <= (to_point + 1) <= 6:
-                                print(f"Black must enter on points {valid_range}.")
-                                continue
-
-                        # Calculate distance for dice validation
-                        if self.game.current_player.player_id == 1:  # White
-                            # White enters from bar to points 19-24 (18-23 in 0-based)
-                            # Distance is based on 25 - point number (from imaginary point 25)
-                            move_distance = 25 - (to_point + 1)
-                        else:  # Black
-                            # Black enters from bar to points 1-6 (0-5 in 0-based)
-                            # Distance is based on the point number (from imaginary point 0)
-                            move_distance = to_point + 1
-
-                        # Check if move distance matches available dice
-                        if not self.game.current_player.can_use_dice_for_move(
-                            move_distance
-                        ):
-                            print(
-                                f"Cannot enter at point {to_point + 1}. "
-                                f"Distance {move_distance} doesn't match available dice: "
-                                f"{self.game.current_player.available_moves}"
-                            )
-                            continue
-
-                        # Attempt to enter from bar
-                        success = self.game.board.enter_from_bar(
-                            self.game.current_player.player_id, to_point
-                        )
-                        if success:
-                            # Consume dice and handle turn management
-                            if self.game.current_player.use_dice_for_move(
-                                move_distance
-                            ):
-                                self.game.sync_checkers()
-
-                                # Check if turn should end
-                                if self.game.current_player.remaining_moves <= 0:
-                                    self.game.current_player.end_turn()
-                                    self.game.switch_players()
-
-                                print(
-                                    f"Enter from bar successful: BAR → {to_point + 1} "
-                                    f"(used dice: {move_distance})"
-                                )
-                                break
-                            print("Failed to consume dice for bar entry.")
-                        else:
-                            print(
-                                "Cannot enter at that point. "
-                                "It may be blocked by opponent checkers."
-                            )
-                        continue
+                        self.game.apply_move("bar", to_point)
+                        break
                     except ValueError:
                         print(
                             "Invalid input. Enter 'bar' followed by a point number (e.g., 'bar 5')."
@@ -403,55 +235,8 @@ class BackgammonCLI:
 
                 # Attempt the move
                 if parts[1].lower() == "off":
-                    # Handle bearing off using apply_move with the correct distance
-                    # Calculate bearing off distance
-                    if self.game.current_player.player_id == 1:  # White
-                        # White bears off from points 1-6 (0-5 in 0-based)
-                        # Distance is from point to "off" (beyond point 0)
-                        move_distance = (
-                            from_point + 1
-                        )  # +1 because bearing off is one step past point 0
-                    else:  # Black
-                        # Black bears off from points 19-24 (18-23 in 0-based)
-                        # Distance is from point to "off" (beyond point 23)
-                        move_distance = 24 - from_point  # Distance to go past point 23
-
-                    # Check if move distance matches available dice
-                    if not self.game.current_player.can_use_dice_for_move(
-                        move_distance
-                    ):
-                        print(
-                            f"Cannot bear off from point {from_point + 1}. "
-                            f"Distance {move_distance} doesn't match available dice: "
-                            f"{self.game.current_player.available_moves}"
-                        )
-                        continue
-
-                    # Use board.bear_off directly since it has special bearing off logic
-                    success = self.game.board.bear_off(
-                        self.game.current_player.player_id, from_point
-                    )
-                    if success:
-                        # Manually consume dice and handle turn management
-                        if self.game.current_player.use_dice_for_move(move_distance):
-                            self.game.sync_checkers()
-
-                            # Check if turn should end
-                            if self.game.current_player.remaining_moves <= 0:
-                                self.game.current_player.end_turn()
-                                self.game.switch_players()
-
-                            print(
-                                f"Bear off successful: {from_point + 1} → OFF "
-                                f"(used dice: {move_distance})"
-                            )
-                            break
-                        print("Failed to consume dice for bearing off.")
-                    else:
-                        print(
-                            "Invalid bear off attempt. "
-                            "Check that all checkers are in home board."
-                        )
+                    self.game.apply_bear_off_move(from_point)
+                    break
                 else:
                     # Normal move - apply_move now handles dice validation
                     success = self.game.apply_move(from_point, to_point)
@@ -646,7 +431,6 @@ def main():
         print(f"System error: {e}")
     except Exception as e:  # pylint: disable=broad-exception-caught
         print(f"An unexpected error occurred: {e}")
-
 
 if __name__ == "__main__":
     main()

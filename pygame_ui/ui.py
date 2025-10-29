@@ -32,7 +32,7 @@ POINT_HEIGHT = 300
 POINT_WIDTH = (SCREEN_WIDTH - 2 * BOARD_MARGIN - BAR_WIDTH - 200) / 12
 CHECKER_RADIUS = int(POINT_WIDTH / 2) - 2
 
-API_URL = "http://127.0.0.1:5000"
+API_URL = "http://127.0.0.1:8000"
 
 
 class APIClient:
@@ -154,9 +154,14 @@ class BackgammonUI:
         }
         panel_x = SCREEN_WIDTH - 200 - BOARD_MARGIN
         self.bear_off_button = pygame.Rect(panel_x + 25, SCREEN_HEIGHT - 100, 150, 50)
-        self.play_again_button = pygame.Rect(400, 400, 200, 50)
-        self.resume_button = pygame.Rect(400, 250, 200, 50)
-        self.start_new_button = pygame.Rect(400, 350, 200, 50)
+        self.play_again_button = pygame.Rect(0, 400, 200, 50)
+        self.play_again_button.centerx = SCREEN_WIDTH // 2
+        self.resume_button = pygame.Rect(0, 250, 200, 50)
+        self.resume_button.centerx = SCREEN_WIDTH // 2
+        self.start_new_button = pygame.Rect(0, 350, 200, 50)
+        self.start_new_button.centerx = SCREEN_WIDTH // 2
+        self.start_button = pygame.Rect(0, 400, 200, 50)
+        self.start_button.centerx = SCREEN_WIDTH // 2
 
     def calculate_point_rects(self):
         """
@@ -514,10 +519,10 @@ class BackgammonUI:
             (self.input_boxes["player2"].x - 200, self.input_boxes["player2"].y + 5),
         )
 
-        start_button = pygame.Rect(400, 400, 200, 50)
-        pygame.draw.rect(self.screen, DARK_BROWN, start_button)
+        pygame.draw.rect(self.screen, DARK_BROWN, self.start_button)
         start_text = self.font.render("Start Game", True, WHITE)
-        self.screen.blit(start_text, (start_button.x + 50, start_button.y + 15))
+        start_text_rect = start_text.get_rect(center=self.start_button.center)
+        self.screen.blit(start_text, start_text_rect)
 
     def draw_winner_screen(self):
         """Draws the winner screen."""
@@ -532,10 +537,10 @@ class BackgammonUI:
 
         pygame.draw.rect(self.screen, DARK_BROWN, self.play_again_button)
         play_again_text = self.font.render("Play Again", True, WHITE)
-        self.screen.blit(
-            play_again_text,
-            (self.play_again_button.x + 50, self.play_again_button.y + 15),
+        play_again_text_rect = play_again_text.get_rect(
+            center=self.play_again_button.center
         )
+        self.screen.blit(play_again_text, play_again_text_rect)
 
     def draw_resume_screen(self):
         """Draws the screen asking to resume or start a new game."""
@@ -547,15 +552,15 @@ class BackgammonUI:
 
         pygame.draw.rect(self.screen, DARK_BROWN, self.resume_button)
         resume_text = self.font.render("Resume Game", True, WHITE)
-        self.screen.blit(
-            resume_text, (self.resume_button.x + 40, self.resume_button.y + 15)
-        )
+        resume_text_rect = resume_text.get_rect(center=self.resume_button.center)
+        self.screen.blit(resume_text, resume_text_rect)
 
         pygame.draw.rect(self.screen, DARK_BROWN, self.start_new_button)
         new_game_text = self.font.render("Start New Game", True, WHITE)
-        self.screen.blit(
-            new_game_text, (self.start_new_button.x + 25, self.start_new_button.y + 15)
+        new_game_text_rect = new_game_text.get_rect(
+            center=self.start_new_button.center
         )
+        self.screen.blit(new_game_text, new_game_text_rect)
 
     def show_no_moves_message(self):
         """Displays a message indicating that there are no valid moves."""
@@ -633,7 +638,6 @@ class BackgammonUI:
             self.game_state = "RESUME_SCREEN"
         else:
             self.game_state = "START_SCREEN"
-        start_button = pygame.Rect(400, 400, 200, 50)
         while self.running:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -653,7 +657,7 @@ class BackgammonUI:
                             self.active_input = "player1"
                         elif self.input_boxes["player2"].collidepoint(event.pos):
                             self.active_input = "player2"
-                        elif start_button.collidepoint(event.pos):
+                        elif self.start_button.collidepoint(event.pos):
                             if self.player1_name and self.player2_name:
                                 self.game_data = self.api_client.new_game(
                                     self.player1_name, self.player2_name
