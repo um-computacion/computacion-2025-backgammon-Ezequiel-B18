@@ -13,7 +13,7 @@
 3. [Módulo Core - Lógica de Negocio](#módulo-core---lógica-de-negocio)
 4. [Interfaces de Usuario](#interfaces-de-usuario)
 5. [Sistema de Excepciones](#sistema-de-excepciones)
-6. [Flask y Redis](flask-y-redis)
+6. [Redis - Persistencia Directa](#redis---persistencia-directa-opcional)
 
 ---
 
@@ -841,48 +841,11 @@ find . -name "*.py" | xargs pylint
 
 ---
 
-## Flask y Redis (Opcional)
+## Redis - Persistencia Directa (Opcional)
 
-Como característica opcional avanzada, el proyecto incluye un sistema de persistencia de partidas utilizando **Flask** (framework web) y **Redis** (base de datos en memoria). Esta implementación demuestra la extensibilidad de la arquitectura y permite guardar y recuperar el estado completo del juego.
+Como característica opcional avanzada, el proyecto incluye un sistema de persistencia de partidas utilizando **Redis** (base de datos en memoria). Esta implementación demuestra la extensibilidad de la arquitectura y permite guardar y recuperar el estado completo del juego directamente desde la interfaz gráfica Pygame.
 
-### 6.1. ¿Qué es Flask?
-
-**Flask** es un framework web ligero para Python que permite crear aplicaciones web y APIs RESTful de manera simple y elegante.
-
-#### Características principales:
-
-- **Micro-framework:** Minimalista pero extensible
-- **Routing HTTP:** Define endpoints (URLs) que responden a peticiones
-- **JSON support:** Perfecto para crear APIs que consuman/devuelvan JSON
-- **WSGI compliant:** Compatible con servidores web estándar
-
-#### En nuestro proyecto (`server/main.py`):
-
-```python
-from flask import Flask, jsonify, request
-
-app = Flask(__name__)
-
-@app.route("/game", methods=["POST"])
-def new_game():
-    """Endpoint para crear una nueva partida"""
-    data = request.get_json()  # Recibe JSON del cliente
-    player1_name = data.get("player1_name", "Player 1")
-    player2_name = data.get("player2_name", "Player 2")
-
-    game = Game(player1_name=player1_name, player2_name=player2_name)
-    game.setup_game()
-    game.initial_roll_until_decided()
-
-    save_game(game)  # Guarda en Redis
-    return jsonify(get_game_state(game))  # Devuelve JSON
-```
-
-**Flask actúa como una capa de comunicación HTTP** que expone la lógica del juego a través de endpoints, sin modificar el código core.
-
----
-
-### 6.2. ¿Qué es Redis?
+### 6.1. ¿Qué es Redis?
 
 **Redis** (REmote DIctionary Server) es una base de datos **in-memory** de tipo clave-valor, conocida por su velocidad extrema y versatilidad.
 
@@ -913,313 +876,237 @@ def new_game():
    - Contadores en tiempo real
    - **Guardado de estado de juegos**
 
-#### En nuestro proyecto:
+#### Conexión con Redis en Python (`redis-py`):
 
 ```python
 import redis
 import json
 
-# Conexión a Redis
+# Conexión directa a Redis
 redis_client = redis.Redis(
-    host=REDIS_HOST,      # 'localhost' o 'redis' (en Docker)
-    port=6379,            # Puerto por defecto de Redis
-    db=0,                 # Base de datos (Redis tiene 16 por defecto)
+    host='localhost',     # o 'redis' (en Docker)
+    port=6379,           # Puerto por defecto de Redis
+    db=0,                # Base de datos (Redis tiene 16 por defecto)
     decode_responses=True # Devuelve strings en lugar de bytes
 )
 
-GAME_ID = "backgammon_game"  # Clave única para el juego
+GAME_KEY = "backgammon:current_game"  # Clave única para el juego
 ```
 
 ---
 
-### 6.3. Integración Flask + Redis: Arquitectura
+### 6.2. Arquitectura: Conexión Directa Pygame → Redis
 
-La combinación de Flask y Redis crea una **arquitectura de tres capas** que separa responsabilidades:
+La arquitectura utiliza una **conexión directa** entre la interfaz Pygame y Redis, sin capas intermedias:
 
 ```
-┌─────────────────┐      HTTP/JSON       ┌─────────────────┐      Set/Get      ┌─────────────────┐
-│                 │ ──────────────────>  │                 │ ───────────────>  │                 │
-│   Cliente       │                      │  Flask Server   │                   │  Redis DB       │
-│ (Browser/CLI/UI)│ <────────────────── │  (API Layer)    │ <─────────────── │  (Persistence)  │
-│                 │      Response        │                 │      Data         │                 │
-└─────────────────┘                      └─────────────────┘                   └─────────────────┘
-        ↓                                         ↓                                      ↓
-   Presenta datos                         Orquesta lógica                        Almacena estado
-   al usuario                             usando core/                           serializado (JSON)
+┌─────────────────┐                       ┌─────────────────┐
+│                 │    redis.set/get      │                 │
+│  Pygame UI      │ ───────────────────>  │   Redis DB      │
+│ (BackgammonUI)  │                       │ (In-Memory KV)  │
+│                 │ <─────────────────── │                 │
+└─────────────────┘    Game objects       └─────────────────┘
+        ↓                                           ↓
+   Presenta juego                             Almacena estado
+   usando core/                               serializado (JSON)
 ```
+
+**Ventajas de la conexión directa:**
+
+1. **Simplicidad:** Menos capas = menos complejidad
+2. **Rendimiento:** Sin overhead de HTTP/JSON serialization en cada llamada
+3. **Mantenibilidad:** Código más fácil de entender y debuggear
+4. **Fácil de explicar:** Arquitectura clara para examen oral
 
 **Flujo de datos:**
 
-1. **Cliente** → Envía petición HTTP con JSON → **Flask**
-2. **Flask** → Procesa usando clases `core/` → Genera estado del juego
-3. **Flask** → Serializa estado a JSON → **Redis** (guarda)
-4. **Redis** → Almacena en memoria → Responde OK
-5. **Flask** → Devuelve estado al cliente → **Cliente** muestra UI
+1. **Usuario** → Juega en Pygame UI → Modifica objeto `Game`
+2. **Pygame** → Serializa `game.to_dict()` a JSON → Guarda con `redis.set()`
+3. **Redis** → Almacena estado en memoria → Persiste a disco (opcional)
+4. **Siguiente sesión** → Pygame hace `redis.get()` → Reconstruye con `Game.from_dict()`
 
 ---
 
-### 6.4. Implementación: Guardado y Carga de Partidas
+### 6.3. Implementación: RedisGameManager
 
-#### Función: Guardar partida en Redis
-
-```python
-def save_game(game):
-    """Serializa el estado del juego y lo guarda en Redis."""
-    # 1. Convertir objeto Game a diccionario
-    game_state = game.to_dict()
-
-    # 2. Añadir información de ganador (si existe)
-    winner = game.get_winner()
-    game_state["winner"] = winner.to_dict() if winner else None
-
-    # 3. Serializar diccionario a string JSON
-    json_string = json.dumps(game_state)
-
-    # 4. Guardar en Redis con clave GAME_ID
-    redis_client.set(GAME_ID, json_string)
-```
-
-**Por qué funciona:**
-
-- `game.to_dict()` convierte todo el estado (Board, Dice, Players) a un diccionario Python
-- `json.dumps()` transforma el diccionario en un string JSON
-- `redis_client.set()` guarda el string con la clave "backgammon_game"
-
-#### Función: Cargar partida desde Redis
+La clase `RedisGameManager` en `pygame_ui/ui.py` encapsula toda la lógica de persistencia:
 
 ```python
-def load_game():
-    """Recupera el estado del juego desde Redis."""
-    # 1. Obtener string JSON desde Redis
-    game_data = redis_client.get(GAME_ID)
+class RedisGameManager:
+    """Manages game persistence using Redis directly (no Flask server)."""
 
-    if game_data:
-        # 2. Deserializar JSON a diccionario
-        game_dict = json.loads(game_data)
+    def __init__(self):
+        """Initialize connection to Redis."""
+        self.redis_client = redis.Redis(
+            host=REDIS_HOST,
+            port=6379,
+            db=0,
+            decode_responses=True
+        )
+        # Verify connection
+        self.redis_client.ping()
 
-        # 3. Eliminar datos derivados (winner se calcula, no se guarda)
-        game_dict.pop("winner", None)
+    def save_game(self, game):
+        """Save Game object to Redis as JSON."""
+        game_dict = game.to_dict()
+        game_json = json.dumps(game_dict)
+        self.redis_client.set(GAME_KEY, game_json)
 
-        # 4. Reconstruir objeto Game desde diccionario
-        return Game.from_dict(game_dict)
+    def load_game(self):
+        """Load Game object from Redis, or None if not found."""
+        data = self.redis_client.get(GAME_KEY)
+        if data:
+            game_dict = json.loads(data)
+            return Game.from_dict(game_dict)
+        return None
 
-    return None  # No hay partida guardada
+    def delete_game(self):
+        """Delete saved game from Redis."""
+        self.redis_client.delete(GAME_KEY)
 ```
 
-**Por qué funciona:**
+**Decisiones de diseño:**
 
-- `redis_client.get()` recupera el string JSON guardado
-- `json.loads()` convierte el string en diccionario
-- `Game.from_dict()` reconstruye el objeto completo con Board, Dice y Players
+- **Clase dedicada:** Separa lógica de persistencia de la UI (SRP)
+- **Ping en `__init__`:** Detecta problemas de conexión tempranamente
+- **decode_responses=True:** Redis devuelve strings, no bytes
+- **JSON como formato:** Human-readable, fácil de debuggear
 
 ---
 
-### 6.5. Endpoints de la API Flask
+### 6.4. Uso en Pygame UI
 
-El servidor Flask expone varios endpoints para interactuar con el juego:
-
-#### 1. Crear nueva partida: `POST /game`
+La interfaz Pygame utiliza `RedisGameManager` para guardar/cargar partidas automáticamente:
 
 ```python
-@app.route("/game", methods=["POST"])
-def new_game():
-    """Inicia una nueva partida."""
-    data = request.get_json()
-    player1_name = data.get("player1_name", "Player 1")
-    player2_name = data.get("player2_name", "Player 2")
+class BackgammonUI:
+    def __init__(self):
+        # ...
+        self.redis_manager = RedisGameManager()  # Conexión directa a Redis
+        self.game = None  # Objeto Game (no JSON)
 
-    game = Game(player1_name=player1_name, player2_name=player2_name)
-    game.setup_game()
-    game.initial_roll_until_decided()
+    def run(self):
+        """Main game loop."""
+        # Intentar cargar partida guardada
+        self.game = self.redis_manager.load_game()
 
-    save_game(game)
-    return jsonify(get_game_state(game)), 201
+        if self.game:
+            # Hay partida guardada → Preguntar si quiere resumir
+            self.game_state = "RESUME_SCREEN"
+        else:
+            # No hay partida → Pantalla de inicio
+            self.game_state = "START_SCREEN"
+
+        # Game loop...
+
+    def handle_new_game(self, player1_name, player2_name):
+        """Start new game and save to Redis."""
+        # Crear nueva partida
+        self.game = Game(player1_name, player2_name)
+        self.game.setup_game()
+        self.game.initial_roll_until_decided()
+
+        # Guardar en Redis
+        self.redis_manager.save_game(self.game)
+
+    def handle_move(self, from_point, to_point):
+        """Apply move and persist to Redis."""
+        # Aplicar movimiento
+        success = self.game.apply_move(from_point, to_point)
+
+        if success:
+            # Guardar estado actualizado
+            self.redis_manager.save_game(self.game)
+
+        return success
 ```
 
-**Uso:**
+**Ventajas de trabajar con objetos Game:**
 
-```bash
-curl -X POST http://localhost:8000/game \
-  -H "Content-Type: application/json" \
-  -d '{"player1_name": "Alice", "player2_name": "Bob"}'
-```
-
-#### 2. Obtener estado actual: `GET /game`
-
-```python
-@app.route("/game", methods=["GET"])
-def get_game():
-    """Recupera el estado actual de la partida."""
-    game = load_game()
-    if game:
-        return jsonify(get_game_state(game)), 200
-    return jsonify({"error": "No game found"}), 404
-```
-
-#### 3. Realizar movimiento: `POST /game/move`
-
-```python
-@app.route("/game/move", methods=["POST"])
-def make_move():
-    """Aplica un movimiento al juego."""
-    game = load_game()
-    if not game:
-        return jsonify({"error": "No game found"}), 404
-
-    data = request.get_json()
-    from_point = data.get("from_point")
-    to_point = data.get("to_point")
-
-    try:
-        game.apply_move(from_point, to_point)
-        save_game(game)
-        return jsonify(get_game_state(game)), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 400
-```
+- Acceso directo: `self.game.board.points` vs `game_data["board"]["points"]`
+- Type safety: IDE autocomplete funciona correctamente
+- Validación: Métodos del Game aseguran invariantes
+- Testing: Más fácil mockear objetos que dicts
 
 ---
 
-### 6.6. Ventajas de esta Arquitectura
+### 6.5. Comparación: Arquitecturas Alternativas
 
-#### 1. **Separación de Responsabilidades (SOLID - SRP)**
+#### Opción 1: Flask + Redis (Anterior - Removida)
 
-- **Core:** Lógica pura del juego (no sabe de HTTP ni Redis)
-- **Flask:** Capa de comunicación HTTP (no sabe de reglas del juego)
-- **Redis:** Capa de persistencia (no sabe de Backgammon)
-
-Cada componente puede evolucionar independientemente.
-
-#### 2. **Stateless Server (Sin estado en Flask)**
-
-- Flask no mantiene el juego en memoria
-- Cada request carga el estado desde Redis
-- El servidor puede reiniciarse sin perder partidas
-- Facilita escalabilidad horizontal (múltiples servidores)
-
-#### 3. **Persistencia sin Sistema de Archivos**
-
-- No hay que gestionar archivos `.json` o `.pickle`
-- Redis maneja la concurrencia automáticamente
-- Operaciones atómicas (SET/GET son thread-safe)
-- Backup/restore más simple
-
-#### 4. **Extensibilidad**
-
-Fácil agregar nuevas funcionalidades:
-
-- Múltiples partidas simultáneas (usar IDs únicos)
-- Sistema de usuarios (autenticación JWT)
-- Histórico de movimientos (listas Redis)
-- Ranking de jugadores (sorted sets Redis)
-- Notificaciones en tiempo real (pub/sub Redis)
-
-#### 5. **Testing Independiente**
-
-```python
-# Test de core (sin Flask/Redis)
-def test_game_logic():
-    game = Game("Alice", "Bob")
-    game.setup_game()
-    assert len(game.board.points) == 24
-
-# Test de API (con mocks)
-def test_api_new_game(mocker):
-    mocker.patch('server.main.save_game')
-    response = client.post('/game', json={"player1_name": "Alice"})
-    assert response.status_code == 201
 ```
+Pygame → HTTP (requests) → Flask API → redis-py → Redis
+```
+
+**Problemas:**
+
+- Flask innecesario para single-player game
+- HTTP overhead en cada movimiento
+- Dos capas de serialización (Game→JSON→HTTP→JSON→Redis)
+- Más difícil de explicar en examen oral
+
+#### Opción 2: Conexión Directa Redis (Actual - Implementada)
+
+```
+Pygame → redis-py → Redis
+```
+
+**Ventajas:**
+
+- ✅ Simple y directo
+- ✅ Menos dependencias (sin Flask, sin requests)
+- ✅ Mejor performance (sin HTTP)
+- ✅ Fácil de explicar
+- ✅ Demuestra conocimiento de NoSQL igual que Flask+Redis
+
+#### Opción 3: Sin persistencia
+
+```
+Pygame → core/ (solo en memoria)
+```
+
+**Limitación:**
+
+- Estado se pierde al cerrar ventana
+- No demuestra conocimiento de bases de datos
+
+**Conclusión:** La opción 2 (Direct Redis) es el equilibrio perfecto entre funcionalidad y simplicidad.
 
 ---
 
-### 6.7. Configuración con Docker Compose
+### 6.6. Ejecución con Docker Compose
 
-El proyecto usa Docker Compose para orquestar Redis y Flask:
+Para usar la persistencia, solo se necesita el contenedor de Redis (no Flask):
 
 ```yaml
 # compose.yaml
+version: "3.8"
 services:
   redis:
-    image: redis:alpine # Imagen oficial ligera
-    container_name: backgammon-redis
+    image: redis:7-alpine
     ports:
-      - "6379:6379" # Expone puerto para desarrollo local
-    networks:
-      - backgammon-network
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
 
-  server:
-    build: . # Construye desde Dockerfile
-    container_name: backgammon-server
-    environment:
-      - REDIS_HOST=redis # Usa hostname del contenedor Redis
-    ports:
-      - "8000:8000" # API accesible en localhost:8000
-    depends_on:
-      - redis # Asegura que Redis inicie primero
-    networks:
-      - backgammon-network
-
-networks:
-  backgammon-network:
-    driver: bridge # Red interna para comunicación
+volumes:
+  redis_data:
 ```
 
-**Ventajas del enfoque Docker:**
-
-1. **Entorno reproducible:** Mismo comportamiento en dev/prod
-2. **Aislamiento:** Redis y Flask en contenedores separados
-3. **Networking automático:** Contenedores se comunican por nombre
-4. **Fácil deployment:** `docker compose up -d` y listo
-
----
-
-### 6.8. Flujo Completo: Ejemplo de Uso
-
-**Escenario:** Jugador guarda partida y la retoma más tarde
-
-#### Sesión 1: Iniciar y jugar
+**Comandos:**
 
 ```bash
-# 1. Levantar infraestructura
+# Iniciar Redis
 docker compose up -d
 
-# 2. Crear nueva partida (vía API)
-curl -X POST http://localhost:8000/game \
-  -H "Content-Type: application/json" \
-  -d '{"player1_name": "Alice", "player2_name": "Bob"}'
+# Verificar que está corriendo
+docker compose ps
 
-# Response: Estado inicial del juego (JSON)
+# Jugar con Pygame (persiste automáticamente)
+python -m pygame_ui.ui
 
-# 3. Realizar algunos movimientos
-curl -X POST http://localhost:8000/game/move \
-  -H "Content-Type: application/json" \
-  -d '{"from_point": 1, "to_point": 4}'
-
-# 4. Jugador cierra todo (sale del juego)
-```
-
-**Redis ahora contiene:**
-
-```
-Key: "backgammon_game"
-Value: '{"board": {...}, "dice": {...}, "players": [...]}'
-```
-
-#### Sesión 2: Retomar partida
-
-```bash
-# 1. Levantar infraestructura (Redis mantiene datos)
-docker compose up -d
-
-# 2. Recuperar estado del juego
-curl http://localhost:8000/game
-
-# Response: Estado exacto donde lo dejó (JSON)
-
-# 3. Continuar jugando desde donde estaba
-curl -X POST http://localhost:8000/game/move \
-  -H "Content-Type: application/json" \
-  -d '{"from_point": 6, "to_point": 9}'
+# Detener Redis (datos se mantienen en volumen)
+docker compose down
 ```
 
 ---

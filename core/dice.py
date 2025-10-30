@@ -85,7 +85,7 @@ class Dice:
         if self.__initial_values__[1] > self.__initial_values__[0]:
             return 2
         return 0
-    
+
     def to_dict(self):
         """Converts the Dice object to a dictionary."""
         return {

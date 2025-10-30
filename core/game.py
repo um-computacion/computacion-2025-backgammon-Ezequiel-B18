@@ -575,7 +575,7 @@ class Game:
             self.current_player.end_turn()
             self.switch_players()
             self.turn_was_skipped = True
-            
+
     def _get_player_by_id(self, player_id):
         """Returns the player object for the given player ID."""
         if player_id == 1:
@@ -587,7 +587,7 @@ class Game:
     def _get_opponent_id(self, player_id):
         """Returns the opponent's ID."""
         return 2 if player_id == 1 else 1
-    
+
     def is_valid_bear_off_move(self, from_point):
         """
         Checks if a bear-off move is valid for the selected checker.
@@ -644,7 +644,7 @@ class Game:
                     break
 
         return is_highest_checker
-    
+
     def to_dict(self):
         """Converts the Game object to a dictionary."""
         current_player_ref = None

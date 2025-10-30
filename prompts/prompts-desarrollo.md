@@ -1544,3 +1544,269 @@ Over the course of development, numerous bugs were fixed and features were added
 **Design Choices:**
 - A type check was added to the `is_valid_bear_off_move` method in `core/game.py` to prevent the `TypeError`.
 - The `get_valid_moves` method was refined to correctly handle the final edge case in the turn-skipping logic, ensuring that the game never gets stuck.
+
+## Prompt: Major Architectural Refactor - Flask+Redis → Direct Redis
+
+**Date:** 30/10/2025
+
+**User Request:**
+"Could you checkout the entire codebase for inefficiencies or unnecessary code? Report to me before deleting anything if you find any."
+
+Later: "I want to definitely use Redis as it would take my grade up, but I don't know if it is better to have the server or not as it is more complex"
+
+Final decision: "Do that and document in the changelog and in prompts-desarrollo and prompts-documentacion. Let's see if everything still works perfectly after"
+
+**Context:**
+After implementing Flask + Redis for game persistence, user asked for a comprehensive code audit. Discovered that the Flask server was acting as unnecessary middleware between Pygame UI and Redis. User's friend implemented "just Redis" without Flask, which prompted the question of whether Flask was needed. After analysis, recommended removing Flask for a simpler direct Redis connection.
+
+**Technical Analysis:**
+
+### Problem Identified
+
+Current architecture (Flask + Redis):
+```
+Pygame UI → requests library → HTTP → Flask server → redis-py → Redis DB
+```
+
+Issues:
+1. **Flask is unnecessary middleware** for a single-player game
+2. **HTTP overhead** on every game action (serialize → HTTP → deserialize)
+3. **Double serialization**: Game object → JSON → HTTP → JSON → Redis
+4. **More dependencies** to maintain (Flask, requests)
+5. **Harder to explain** in oral exam (why do we need a web server for local game?)
+
+### Solution: Direct Redis Connection
+
+New architecture (Direct Redis):
+```
+Pygame UI → redis-py → Redis DB
+```
+
+Benefits:
+1. ✅ **Simpler**: One connection layer instead of three
+2. ✅ **Faster**: No HTTP overhead
+3. ✅ **Fewer dependencies**: Removed Flask and requests
+4. ✅ **Easier to understand**: Direct persistence, clear purpose
+5. ✅ **Still demonstrates Redis knowledge**: Maintains grade boost benefit
+
+**Implementation Details:**
+
+### 1. Created RedisGameManager Class
+
+Replaced `APIClient` (HTTP client) with `RedisGameManager` (direct Redis):
+
+```python
+class RedisGameManager:
+    """Manages game persistence using Redis directly (no Flask server)."""
+    
+    def __init__(self):
+        self.redis_client = redis.Redis(
+            host=REDIS_HOST,
+            port=6379,
+            db=0,
+            decode_responses=True
+        )
+        self.redis_client.ping()  # Verify connection
+    
+    def save_game(self, game):
+        """Save Game object to Redis as JSON."""
+        game_dict = game.to_dict()
+        game_json = json.dumps(game_dict)
+        self.redis_client.set(GAME_KEY, game_json)
+    
+    def load_game(self):
+        """Load Game object from Redis."""
+        data = self.redis_client.get(GAME_KEY)
+        if data:
+            game_dict = json.loads(data)
+            return Game.from_dict(game_dict)
+        return None
+    
+    def delete_game(self):
+        """Delete saved game from Redis."""
+        self.redis_client.delete(GAME_KEY)
+```
+
+**Design decisions:**
+- Single class responsibility: manages Redis persistence only
+- Ping in `__init__`: fails fast if Redis unavailable
+- Direct Game objects: no JSON→dict→Game conversions in UI code
+
+### 2. Refactored BackgammonUI Class
+
+Changed from working with JSON responses to Game objects:
+
+**Before (API Client):**
+```python
+self.api_client = APIClient()
+self.game_data = None  # JSON dict
+
+# Roll dice via HTTP
+self.game_data = self.api_client.roll_dice()
+
+# Access nested JSON
+if self.game_data and self.game_data["current_player"]:
+    current_player = self.game_data["current_player"]
+    player_name = self.game_data[current_player]["name"]
+```
+
+**After (Direct Redis):**
+```python
+self.redis_manager = RedisGameManager()
+self.game = None  # Game object
+
+# Roll dice directly
+self.game.start_turn()
+
+# Access object properties
+if self.game and self.game.current_player:
+    player_name = self.game.current_player.name
+```
+
+**Benefits:**
+- Type safety: IDE autocomplete works
+- Cleaner code: `self.game.board.points` vs `self.game_data["board"]["points"]`
+- Direct validation: Game methods ensure invariants
+
+### 3. Updated All UI Methods
+
+**draw_checkers():**
+```python
+# Before: for i, (player, count) in enumerate(self.game_data["board"]["points"]):
+# After:
+for i, (player, count) in enumerate(self.game.board.points):
+```
+
+**draw_bar_checkers():**
+```python
+# Before: for player_id, count in self.game_data["board"]["bar"].items():
+# After:
+for player_id, count in self.game.board.bar.items():
+```
+
+**draw_info_panel():**
+```python
+# Before:
+# current_player_ref = self.game_data["current_player"]
+# current_player = self.game_data[current_player_ref]
+# player_color = "White" if current_player["color"] == "WHITE" else "Black"
+
+# After:
+player_color = "White" if self.game.current_player.color == PlayerColor.WHITE else "Black"
+```
+
+**handle_click():**
+```python
+# Before: self.game_data = self.api_client.roll_dice()
+# After:
+self.game.start_turn()
+self.redis_manager.save_game(self.game)
+
+# Before: self.game_data = self.api_client.move(from_point, to_point)
+# After:
+self.game.apply_move(from_point, to_point)
+self.redis_manager.save_game(self.game)
+```
+
+### 4. Removed Flask Server
+
+Deleted entire `server/` directory:
+- `server/main.py` - Flask API endpoints (no longer needed)
+- `server/__init__.py` - package init
+
+**Rationale:**
+Flask was only used to expose Game methods via HTTP. With direct connection, Pygame calls Game methods directly.
+
+### 5. Updated Dependencies
+
+**requirements.txt:**
+```diff
+- Flask==3.0.0
+- requests==2.31.0
++ # (Flask and requests removed - no longer needed)
+  redis==5.0.1
+  pygame==2.5.2
+```
+
+**compose.yaml:**
+```diff
+  services:
+    redis:
+      image: redis:7-alpine
+      ports:
+        - "6379:6379"
+-   server:
+-     build: .
+-     environment:
+-       - REDIS_HOST=redis
+-     ports:
+-       - "8000:8000"
+-     depends_on:
+-       - redis
+```
+
+Now only one service (Redis) instead of two (Redis + Flask).
+
+**Testing Results:**
+
+```bash
+$ python -m unittest discover -s tests -p "tests_*.py" -v
+...
+Ran 209 tests in 0.082s
+
+OK
+```
+
+✅ **All 209 tests still passing** - core game logic unchanged, only UI persistence layer refactored.
+
+**SOLID Principles Applied:**
+
+1. **Single Responsibility Principle (SRP):**
+   - `RedisGameManager`: Only handles Redis operations
+   - `BackgammonUI`: Only handles UI rendering and input
+   - `Game`: Only orchestrates game logic
+
+2. **Open/Closed Principle (OCP):**
+   - Can swap `RedisGameManager` for `PostgresGameManager` without changing UI
+   - Game class unchanged - open for extension (different persisters) but closed for modification
+
+3. **Dependency Inversion Principle (DIP):**
+   - UI depends on Game abstraction, not concrete persistence implementation
+   - Could inject different managers (FileManager, DBManager) without changing Game
+
+**Lessons Learned:**
+
+1. **Simpler is often better:**
+   - Flask+Redis seemed "professional" but added unnecessary complexity
+   - Direct Redis is more appropriate for this use case
+
+2. **Match architecture to requirements:**
+   - Multi-player web game → Flask makes sense (HTTP endpoints for multiple clients)
+   - Single-player local game → Direct connection is sufficient
+
+3. **Easier to explain = better design:**
+   - For oral exam, direct Redis is clearer
+   - "I use Redis to persist game state" vs "I use Flask to create API that talks to Redis to persist game state"
+
+4. **Don't over-engineer:**
+   - Redis still demonstrates NoSQL knowledge (grade benefit maintained)
+   - HTTP layer was overengineering for this scenario
+
+**Files Modified:**
+- `pygame_ui/ui.py` - Complete refactor (APIClient → RedisGameManager, JSON → Game objects)
+- `requirements.txt` - Removed Flask, requests
+- `compose.yaml` - Removed Flask service
+- `README.md` - Updated architecture explanation
+- `CHANGELOG.md` - Documented v1.3.0 refactor
+- `JUSTIFICACION.md` - Rewrote section 6 (Flask+Redis → Direct Redis)
+
+**Files Deleted:**
+- `server/main.py` - Flask API no longer needed
+- `server/__init__.py` - Server package removed
+
+**Impact:**
+- **Lines of code reduced:** ~300 lines removed (Flask server + API client)
+- **Dependencies reduced:** 2 fewer packages (Flask, requests)
+- **Complexity reduced:** 2 fewer serialization steps (Game→HTTP, HTTP→Redis)
+- **Performance improved:** No HTTP overhead
+- **Maintainability improved:** Simpler architecture, fewer moving parts

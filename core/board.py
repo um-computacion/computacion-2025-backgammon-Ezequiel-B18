@@ -12,6 +12,7 @@ NUM_POINTS = 24
 WHITE_HOME_RANGE = range(0, 6)
 BLACK_HOME_RANGE = range(18, 24)
 
+
 class Board:
     """
     Represents a backgammon board.
@@ -111,7 +112,9 @@ class Board:
         """
         # Validate point indices
         if not (0 <= from_point < NUM_POINTS and 0 <= to_point < NUM_POINTS):
-            raise InvalidPointError(from_point if not 0 <= from_point < NUM_POINTS else to_point)
+            raise InvalidPointError(
+                from_point if not 0 <= from_point < NUM_POINTS else to_point
+            )
 
         # Check if there are checkers on the bar that must be entered first
         if self.bar[player] > 0:
@@ -122,7 +125,9 @@ class Board:
             return False
 
         # Check movement direction based on player
-        if player == PLAYER_WHITE:  # White moves from high points to low points (23 -> 0)
+        if (
+            player == PLAYER_WHITE
+        ):  # White moves from high points to low points (23 -> 0)
             if to_point >= from_point:
                 return False  # White cannot move backwards (higher numbers)
         else:  # Black moves from low points to high points (0 -> 23)
@@ -199,7 +204,9 @@ class Board:
             return False
 
         # Validate entry points based on tests
-        if player == PLAYER_WHITE:  # White enters from points 18-23 (19-24 in user terms)
+        if (
+            player == PLAYER_WHITE
+        ):  # White enters from points 18-23 (19-24 in user terms)
             if point not in BLACK_HOME_RANGE:
                 return False
         else:  # Black enters from points 0-5 (1-6 in user terms)
@@ -280,7 +287,7 @@ class Board:
         if self.home[PLAYER_BLACK] == 15:
             return PLAYER_BLACK
         return EMPTY
-    
+
     def to_dict(self):
         """Converts the Board object to a dictionary."""
         return {

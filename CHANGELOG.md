@@ -7,6 +7,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0] - 2025-10-30
+
+### Changed
+
+- **MAJOR ARCHITECTURE REFACTOR:** Simplified persistence layer from Flask+Redis to Direct Redis
+  - **Removed Flask server** (`server/main.py`) - unnecessary middleware between Pygame UI and Redis
+  - **pygame_ui/ui.py:** Replaced `APIClient` (HTTP requests library) with `RedisGameManager` (direct redis-py connection)
+  - **Changed data flow:** Pygame UI → redis-py → Redis (was: Pygame UI → requests → HTTP → Flask → Redis)
+  - **Simplified object handling:** Work directly with `Game` objects instead of JSON dictionaries
+  - **Benefits:** Simpler architecture, easier to explain in oral exam, fewer dependencies, still demonstrates Redis knowledge for grade boost
+
+### Removed
+
+- **Flask framework** - no longer needed for persistence
+- **requests library** - HTTP layer eliminated
+- **server/main.py** - Flask API server removed
+- **server/**init**.py** - server package removed
+- Flask service from `compose.yaml` - now only Redis container needed
+
+### Added
+
+- **RedisGameManager class** in `pygame_ui/ui.py` - handles direct Redis operations (save_game, load_game, delete_game)
+- Import of `PlayerColor` from `core.player` in UI for proper color comparison
+
+### Fixed
+
+- All game state access in UI now uses Game object properties instead of JSON dict access
+- Proper type handling for Redis keys (integers for player IDs instead of strings)
+
+### Testing
+
+- All 209 unit tests still passing ✅
+- Core game logic unchanged - only UI persistence layer refactored
+- Code coverage maintained at **92%**
+
+### Documentation
+
+- Updated README.md to reflect Direct Redis architecture (removed Flask references)
+- Updated requirements.txt (removed Flask, requests)
+- Updated compose.yaml (Redis only)
+
 ## [1.2.0] - 2025-10-29
 
 ### Changed
@@ -22,7 +63,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-  - JUSTIFICACION.md with Flask and Redis explanation.
+- JUSTIFICACION.md with Flask and Redis explanation.
 
 ### Fixed
 
