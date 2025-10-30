@@ -54,10 +54,10 @@ class Game:
             player2 if player2 is not None else Player(player2_name, PlayerColor.BLACK)
         )
 
-        self.current_player = None  # Will be set after initial roll
-        self.other_player = None
+        self.__current_player__ = None  # Will be set after initial roll
+        self.__other_player__ = None
         self.__game_initialized__ = False
-        self.turn_was_skipped = False  # Flag for UI to show "no moves" message
+        self.__turn_was_skipped__ = False  # Flag for UI to show "no moves" message
 
     @property
     def board(self):
@@ -78,6 +78,36 @@ class Game:
     def player2(self):
         """Get player 2."""
         return self.__player2__
+
+    @property
+    def current_player(self):
+        """Get the current player."""
+        return self.__current_player__
+
+    @current_player.setter
+    def current_player(self, value):
+        """Set the current player."""
+        self.__current_player__ = value
+
+    @property
+    def other_player(self):
+        """Get the other player."""
+        return self.__other_player__
+
+    @other_player.setter
+    def other_player(self, value):
+        """Set the other player."""
+        self.__other_player__ = value
+
+    @property
+    def turn_was_skipped(self):
+        """Check if the turn was skipped."""
+        return self.__turn_was_skipped__
+
+    @turn_was_skipped.setter
+    def turn_was_skipped(self, value):
+        """Set whether the turn was skipped."""
+        self.__turn_was_skipped__ = value
 
     def setup_game(self):
         """Use Board as source of truth for starting positions and sync player checkers."""
@@ -159,12 +189,12 @@ class Game:
             self.dice.initial_roll()
             winner = self.dice.get_highest_roller()
             if winner == 1:
-                self.current_player = self.player1
-                self.other_player = self.player2
+                self.__current_player__ = self.player1
+                self.__other_player__ = self.player2
                 return 1
             if winner == 2:
-                self.current_player = self.player2
-                self.other_player = self.player1
+                self.__current_player__ = self.player2
+                self.__other_player__ = self.player1
                 return 2
             # else tie -> repeat
 
@@ -178,7 +208,7 @@ class Game:
                 "Game must be initialized before starting turns"
             )
 
-        if self.current_player is None:
+        if self.__current_player__ is None:
             raise GameNotInitializedError(
                 "Current player not set. Call initial_roll_until_decided() first."
             )
@@ -187,7 +217,7 @@ class Game:
             raise GameAlreadyOverError("Cannot start turn when game is over")
 
         self.dice.roll()
-        self.current_player.start_turn(self.dice)
+        self.__current_player__.start_turn(self.dice)
 
     def roll_dice_for_turn(self):
         """
@@ -198,7 +228,7 @@ class Game:
         player is able to make a move. This centralizes the turn-skipping
         logic within the game core.
         """
-        self.turn_was_skipped = False
+        self.__turn_was_skipped__ = False
         max_skips = 10  # A safeguard against potential infinite loops
 
         # We need to check if the first player has moves before entering the loop
@@ -207,8 +237,8 @@ class Game:
             return
 
         # If the first player has no moves, we start the skipping process
-        self.turn_was_skipped = True
-        self.current_player.end_turn()
+        self.__turn_was_skipped__ = True
+        self.__current_player__.end_turn()
         self.switch_players()
 
         for _ in range(max_skips):
@@ -217,7 +247,7 @@ class Game:
                 return  # The current player has moves and can proceed
 
             # If no moves, end the current player's turn and switch
-            self.current_player.end_turn()
+            self.__current_player__.end_turn()
             self.switch_players()
 
         # If the loop completes, it indicates a potential stalemate.
@@ -231,24 +261,24 @@ class Game:
         Validates that the move uses available dice values correctly.
         Returns True if move succeeded, False otherwise.
         """
-        self.turn_was_skipped = False
+        self.__turn_was_skipped__ = False
         if not self.__game_initialized__:
             raise GameNotInitializedError(
                 "Game must be initialized before making moves"
             )
 
-        if self.current_player is None:
+        if self.__current_player__ is None:
             raise InvalidPlayerTurnError("No current player set")
 
         if self.is_game_over():
             raise GameAlreadyOverError("Cannot make moves when game is over")
 
-        if self.current_player.remaining_moves <= 0:
+        if self.__current_player__.remaining_moves <= 0:
             raise InvalidPlayerTurnError(
-                f"Player {self.current_player.name} has no remaining moves"
+                f"Player {self.__current_player__.name} has no remaining moves"
             )
 
-        pid = self.current_player.player_id
+        pid = self.__current_player__.player_id
 
         if from_point == "bar":
             if self.board.bar[pid] == 0:
@@ -261,7 +291,7 @@ class Game:
             else:  # Black enters on points 1-6 (0-5)
                 move_distance = to_point + 1
 
-            if not self.current_player.can_use_dice_for_move(move_distance):
+            if not self.__current_player__.can_use_dice_for_move(move_distance):
                 raise InvalidMoveError(
                     "bar", to_point, "No available dice for this move."
                 )
@@ -272,16 +302,16 @@ class Game:
                     "bar", to_point, "Board rejected the move from the bar."
                 )
 
-            self.current_player.use_dice_for_move(move_distance)
+            self.__current_player__.use_dice_for_move(move_distance)
             self.sync_checkers()
 
-            if self.current_player.remaining_moves <= 0:
-                self.current_player.end_turn()
+            if self.__current_player__.remaining_moves <= 0:
+                self.__current_player__.end_turn()
                 self.switch_players()
             elif not self.has_any_valid_moves():
-                self.current_player.end_turn()
+                self.__current_player__.end_turn()
                 self.switch_players()
-                self.turn_was_skipped = True
+                self.__turn_was_skipped__ = True
 
             return True
 
@@ -292,7 +322,7 @@ class Game:
             move_distance = to_point - from_point
 
         # Validate that move distance matches available dice
-        if not self.current_player.can_use_dice_for_move(move_distance):
+        if not self.__current_player__.can_use_dice_for_move(move_distance):
             return (
                 False  # Invalid dice usage, return False instead of raising exception
             )

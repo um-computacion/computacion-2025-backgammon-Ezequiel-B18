@@ -715,7 +715,6 @@ class BackgammonUI:
 
         pygame.quit()
 
-
 if __name__ == "__main__":
     ui = BackgammonUI()
     ui.run()

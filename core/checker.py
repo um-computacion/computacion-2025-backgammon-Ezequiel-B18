@@ -32,9 +32,24 @@ class Checker:
         Args:
             color (CheckerColor): The color of the checker (WHITE or BLACK)
         """
-        self.color = color
-        self.state = CheckerState.ON_BOARD
+        self.__color__ = color
+        self.__state__ = CheckerState.ON_BOARD
         self.__position__ = None
+
+    @property
+    def color(self):
+        """Get the color of the checker."""
+        return self.__color__
+
+    @property
+    def state(self):
+        """Get the current state of the checker."""
+        return self.__state__
+
+    @state.setter
+    def state(self, value):
+        """Set the state of the checker."""
+        self.__state__ = value
 
     @property
     def position(self):
@@ -57,7 +72,7 @@ class Checker:
             raise InvalidCheckerPositionError(position)
 
         self.__position__ = position
-        self.state = CheckerState.ON_BOARD
+        self.__state__ = CheckerState.ON_BOARD
 
     def move_to_position(self, new_position):
         """
@@ -70,20 +85,20 @@ class Checker:
             raise InvalidCheckerPositionError(new_position)
 
         self.__position__ = new_position
-        self.state = CheckerState.ON_BOARD
+        self.__state__ = CheckerState.ON_BOARD
 
     def calculate_new_position(self, dice_value):
         """
         Calculate the new position after moving by dice_value.
         White moves from low to high (0->23), Black moves from high to low (23->0).
         """
-        if self.state != CheckerState.ON_BOARD:
+        if self.__state__ != CheckerState.ON_BOARD:
             raise ValueError("Checker must be on board to calculate new position")
 
         if self.position is None:
             raise ValueError("Checker position must be set")
 
-        if self.color == CheckerColor.WHITE:
+        if self.__color__ == CheckerColor.WHITE:
             new_position = self.position + dice_value
         else:  # BLACK
             new_position = self.position - dice_value
@@ -92,16 +107,16 @@ class Checker:
 
     def send_to_bar(self):
         """Send this checker to the bar (after being hit)"""
-        self.state = CheckerState.ON_BAR
+        self.__state__ = CheckerState.ON_BAR
         self.__position__ = None
 
     def enter_from_bar(self, position):
         """Enter a checker from the bar to the specified position."""
-        if self.state != CheckerState.ON_BAR:
+        if self.__state__ != CheckerState.ON_BAR:
             return False
 
         # Validate entry points based on color
-        if self.color == CheckerColor.WHITE:
+        if self.__color__ == CheckerColor.WHITE:
             if not 0 <= position <= 5:
                 raise InvalidCheckerPositionError(position, "0-5")
         else:  # BLACK
@@ -109,7 +124,7 @@ class Checker:
                 raise InvalidCheckerPositionError(position, "18-23")
 
         self.position = position
-        self.state = CheckerState.ON_BOARD
+        self.__state__ = CheckerState.ON_BOARD
         return True
 
     def bear_off(self):
@@ -119,13 +134,13 @@ class Checker:
         Raises:
             ValueError: If the checker is not in its home board
         """
-        if self.state != CheckerState.ON_BOARD:
+        if self.__state__ != CheckerState.ON_BOARD:
             raise ValueError("Cannot bear off: checker not on board")
 
         if not self.is_in_home_board():
             raise ValueError("Cannot bear off: checker not in home board")
 
-        self.state = CheckerState.BORNE_OFF
+        self.__state__ = CheckerState.BORNE_OFF
         self.__position__ = None
 
     def is_in_home_board(self):
@@ -133,7 +148,7 @@ class Checker:
         if self.position is None:
             return False
 
-        if self.color == CheckerColor.WHITE:
+        if self.__color__ == CheckerColor.WHITE:
             return 18 <= self.position <= 23
         # BLACK
         return 0 <= self.position <= 5
@@ -143,7 +158,7 @@ class Checker:
         if not self.is_in_home_board():
             return False
 
-        if self.color == CheckerColor.WHITE:
+        if self.__color__ == CheckerColor.WHITE:
             needed_value = 24 - self.position
         else:  # BLACK
             needed_value = self.position + 1
@@ -152,8 +167,8 @@ class Checker:
 
     def __str__(self):
         """String representation of the checker"""
-        color_name = "White" if self.color == CheckerColor.WHITE else "Black"
-        state_name = self.state.name
+        color_name = "White" if self.__color__ == CheckerColor.WHITE else "Black"
+        state_name = self.__state__.name
         pos_str = f"pos={self.__position__}"
         return f"{color_name}({state_name}, {pos_str})"
 
@@ -170,6 +185,6 @@ class Checker:
         """Creates a Checker object from a dictionary."""
         color = CheckerColor[data["color"]]
         checker = Checker(color)
-        checker.state = CheckerState[data["state"]]
+        checker.__state__ = CheckerState[data["state"]]
         checker.position = data["position"]
         return checker

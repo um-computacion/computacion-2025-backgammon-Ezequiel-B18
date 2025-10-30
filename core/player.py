@@ -26,11 +26,11 @@ class Player:
             name (str): The player's name
             color (PlayerColor): The player's color (WHITE or BLACK)
         """
-        self.name = name
-        self.color = color
+        self.__name__ = name
+        self.__color__ = color
 
         # Player ID (1 for white, 2 for black) for board interactions
-        self.player_id = 1 if color == PlayerColor.WHITE else 2
+        self.__player_id__ = 1 if color == PlayerColor.WHITE else 2
 
         # Initialize 15 checkers with corresponding color
         checker_color = (
@@ -39,14 +39,59 @@ class Player:
         self.__checkers__ = [Checker(checker_color) for _ in range(15)]
 
         # Turn and move tracking
-        self.is_turn = False
-        self.remaining_moves = 0
-        self.available_moves = []  # Track actual dice values available
+        self.__is_turn__ = False
+        self.__remaining_moves__ = 0
+        self.__available_moves__ = []  # Track actual dice values available
 
     @property
     def checkers(self):
         """Access to the player's list of checkers (element mutation allowed)."""
         return self.__checkers__
+
+    @property
+    def name(self):
+        """Get the player's name."""
+        return self.__name__
+
+    @property
+    def color(self):
+        """Get the player's color."""
+        return self.__color__
+
+    @property
+    def player_id(self):
+        """Get the player's ID (1 for white, 2 for black)."""
+        return self.__player_id__
+
+    @property
+    def is_turn(self):
+        """Check if it's currently this player's turn."""
+        return self.__is_turn__
+
+    @is_turn.setter
+    def is_turn(self, value):
+        """Set whether it's this player's turn."""
+        self.__is_turn__ = value
+
+    @property
+    def remaining_moves(self):
+        """Get the number of remaining moves."""
+        return self.__remaining_moves__
+
+    @remaining_moves.setter
+    def remaining_moves(self, value):
+        """Set the number of remaining moves."""
+        self.__remaining_moves__ = value
+
+    @property
+    def available_moves(self):
+        """Get the list of available dice values."""
+        return self.__available_moves__
+
+    @available_moves.setter
+    def available_moves(self, value):
+        """Set the list of available dice values."""
+        self.__available_moves__ = value
 
     def get_starting_positions(self):
         """
@@ -55,7 +100,7 @@ class Player:
         Returns:
             list: List of tuples (point_index, checker_count)
         """
-        if self.color == PlayerColor.WHITE:
+        if self.__color__ == PlayerColor.WHITE:
             # White needs to bear off to 1-6, so starts from far end
             return [(23, 2), (12, 5), (7, 3), (5, 5)]
         # Black needs to bear off to 19-24, so starts from far end
@@ -86,15 +131,15 @@ class Player:
         Args:
             dice: The dice roll
         """
-        self.is_turn = True
-        self.available_moves = dice.get_moves()
-        self.remaining_moves = len(self.available_moves)
+        self.__is_turn__ = True
+        self.__available_moves__ = dice.get_moves()
+        self.__remaining_moves__ = len(self.__available_moves__)
 
     def end_turn(self):
         """End the player's turn."""
-        self.is_turn = False
-        self.remaining_moves = 0
-        self.available_moves = []  # Clear available moves
+        self.__is_turn__ = False
+        self.__remaining_moves__ = 0
+        self.__available_moves__ = []  # Clear available moves
 
     def use_move(self):
         """
@@ -103,10 +148,10 @@ class Player:
         Returns:
             bool: True if successful, False if no moves remaining
         """
-        if self.remaining_moves <= 0:
-            raise NoMovesRemainingError(self.name)
+        if self.__remaining_moves__ <= 0:
+            raise NoMovesRemainingError(self.__name__)
 
-        self.remaining_moves -= 1
+        self.__remaining_moves__ -= 1
         return True
 
     def can_use_dice_for_move(self, move_distance):
@@ -120,27 +165,27 @@ class Player:
             bool: True if move is possible with available dice
         """
         # For single dice value moves
-        if move_distance in self.available_moves:
+        if move_distance in self.__available_moves__:
             return True
 
         # For combined dice moves
         # Check if we can combine two dice to make this move
-        for i, die1 in enumerate(self.available_moves):
-            for j, die2 in enumerate(self.available_moves[i + 1 :], i + 1):
+        for i, die1 in enumerate(self.__available_moves__):
+            for j, die2 in enumerate(self.__available_moves__[i + 1 :], i + 1):
                 if die1 + die2 == move_distance:
                     return True
 
         # For doubles, check if we can combine 3 dice (e.g., 1+1+1=3)
-        if len(self.available_moves) >= 3:
-            for i, die1 in enumerate(self.available_moves):
-                for j, die2 in enumerate(self.available_moves[i + 1 :], i + 1):
-                    for die3 in self.available_moves[j + 1 :]:
+        if len(self.__available_moves__) >= 3:
+            for i, die1 in enumerate(self.__available_moves__):
+                for j, die2 in enumerate(self.__available_moves__[i + 1 :], i + 1):
+                    for die3 in self.__available_moves__[j + 1 :]:
                         if die1 + die2 + die3 == move_distance:
                             return True
 
         # For doubles, check if we can combine 4 dice (e.g., 1+1+1+1=4)
-        if len(self.available_moves) >= 4:
-            total = sum(self.available_moves[:4])
+        if len(self.__available_moves__) >= 4:
+            total = sum(self.__available_moves__[:4])
             if total == move_distance:
                 return True
 
@@ -157,42 +202,42 @@ class Player:
             bool: True if dice were successfully consumed
         """
         # Try single dice value first
-        if move_distance in self.available_moves:
-            self.available_moves.remove(move_distance)
-            self.remaining_moves -= 1
+        if move_distance in self.__available_moves__:
+            self.__available_moves__.remove(move_distance)
+            self.__remaining_moves__ -= 1
             return True
 
         # Try combined dice - 2 dice
-        for i, die1 in enumerate(self.available_moves):
-            for j, die2 in enumerate(self.available_moves[i + 1 :], i + 1):
+        for i, die1 in enumerate(self.__available_moves__):
+            for j, die2 in enumerate(self.__available_moves__[i + 1 :], i + 1):
                 if die1 + die2 == move_distance:
                     # Remove both dice values (remove higher index first)
-                    self.available_moves.pop(j)
-                    self.available_moves.pop(i)
-                    self.remaining_moves -= 2
+                    self.__available_moves__.pop(j)
+                    self.__available_moves__.pop(i)
+                    self.__remaining_moves__ -= 2
                     return True
 
         # Try combined dice - 3 dice (for doubles)
-        if len(self.available_moves) >= 3:
-            for i, die1 in enumerate(self.available_moves):
-                for j, die2 in enumerate(self.available_moves[i + 1 :], i + 1):
-                    for k, die3 in enumerate(self.available_moves[j + 1 :], j + 1):
+        if len(self.__available_moves__) >= 3:
+            for i, die1 in enumerate(self.__available_moves__):
+                for j, die2 in enumerate(self.__available_moves__[i + 1 :], i + 1):
+                    for k, die3 in enumerate(self.__available_moves__[j + 1 :], j + 1):
                         if die1 + die2 + die3 == move_distance:
                             # Remove all three dice (remove highest index first)
-                            self.available_moves.pop(k)
-                            self.available_moves.pop(j)
-                            self.available_moves.pop(i)
-                            self.remaining_moves -= 3
+                            self.__available_moves__.pop(k)
+                            self.__available_moves__.pop(j)
+                            self.__available_moves__.pop(i)
+                            self.__remaining_moves__ -= 3
                             return True
 
         # Try combined dice - 4 dice (for doubles)
-        if len(self.available_moves) >= 4:
-            total = sum(self.available_moves[:4])
+        if len(self.__available_moves__) >= 4:
+            total = sum(self.__available_moves__[:4])
             if total == move_distance:
                 # Remove all four dice
                 for _ in range(4):
-                    self.available_moves.pop(0)
-                self.remaining_moves -= 4
+                    self.__available_moves__.pop(0)
+                self.__remaining_moves__ -= 4
                 return True
 
         return False
@@ -246,22 +291,22 @@ class Player:
         borne_off = self.count_checkers_by_state(CheckerState.BORNE_OFF)
 
         turn_status = (
-            f"in turn ({self.remaining_moves} moves)" if self.is_turn else "not in turn"
+            f"in turn ({self.__remaining_moves__} moves)" if self.__is_turn__ else "not in turn"
         )
 
         return (
-            f"{self.name} ({self.color.name}): {on_board} on board, "
+            f"{self.__name__} ({self.__color__.name}): {on_board} on board, "
             f"{on_bar} on bar, {borne_off} borne off, {turn_status}"
         )
     
     def to_dict(self):
         """Converts the Player object to a dictionary."""
         return {
-            "name": self.name,
-            "color": self.color.name,
-            "is_turn": self.is_turn,
-            "remaining_moves": self.remaining_moves,
-            "available_moves": self.available_moves,
+            "name": self.__name__,
+            "color": self.__color__.name,
+            "is_turn": self.__is_turn__,
+            "remaining_moves": self.__remaining_moves__,
+            "available_moves": self.__available_moves__,
             "checkers": [checker.to_dict() for checker in self.checkers],
         }
 
@@ -270,9 +315,9 @@ class Player:
         """Creates a Player object from a dictionary."""
         color = PlayerColor[data["color"]]
         player = Player(data["name"], color)
-        player.is_turn = data["is_turn"]
-        player.remaining_moves = data["remaining_moves"]
-        player.available_moves = data["available_moves"]
+        player.__is_turn__ = data["is_turn"]
+        player.__remaining_moves__ = data["remaining_moves"]
+        player.__available_moves__ = data["available_moves"]
         player.checkers.clear()
         for checker_data in data["checkers"]:
             player.checkers.append(Checker.from_dict(checker_data))

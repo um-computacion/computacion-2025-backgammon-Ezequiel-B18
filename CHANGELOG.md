@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2025-10-29
+
+### Changed
+
+- **MAJOR:** Refactored all class attributes to comply with rubric requirement using `__attribute__` naming pattern
+  - **core/dice.py:** Renamed `initial_values` to `__initial_values__` with @property decorator
+  - **core/player.py:** Renamed 6 attributes (`name`, `color`, `player_id`, `is_turn`, `remaining_moves`, `available_moves`) to use `__attribute__` pattern with @property decorators and @setters where needed
+  - **core/game.py:** Renamed 3 attributes (`current_player`, `other_player`, `turn_was_skipped`) to use `__attribute__` pattern with @property decorators and @setters
+  - **core/exceptions.py:** Renamed ~14 attributes across all exception classes (InvalidMoveError, InvalidPointError, InvalidCheckerPositionError, NoMovesRemainingError, InvalidCheckerCountError, InvalidDiceValueError, InvalidCheckerStateError, CheckerPositionError) to use `__attribute__` pattern with @property decorators
+  - **cli/cli.py:** Renamed 3 attributes (`game`, `player1_name`, `player2_name`) to use `__attribute__` pattern with @property decorators and @setters
+  - **core/board.py:** Verified already compliant (uses `__points__`, `__bar__`, `__home__`)
+  - **core/checker.py:** Verified already compliant (uses `__color__`, `__position__`, `__state__`)
+
+### Added
+
+  - JUSTIFICACION.md with Flask and Redis explanation.
+
+### Fixed
+
+- Nothing
+
+### Testing
+
+- All 209 tests passing after refactoring
+- Code coverage maintained at **92%** (above required 90% minimum)
+- Validated syntax across all modified files
+
 ## [1.1.0] - 2025-10-29
 
 ### Added
@@ -19,7 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Centered some UI components in pygame_ui.ui 
+- Centered some UI components in pygame_ui.ui
 
 ## [1.0.1] - 2025-10-22
 

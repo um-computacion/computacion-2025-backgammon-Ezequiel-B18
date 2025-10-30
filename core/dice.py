@@ -13,7 +13,7 @@ class Dice:
     def __init__(self):
         """Initialize two dice with default values of [0, 0]"""
         self.__values__ = [0, 0]
-        self.initial_values = [0, 0]
+        self.__initial_values__ = [0, 0]
 
     @property
     def values(self):
@@ -26,6 +26,16 @@ class Dice:
     def rolled(self):
         """Check if the dice have been rolled."""
         return self.__values__ != [0, 0]
+
+    @property
+    def initial_values(self):
+        """Get the initial roll values."""
+        return self.__initial_values__
+
+    @initial_values.setter
+    def initial_values(self, value):
+        """Set the initial roll values."""
+        self.__initial_values__ = value
 
     def roll(self):
         """Roll both dice and store their values"""
@@ -58,21 +68,21 @@ class Dice:
         """
         player1_roll = random.randint(1, 6)
         player2_roll = random.randint(1, 6)
-        self.initial_values = [player1_roll, player2_roll]
-        return tuple(self.initial_values)
+        self.__initial_values__ = [player1_roll, player2_roll]
+        return tuple(self.__initial_values__)
 
     def is_initial_tie(self):
         """Check if the initial roll resulted in a tie"""
-        return self.initial_values[0] == self.initial_values[1]
+        return self.__initial_values__[0] == self.__initial_values__[1]
 
     def get_highest_roller(self):
         """
         Get the player who rolled the highest value in the initial roll.
         Returns 1 if player 1 rolled higher, 2 if player 2 rolled higher, 0 if tie.
         """
-        if self.initial_values[0] > self.initial_values[1]:
+        if self.__initial_values__[0] > self.__initial_values__[1]:
             return 1
-        if self.initial_values[1] > self.initial_values[0]:
+        if self.__initial_values__[1] > self.__initial_values__[0]:
             return 2
         return 0
     
@@ -80,7 +90,7 @@ class Dice:
         """Converts the Dice object to a dictionary."""
         return {
             "values": self.__values__,
-            "initial_values": self.initial_values,
+            "initial_values": self.__initial_values__,
         }
 
     @staticmethod
@@ -88,5 +98,5 @@ class Dice:
         """Creates a Dice object from a dictionary."""
         dice = Dice()
         dice.__values__ = data["values"]
-        dice.initial_values = data["initial_values"]
+        dice.__initial_values__ = data["initial_values"]
         return dice
