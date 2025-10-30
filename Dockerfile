@@ -31,10 +31,6 @@ RUN --mount=type=cache,target=/root/.cache/pip \
 # Copy the rest of the application
 COPY . .
 
-# Copy entrypoint script and make it executable
-COPY docker-entrypoint.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
-
 # Create non-privileged user
 RUN useradd -m -u 10001 appuser && \
     chown -R appuser:appuser /app

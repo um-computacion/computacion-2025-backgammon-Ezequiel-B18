@@ -32,9 +32,39 @@ class BackgammonCLI:
 
     def __init__(self):
         """Initialize the CLI."""
-        self.game = None
-        self.player1_name = None
-        self.player2_name = None
+        self.__game__ = None
+        self.__player1_name__ = None
+        self.__player2_name__ = None
+
+    @property
+    def game(self):
+        """Get the game instance."""
+        return self.__game__
+
+    @game.setter
+    def game(self, value):
+        """Set the game instance."""
+        self.__game__ = value
+
+    @property
+    def player1_name(self):
+        """Get player 1 name."""
+        return self.__player1_name__
+
+    @player1_name.setter
+    def player1_name(self, value):
+        """Set player 1 name."""
+        self.__player1_name__ = value
+
+    @property
+    def player2_name(self):
+        """Get player 2 name."""
+        return self.__player2_name__
+
+    @player2_name.setter
+    def player2_name(self, value):
+        """Set player 2 name."""
+        self.__player2_name__ = value
 
     # =============================================================================
     # GAME FLOW CONTROL (SRP: Game orchestration responsibility)
