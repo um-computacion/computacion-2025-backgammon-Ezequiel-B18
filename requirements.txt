@@ -2,5 +2,3 @@ coverage==7.10.5
 pygame>=2.5.0
 pylint>=3.0.0
 redis
-Flask
-requests

@@ -615,7 +615,6 @@ class TestBackgammonCLI(
 
         mock_print.assert_any_call("An unexpected error occurred: Unexpected error")
 
-
     @patch("builtins.input")
     @patch("builtins.print")
     def test_handle_player_move_bar_entry_white(
@@ -1108,6 +1107,7 @@ class TestBackgammonCLI(
         # Should mention doubles
         doubles_mentioned = any("doubles" in call.lower() for call in calls)
         self.assertTrue(doubles_mentioned)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -12,29 +12,41 @@
 docker build -t backgammon .
 ```
 
-### 2) Inicializar base de datos + server para jugar con la UI
+### 2) Inicializar base de datos para jugar con la UI (Redis)
 
 ```bash
 docker compose up -d
 ```
 
-### 3) Inicializar desde VS
+Esto levanta **Redis** - una base de datos en memoria para persistir el estado del juego.
+La UI de Pygame se conecta directamente a Redis (sin servidor Flask intermediario).
+
+### 3) Instalar las librerías y dependencias (hacer en entorno virtual)
 
 ```bash
-# Para solo jugar al de la UI
+pip install -r requirements.txt
+```
+
+### 4) Inicializar desde VS
+
+```bash
+# Para jugar con la UI (requiere que docker compose esté corriendo)
 python -m pygame_ui.ui
 
-# Muestra el CLI y la UI desde la terminal de VS
+# Para jugar con CLI (no requiere servidor, funciona standalone)
+python -m cli.cli
+
+# Muestra menú para elegir entre CLI o UI
 python -m main
 ```
 
-### 4) Jugar al CLI desde el docker
+### 5) Jugar al CLI desde el docker
 
 ```bash
 docker run -it backgammon cli
 ```
 
-### 5) Correr los tests + coverage desde docker
+### 6) Correr los tests + coverage desde docker
 
 ```bash
 docker run backgammon test

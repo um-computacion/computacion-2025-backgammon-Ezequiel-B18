@@ -291,14 +291,16 @@ class Player:
         borne_off = self.count_checkers_by_state(CheckerState.BORNE_OFF)
 
         turn_status = (
-            f"in turn ({self.__remaining_moves__} moves)" if self.__is_turn__ else "not in turn"
+            f"in turn ({self.__remaining_moves__} moves)"
+            if self.__is_turn__
+            else "not in turn"
         )
 
         return (
             f"{self.__name__} ({self.__color__.name}): {on_board} on board, "
             f"{on_bar} on bar, {borne_off} borne off, {turn_status}"
         )
-    
+
     def to_dict(self):
         """Converts the Player object to a dictionary."""
         return {
