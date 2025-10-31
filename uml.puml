@@ -1,0 +1,149 @@
+@startuml Backgammon
+
+' --- Overall Style ---
+skinparam classAttributeIconSize 0
+skinparam classBackgroundColor LightBlue
+skinparam arrowColor Black
+
+' --- Class Definitions ---
+
+class Game {
+  - __board__: Board
+  - __dice__: Dice
+  - __player1__: Player
+  - __player2__: Player
+  - current_player: Player
+  - other_player: Player
+  - __game_initialized__: bool
+  - turn_was_skipped: bool
+  + setup_game()
+  + sync_checkers()
+  + _reset_checker_states(player_obj)
+  + _assign_borne_off_checkers(player_obj, player_id)
+  + _assign_bar_checkers(player_obj, player_id)
+  + _assign_board_positions(player_obj, player_id)
+  + initial_roll_until_decided()
+  + start_turn()
+  + roll_dice_for_turn()
+  + apply_move(from_point, to_point)
+  + apply_bear_off_move(from_point)
+  + switch_players()
+  + is_game_over(): bool
+  + get_winner(): Player
+  + get_valid_moves(from_point): list
+  + has_any_valid_moves(): bool
+  + is_valid_bear_off_move(from_point): bool
+}
+
+class Player {
+  - name: str
+  - color: PlayerColor
+  - player_id: int
+  - __checkers__: list<Checker>
+  - is_turn: bool
+  - remaining_moves: int
+  - available_moves: list<int>
+  + get_starting_positions()
+  + distribute_checkers(board)
+  + start_turn(dice)
+  + end_turn()
+  + use_move()
+  + can_use_dice_for_move(move_distance): bool
+  + use_dice_for_move(move_distance): bool
+  + get_checkers_by_state(state)
+  + count_checkers_by_state(state)
+  + has_checkers_on_bar()
+  + has_won()
+  + __str__()
+}
+
+class Board {
+  - __points__: list<tuple>
+  - __bar__: dict
+  - __home__: dict
+  + get_player_at_point(point)
+  + get_checkers_count(point)
+  + setup_starting_positions()
+  + move_checker(player, from_point, to_point): dict
+  + enter_from_bar(player, point): bool
+  + bear_off(player, point): bool
+  + is_valid_move(player, from_point, to_point): bool
+  + all_checkers_in_home_board(player): bool
+  + check_winner(): int
+}
+
+class Dice {
+  - __values__: list<int>
+  - initial_values: list<int>
+  + roll()
+  + is_doubles(): bool
+  + get_moves(): list<int>
+  + initial_roll(): tuple
+  + is_initial_tie()
+  + get_highest_roller()
+}
+
+class Checker {
+  - color: CheckerColor
+  - state: CheckerState
+  - position: int
+  + set_position(position)
+  + move_to_position(new_position)
+  + calculate_new_position(dice_value)
+  + send_to_bar()
+  + enter_from_bar(position)
+  + bear_off()
+  + is_in_home_board()
+  + can_bear_off_with_value(dice_value)
+  + __str__()
+}
+
+' --- Enum Definitions ---
+
+enum PlayerColor {
+  WHITE
+  BLACK
+}
+
+enum CheckerColor {
+  WHITE
+  BLACK
+}
+
+enum CheckerState {
+  ON_BOARD
+  ON_BAR
+  BORNE_OFF
+}
+
+' --- Relationships ---
+
+Game "1" *-- "1" Board
+Game "1" *-- "1" Dice
+Game "1" *-- "2" Player
+
+Player "1" *-- "15" Checker
+Player -- PlayerColor
+
+Checker -- CheckerColor
+Checker -- CheckerState
+
+' --- Exception Hierarchy ---
+
+package "exceptions" {
+  class BackgammonError
+  class GameError
+  class BoardError
+  class PlayerError
+  
+  BackgammonError <|-- GameError
+  BackgammonError <|-- BoardError
+  BackgammonError <|-- PlayerError
+  
+  GameError <|-- GameNotInitializedError
+  GameError <|-- InvalidPlayerTurnError
+  GameError <|-- GameAlreadyOverError
+  GameError <|-- InvalidMoveError
+}
+
+@enduml
