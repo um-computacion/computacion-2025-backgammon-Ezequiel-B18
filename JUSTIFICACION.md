@@ -13,7 +13,8 @@
 3. [Módulo Core - Lógica de Negocio](#módulo-core---lógica-de-negocio)
 4. [Interfaces de Usuario](#interfaces-de-usuario)
 5. [Sistema de Excepciones](#sistema-de-excepciones)
-6. [Redis - Persistencia Directa](#redis---persistencia-directa-opcional)
+6. [Estrategias de Testing y Cobertura](#estrategias-de-testing-y-cobertura)
+7. [Redis - Persistencia Directa](#redis---persistencia-directa-opcional)
 
 ---
 
@@ -796,6 +797,120 @@ except InvalidMoveError as e:
 except GameAlreadyOverError:
     print("El juego ya terminó")
 ```
+
+---
+
+## Estrategias de Testing y Cobertura
+
+### Enfoque de Testing
+
+El proyecto utiliza **Test-Driven Development (TDD)** con:
+
+- Tests escritos antes de implementar funcionalidad
+- Cada test verifica un solo comportamiento específico
+- Tests completamente independientes entre sí
+- **92% de cobertura** (supera el 90% requerido)
+
+### Resultados de Cobertura
+
+**Total: 209 tests** distribuidos en 7 archivos de test.
+
+```
+Name                 Stmts   Miss  Cover
+----------------------------------------
+cli/cli.py             272      3    99%
+core/board.py          150     12    92%
+core/checker.py         91      9    90%
+core/dice.py            53      7    87%
+core/exceptions.py     100      0   100%
+core/game.py           367     52    86%
+core/player.py         140     10    93%
+----------------------------------------
+TOTAL                 1173     93    92%
+```
+
+---
+
+### Qué Se Probó y Por Qué
+
+#### 1. **tests_board.py (92% coverage)**
+
+**Qué:** Configuración inicial, validación de movimientos, capturas, entrada desde barra, bearing off, detección de victoria.
+
+**Por qué:** Board es el **Single Source of Truth** del estado del juego. Validar todas las reglas físicas del backgammon es crítico.
+
+#### 2. **tests_dice.py (87% coverage)**
+
+**Qué:** Generación aleatoria (1-6), detección de dobles, conversión a movimientos, initial roll.
+
+**Por qué:** Los dados introducen **aleatoriedad controlada**. Tests con mocks aseguran que la lógica de dobles (4 movimientos) funcione sin depender del azar.
+
+#### 3. **tests_player.py (93% coverage)**
+
+**Qué:** Creación de jugadores, distribución de fichas, inicio/fin de turno, uso de movimientos (individuales y combinados), detección de victoria.
+
+**Por qué:** Player gestiona **estado del turno** y **movimientos disponibles**. Crucial verificar que los dados se consuman correctamente y las combinaciones funcionen.
+
+#### 4. **tests_game.py (86% coverage)**
+
+**Qué:** Inicialización, setup, initial roll, aplicación de movimientos válidos/inválidos, cambio de turnos, detección de fin de juego, dependency injection.
+
+**Por qué:** Game es el **orquestador**. Tests verifican reglas de negocio, flujo del juego, y manejo de excepciones.
+
+_El 14% no cubierto son edge cases de combinaciones complejas poco frecuentes._
+
+#### 5. **tests_checker.py (90% coverage)**
+
+**Qué:** Creación de fichas, estados (ON_BOARD, ON_BAR, BORNE_OFF), transiciones de estado.
+
+**Por qué:** Asegurar transiciones correctas de estado durante el juego (board → bar → board → borne off).
+
+#### 6. **tests_cli.py (99% coverage)**
+
+**Qué:** Inicio de juego, parsing de comandos (`0-4`, `bar-19`, `off-5`), manejo de input inválido, display de información.
+
+**Por qué:** CLI es la **interfaz principal**. Tests con mocks de `input()`/`print()` verifican parsing correcto sin interacción humana.
+
+#### 7. **tests_ui.py**
+
+**Qué:** Inicialización Pygame, conversión de coordenadas, click handling.
+
+**Por qué:** Verificar lógica de conversión pixel → punto de tablero. Testing limitado (Pygame requiere ventana gráfica).
+
+---
+
+### Uso de Mocks - Justificación
+
+**Dónde:** Solo en `tests_cli.py` (input/print) y `tests_dice.py` (random.randint).
+
+**Por qué:**
+
+- No se puede testear `input()` automáticamente sin mocks
+- Dados aleatorios necesitan valores controlados para tests reproducibles
+- Solo **7% de tests** (15/209) usan mocks - el resto son tests puros con objetos reales
+
+---
+
+### Evidencia
+
+```bash
+# Local
+python -m coverage run -m unittest discover -s tests -p "tests_*.py" -v
+python -m coverage report
+# Resultado: 209 tests OK, 92% coverage
+
+# Docker
+docker run backgammon test
+# Resultado: 209 passed, 92% coverage
+```
+
+### Conclusión
+
+- ✅ 92% de cobertura (supera 90% requerido)
+- ✅ 209 tests automatizados
+- ✅ TDD aplicado
+- ✅ Mocks usados apropiadamente (solo I/O y randomness)
+- ✅ Tests ejecutables en Docker (CI/CD ready)
 
 ---
 
